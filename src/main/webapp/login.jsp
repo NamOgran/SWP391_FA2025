@@ -1,11 +1,10 @@
 <%-- 
     Document   : login
     Created on : Feb 28, 2024, 5:18:02 PM
-    Author     : thinh
+    Author     : duyentq
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<!DOCTYPE html>
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -929,7 +928,7 @@
                     <h2>LOG IN</h2>
                     <h3>Enter your email and password</h3>
                     <hr>
-                    
+
                     <!-- Google Login Button -->
                     <div class="google-login-section">
                         <button type="button" class="google-login-btn" onclick="loginWithGoogle()">
@@ -937,7 +936,7 @@
                             Continue with Google
                         </button>
                     </div>
-                    
+
                     <div class="divider">
                         <span>or</span>
                     </div>
@@ -950,13 +949,14 @@
                         <input type="password" name="password" required>
                         <label for="password">Password</label>
                     </div>
-                    
+
                     <div>
                         <b>Join With Account</b>
-                        <select id="account" onchange="getURL()" name="account">
-                            <option value="customer">Customer</option>
+                        <select id="account" name="account" onchange="getURL()">
+                            <option value="customer" selected>Customer</option>
                             <option value="staff">Staff</option>
                         </select>
+
                     </div>
 
                     <div class="policyText">
@@ -965,7 +965,7 @@
                     <div class="g-recaptcha" data-sitekey="6LdZuIkpAAAAAJkyWF_aBPQcctXb-PqjyNorBG28"></div><br>
                     <div id="error">${message}</div>
                     <button class="login">Log In</button>
-                    
+
                     <div class="other-options">
                         <p>Create new account?<a href="http://localhost:8080/Project_SWP391_Group4/signup.jsp" class="highlight2"> Join with us</a></p>
                         <p>Forgotten password?<a href="http://localhost:8080/Project_SWP391_Group4/forgot.jsp" class="highlight2"> Reset Password</a></p>
@@ -978,7 +978,7 @@
         <footer>
             <div class="content-footer">
                 <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@dotai.vn & @fired.vn</p>
+                <p>@gio.vn & @fired.vn</p>
             </div>
 
             <div class="row" id="img-footer">
@@ -1033,52 +1033,7 @@
         <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
         <script src="/Project_SWP391_Group4/js/jquery-3.7.0.min.js"></script>
         <script src="/Project_SWP391_Group4/js/jquery.validate.min.js"></script>
-        <script src="/Project_SWP391_Group4/js/login.js"></script>
-
-        <script>
-            // Hàm xử lý login với Google
-            function loginWithGoogle() {
-                // Thay thế bằng Client ID thực tế của bạn từ Google Cloud Console
-                const clientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-                const redirectUri = 'http://localhost:8080/Project_SWP391_Group4/google-callback';
-                const scope = 'email profile';
-                
-                const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?
-                    client_id=${clientId}&
-                    redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&
-                    scope=${encodeURIComponent(scope)}&
-                    access_type=offline&
-                    prompt=consent`;
-                
-                window.location.href = googleAuthUrl;
-            }
-
-            // Hàm xử lý thay đổi form action dựa trên loại tài khoản
-            function getURL() {
-                var accountType = document.getElementById("account").value;
-                var form = document.getElementById("loginForm");
-                
-                if (accountType === "customer") {
-                    form.action = "http://localhost:8080/Project_SWP391_Group4/login/customer";
-                } else if (accountType === "staff") {
-                    form.action = "http://localhost:8080/Project_SWP391_Group4/login/staff";
-                }
-            }
-
-            // Gọi hàm getURL khi trang load để set action mặc định
-            document.addEventListener('DOMContentLoaded', function() {
-                getURL();
-            });
-
-            // Hàm toggle search box (giữ nguyên từ code gốc)
-            function toggleBox(boxId) {
-                var box = document.getElementById(boxId);
-                if (box.style.display === "block") {
-                    box.style.display = "none";
-                } else {
-                    box.style.display = "block";
-                }
-            }
-        </script>
+        <script src="/Project_SWP391_Group4/js/login.js"></script> 
+        <script src="/Project_SWP391_Group4/js/googleLogin.js"></script>   
     </body>
 </html>
