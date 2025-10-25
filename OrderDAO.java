@@ -2,15 +2,37 @@ package DAO;
 
 import entity.OrderDetail;
 import entity.Orders;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * OrderDAO - Lớp truy xuất dữ liệu cho bảng "orders" và "order_detail".
+ *
+ * ✅ Chức năng chính:
+ *  - Lấy danh sách đơn hàng và chi tiết đơn hàng
+ *  - Thêm mới đơn hàng (insert order + details)
+ *  - Cập nhật trạng thái đơn hàng
+ *  - Lấy ID đơn mới nhất của khách hàng
+ *
+ * 🔥 Quy ước:
+ *  - Bảng orders.order_id là AUTO_INCREMENT
+ *  - Bảng order_detail lưu chi tiết gồm (order_id, product_id, size_name, quantity)
+ *  - Cột total (int) lưu tổng tiền của đơn (đã bao gồm khuyến mãi)
+ *  - Cột staff_id có thể null nếu đơn chưa được nhân viên xác nhận
+ *
+ * @author 
+ */
 public class OrderDAO extends DBConnect.DBConnect {
 
-    // ========================= SELECT =========================
+    // =========================================================
+    // ===============        SELECT QUERY       ===============
+    // =========================================================
+
+    /**
+     * Lấy tất cả đơn hàng trong hệ thống (không sắp xếp).
+     */
     public List<Orders> getAllOrders() {
         List<Orders> list = new ArrayList<>();
         String sql = "SELECT order_id, address, date, status, phone_number, customer_id, staff_id, total FROM orders";
@@ -34,6 +56,11 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
 
+    /**
+     * Lấy tất cả đơn hàng có sắp xếp theo trạng thái ưu tiên:
+     * Pending → Delivering → Delivered → Cancelled → (khác)
+     * Sau đó sắp xếp tiếp theo ngày và order_id giảm dần.
+     */
     public List<Orders> getAllOrdersSort() {
         List<Orders> list = new ArrayList<>();
         String sql =
@@ -65,6 +92,9 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
 
+    /**
+     * Lấy toàn bộ chi tiết của tất cả đơn hàng.
+     */
     public List<OrderDetail> getAllOrdersDetail() {
         List<OrderDetail> list = new ArrayList<>();
         String sql = "SELECT order_id, product_id, size_name, quantity FROM order_detail";
@@ -84,6 +114,12 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
 
+    /**
+     * Lấy danh sách chi tiết đơn hàng theo ID đơn hàng.
+     *
+     * @param order_id Mã đơn hàng
+     * @return List<OrderDetail> danh sách chi tiết
+     */
     public List<OrderDetail> getAllOrdersDetailByID(int order_id) {
         List<OrderDetail> list = new ArrayList<>();
         String sql = "SELECT order_id, product_id, size_name, quantity FROM order_detail WHERE order_id = ?";
@@ -105,6 +141,11 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
 
+    /**
+     * Lấy danh sách đơn hàng của 1 khách hàng cụ thể, sắp xếp mới nhất trước.
+     *
+     * @param customer_id ID khách hàng
+     */
     public List<Orders> orderUser(int customer_id) {
         List<Orders> list = new ArrayList<>();
         String sql = "SELECT order_id, address, date, status, phone_number, customer_id, staff_id, total " +
@@ -131,46 +172,60 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
 
-    // ========================= INSERT (đặt hàng) =========================
+    // =========================================================
+    // ===============         INSERT          ===============
+    // =========================================================
+
     /**
-     * Tạo đơn và TRẢ VỀ order_id sinh ra. total là INT (VND).
-     * YÊU CẦU: orders.order_id phải AUTO_INCREMENT.
+     * Thêm mới một đơn hàng vào bảng orders.
+     * 
+     * @param address      địa chỉ giao hàng
+     * @param date         ngày đặt
+     * @param status       trạng thái ban đầu (Pending,...)
+     * @param phoneNumber  số điện thoại nhận hàng
+     * @param customer_id  ID khách hàng
+     * @param staffId      ID nhân viên (có thể null nếu chưa xử lý)
+     * @param total        tổng tiền đơn (VND)
+     * @return order_id vừa được tạo (0 nếu lỗi)
      */
-    // signature đổi total -> int, staffId -> Integer để có thể setNull
-public int insertOrder(String address, Date date, String status, String phoneNumber,
-                       int customer_id, Integer staffId, int total) {
-    String sql = "INSERT INTO orders(address, date, status, phone_number, customer_id, staff_id, total) " +
-                 "VALUES(?,?,?,?,?,?,?)";
-    try (PreparedStatement st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-        st.setString(1, address);
-        st.setDate(2, new java.sql.Date(date.getTime()));
-        st.setString(3, status);
-        st.setString(4, (phoneNumber == null ? "" : phoneNumber));
-        st.setInt(5, customer_id);
-        if (staffId == null || staffId <= 0) {
-            st.setNull(6, java.sql.Types.INTEGER);     // <<< quan trọng
-        } else {
-            st.setInt(6, staffId);
-        }
-        st.setInt(7, total);
-        st.executeUpdate();
+    public int insertOrder(String address, Date date, String status, String phoneNumber,
+                           int customer_id, Integer staffId, int total) {
+        String sql = "INSERT INTO orders(address, date, status, phone_number, customer_id, staff_id, total) VALUES(?,?,?,?,?,?,?)";
+        try (PreparedStatement st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            st.setString(1, address);
+            st.setDate(2, new java.sql.Date(date.getTime()));
+            st.setString(3, status);
+            st.setString(4, (phoneNumber == null ? "" : phoneNumber));
+            st.setInt(5, customer_id);
+            if (staffId == null || staffId <= 0) {
+                st.setNull(6, java.sql.Types.INTEGER);  // staff_id null
+            } else {
+                st.setInt(6, staffId);
+            }
+            st.setInt(7, total);
+            st.executeUpdate();
 
-        try (ResultSet keys = st.getGeneratedKeys()) {
-            if (keys.next()) return keys.getInt(1);     // <<< trả về order_id
-        }
-        // fallback an toàn theo customer
-        return getLatestOrderIdByCustomer(customer_id);
+            // Lấy order_id vừa sinh (nếu DB hỗ trợ)
+            try (ResultSet keys = st.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
 
-    } catch (SQLException e) {
-        System.err.println("OrderDAO.insertOrder: " + e.getMessage());
-        return 0;
+            // fallback: lấy đơn mới nhất của customer
+            return getLatestOrderIdByCustomer(customer_id);
+
+        } catch (SQLException e) {
+            System.err.println("OrderDAO.insertOrder: " + e.getMessage());
+            return 0;
+        }
     }
-}
-
 
     /**
-     * Thêm chi tiết đơn. Ghi rõ tên cột để không phụ thuộc thứ tự cột DB.
-     * Schema: order_detail(order_id, product_id, size_name, quantity)
+     * Thêm chi tiết đơn hàng (order_detail).
+     * 
+     * @param quantity   số lượng
+     * @param size_name  size sản phẩm
+     * @param productID  ID sản phẩm
+     * @param orderID    ID đơn hàng
      */
     public void insertOrderDetail(int quantity, String size_name, int productID, int orderID) {
         String sql = "INSERT INTO order_detail(order_id, product_id, size_name, quantity) VALUES(?,?,?,?)";
@@ -186,8 +241,10 @@ public int insertOrder(String address, Date date, String status, String phoneNum
     }
 
     /**
-     * (TÙY CHỌN) Giao dịch: tạo đơn + thêm toàn bộ chi tiết atomically.
-     * Trả về order_id; lỗi thì rollback và trả 0.
+     * Giao dịch (transaction) tạo đơn hàng + thêm chi tiết đơn hàng.
+     * Nếu có lỗi, rollback toàn bộ.
+     *
+     * @return order_id tạo thành công, hoặc 0 nếu rollback.
      */
     public int insertOrderWithDetails(String address, Date date, String status, String phoneNumber,
                                       int customer_id, int staff_id, int total,
@@ -195,7 +252,7 @@ public int insertOrder(String address, Date date, String status, String phoneNum
         boolean oldAutoCommit = true;
         try {
             oldAutoCommit = connection.getAutoCommit();
-            connection.setAutoCommit(false);
+            connection.setAutoCommit(false); // bắt đầu transaction
 
             int orderId = insertOrder(address, date, status, phoneNumber, customer_id, staff_id, total);
             if (orderId <= 0) {
@@ -203,13 +260,14 @@ public int insertOrder(String address, Date date, String status, String phoneNum
                 connection.setAutoCommit(oldAutoCommit);
                 return 0;
             }
+
             if (details != null) {
                 for (OrderDetail d : details) {
                     insertOrderDetail(d.getQuantity(), d.getSize_name(), d.getProductID(), orderId);
                 }
             }
 
-            connection.commit();
+            connection.commit(); // xác nhận giao dịch
             connection.setAutoCommit(oldAutoCommit);
             return orderId;
 
@@ -221,8 +279,13 @@ public int insertOrder(String address, Date date, String status, String phoneNum
         }
     }
 
-    // ========================= UTILS =========================
-    /** Lấy đơn mới nhất của customer (tránh MAX toàn bảng). */
+    // =========================================================
+    // ===============          UTILS          ===============
+    // =========================================================
+
+    /**
+     * Lấy ID đơn mới nhất của 1 khách hàng (theo order_id DESC).
+     */
     public int getLatestOrderIdByCustomer(int customer_id) {
         String sql = "SELECT order_id FROM orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
@@ -236,7 +299,9 @@ public int insertOrder(String address, Date date, String status, String phoneNum
         return 0;
     }
 
-    /** Giữ lại cho tương thích cũ, KHÔNG khuyến nghị dùng. */
+    /**
+     * (Deprecated) Lấy order_id lớn nhất toàn bảng. Chỉ giữ lại để tương thích cũ.
+     */
     @Deprecated
     public int getOrderId() {
         String sql = "SELECT order_id FROM orders ORDER BY order_id DESC LIMIT 1";
@@ -249,7 +314,13 @@ public int insertOrder(String address, Date date, String status, String phoneNum
         return 0;
     }
 
-    // ========================= UPDATE =========================
+    // =========================================================
+    // ===============          UPDATE          ===============
+    // =========================================================
+
+    /**
+     * Cập nhật trạng thái đơn hàng (Pending → Delivering → Delivered → Cancelled...).
+     */
     public void updateStatus(String status, int order_id) {
         String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
