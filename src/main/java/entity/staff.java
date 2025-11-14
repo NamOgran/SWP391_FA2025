@@ -4,35 +4,52 @@
  */
 package entity;
 
-/**
- *
- * @author thinh
- */
-public class staff {
+public class Staff {
+    private int staff_id;
+    private String username;
+    private String email;
+    private String password;
+    private String address;
+    private String phoneNumber;
+    private String fullName;
+    private String role;
 
-    private String username, email, password, address, phoneNumber, fullName;
-
-    public staff() {
+    public Staff() {
     }
 
-    public staff(String username, String email, String password, String address, String phoneNumber, String fullName) {
+    // Constructor đầy đủ có staff_id
+    public Staff(String username, String email, String password, String address, String phoneNumber, String fullName) {
+        this.staff_id = staff_id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.fullName = fullName;
+        this.role = role;
     }
 
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
+    // Constructor không có staff_id (khi insert)
+    public Staff(String username, String email, String password, String address,
+                 String phoneNumber, String fullName, String role) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
         this.fullName = fullName;
+        this.role = role;
     }
 
-   
+    // Getter & Setter
+    public int getStaff_id() {
+        return staff_id;
+    }
+
+    public void setStaff_id(int staff_id) {
+        this.staff_id = staff_id;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -73,4 +90,19 @@ public class staff {
         this.phoneNumber = phoneNumber;
     }
 
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 }

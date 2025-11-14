@@ -8,15 +8,15 @@ import java.util.Date;
 
 /**
  *
- * @author Administrator
+ * 
  */
-public class promo {
+public class Promo {
     int promoID;
     int promoPercent;
     Date startDate;
     Date endDate;
 
-    public promo(int promoID, int promoPercent, Date startDate, Date endDate) {
+    public Promo(int promoID, int promoPercent, Date startDate, Date endDate) {
         this.promoID = promoID;
         this.promoPercent = promoPercent;
         this.startDate = startDate;

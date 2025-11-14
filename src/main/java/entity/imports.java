@@ -8,22 +8,22 @@ import java.util.Date;
 
 /**
  *
- * @author thinh
+ * 
  */
-public class imports {
+public class Imports {
 
-    private int  quantity, total,id;
-    private String username, status;
+    private int  quantity, total,id, staff_id;
+    private String status;
     private Date date;
 
-    public imports() {
+    public Imports() {
     }
 
-    public imports(int id, int quantity, int total, String username, String status, Date date) {
+    public Imports(int id, int quantity, int total, int staff_id, String status, Date date) {
         this.id = id;
         this.quantity = quantity;
         this.total = total;
-        this.username = username;
+        this.staff_id = staff_id;
         this.status = status;
         this.date = date;
     }
@@ -52,12 +52,12 @@ public class imports {
         this.total = total;
     }
 
-    public String getUsername() {
-        return username;
+    public int getStaff_id() {
+        return staff_id;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setStaff_id(String username) {
+        this.staff_id = staff_id;
     }
 
     public String getStatus() {

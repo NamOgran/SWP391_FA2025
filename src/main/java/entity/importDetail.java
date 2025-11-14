@@ -8,14 +8,14 @@ import java.util.Date;
 
 /**
  *
- * @author thinh
+ * 
  */
-public class importDetail {
+public class ImportDetail {
 
     private int importDetailID, productID, quantity, price, importID;
     private String productName, sizeName;
 
-    public importDetail(int importID, int productID, int quantity, int price, String productName, String sizeName) {
+    public ImportDetail(int importID, int productID, int quantity, int price, String productName, String sizeName) {
         this.productID = productID;
         this.importID = importID;
 
@@ -25,7 +25,7 @@ public class importDetail {
         this.sizeName = sizeName;
     }
 
-    public importDetail(int productID, int quantity, String sizeName) {
+    public ImportDetail(int productID, int quantity, String sizeName) {
         this.productID = productID;
         this.quantity = quantity;
         this.sizeName = sizeName;
@@ -43,7 +43,7 @@ public class importDetail {
 
 
 
-    public importDetail() {
+    public ImportDetail() {
     }
 
     public int getImportDetailID() {

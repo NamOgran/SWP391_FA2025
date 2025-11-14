@@ -5,15 +5,15 @@
 
 /**
  *
- * @author thinh
+ * 
  */
 package url;
 
 /**
  *
- * @author thinh
+ *
  */
-public class profileURL {
+public class ProfileURL {
 
     public static final String URL_PROFILE = "/profile";
 

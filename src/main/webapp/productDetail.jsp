@@ -1,14 +1,30 @@
-<%-- 
-    Document   : productDetail
-    Created on : Feb 27, 2024, 8:34:03 PM
-    Author     : Administrator
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="java.text.NumberFormat"%>
 <%@page import="java.text.DecimalFormat"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="DAO.SizeDAO, entity.Size, entity.Product, java.util.List" %>
+
+<%
+    // Lấy product từ attribute "p" do controller set
+    Product prod = (Product) request.getAttribute("p");
+    int productId = (prod != null) ? prod.getId() : 0;
+
+    SizeDAO sizeDAO = new SizeDAO();
+    List<Size> sizeList = sizeDAO.getSizesByProductId(productId);
+
+    int stockS = 0, stockM = 0, stockL = 0;
+    for (Size s : sizeList) {
+        if ("S".equalsIgnoreCase(s.getSize_name())) {
+            stockS = s.getQuantity();
+        } else if ("M".equalsIgnoreCase(s.getSize_name())) {
+            stockM = s.getQuantity();
+        } else if ("L".equalsIgnoreCase(s.getSize_name())) {
+            stockL = s.getQuantity();
+        }
+    }
+%>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,780 +34,483 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
               integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <title>Profile</title>
+        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'>
         <link rel="icon" href="/Project_SWP391_Group4/images/LG1.png" type="image/x-icon">
-        ${ms}
-    </head>
-    <style>
-        .container {
-            margin: 10% auto;
-        }
-
-        .row {
-            margin: 20px 0;
-        }
-
-        #left img {
-            width: 100%;
-        }
-
-        #right img {
-            width: 100%;
-        }
-
-        #highlight {
-            color: #a0816c;
-            margin: 0px 0;
-        }
-
-        .quan {
-            display: flex;
-            border: rgb(230, 230, 230) solid 1px;
-        }
-
-        .quan button {
-            padding: 10px 25px;
-            width: 30%;
-            font-size: 16px;
-            border: none;
-        }
-
-        .quan input {
-            border: none;
-            width: 41%;
-            text-align: center;
-        }
-
-        .add button {
-            border: #c0a47f solid 1px;
-            background-color: #c0a47f;
-            width: 100%;
-            padding: 10px 30px;
-            text-align: center;
-            color: white;
-            font-weight: 500;
-        }
-
-        .add button:hover {
-            background-color: white;
-            color: #c0a47f;
-            transition: 0.5s;
-        }
-
-        .sale {
-            background-color: rgb(233, 231, 231);
-            text-align: center;
-            color: red;
-            font-weight: 800;
-        }
-
-        .oriprice {
-            text-decoration: line-through;
-        }
-
-        .price {
-            color: red;
-            font-weight: 800;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            font-family: 'Quicksand', sans-serif;
-            box-sizing: border-box;
-            color: rgb(151, 143, 137);
-        }
-
-        img {
-            width: 100%;
-        }
-
-        :root {
-            --logo-color: #a0816c;
-            --nav-list-color: #a0816c;
-            --icon-color: #a0816c;
-            --text-color: #a0816c;
-            --bg-color: #a0816c;
-        }
-
-        body::-webkit-scrollbar {
-            width: 0.5em;
-        }
-
-        body::-webkit-scrollbar-track {
-            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-        }
-
-        body::-webkit-scrollbar-thumb {
-            border-radius: 50px;
-            background-color: var(--bg-color);
-            outline: 1px solid slategrey;
-        }
-
-        nav {
-            height: 70px;
-            justify-content: center;
-            display: flex;
-        }
-
-        #filter {
-            width: 7%;
-        }
-
-
-        .header_title {
-            display: flex;
-            text-align: center;
-            justify-content: center;
-            align-items: center;
-            background-color: #f5f5f5;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            height: 30px;
-        }
-
-        .headerContent {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .headerContent,
-        .headerList,
-        .headerTool {
-            display: flex;
-            align-items: center;
-        }
-
-        .headerContent {
-            justify-content: space-around;
-        }
-
-        .logo a {
-            text-decoration: none;
-            color: var(--logo-color);
-            font-size: 1.5em;
-            font-weight: bold;
-        }
-
-        .logo a:hover {
-            color: var(--logo-color);
-        }
-
-        .headerList {
-            margin: 0;
-            list-style-type: none;
-        }
-
-        /* hiệu ứng hover */
-        .headerListItem {
-            transition: font-size 0.3s ease;
-            height: 24px;
-        }
-
-        .headerListItem:hover {
-            font-size: 18px;
-        }
-
-        /* hiệu ứng hover */
-        .headerListItem a {
-            margin: 0 10px;
-            padding: 22px 0;
-            text-decoration: none;
-            color: var(--text-color);
-        }
-
-        .dropdown-icon {
-            margin-left: 2px;
-            font-size: 0.7500em;
-        }
-
-        .dropdownMenu {
-            position: absolute;
-            width: 200px;
-            padding: 0;
-            margin-top: 17px;
-            background-color: #fff;
-            display: none;
-            z-index: 1;
-            box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-        }
-
-        .dropdownMenu li {
-            list-style-type: none;
-            margin: 0;
-            border-bottom: 1px solid rgb(235 202 178);
-        }
-
-        .dropdownMenu li a {
-            text-decoration: none;
-            padding: 5px 15px;
-            margin: 0;
-            width: fit-content;
-            display: flex;
-            font-size: 0.9em;
-            width: 100%;
-            color: var(--text-color);
-        }
-
-        .dropdownMenu li:hover {
-            background-color: #f1f1f1
-        }
-
-        .headerListItem:hover .dropdownMenu {
-            display: block;
-        }
-
-        .headerTool a {
-            padding: 5px;
-        }
-
-        .headerToolIcon {
-            width: 45px;
-            justify-content: center;
-            display: flex;
-        }
-
-        .icon {
-            cursor: pointer;
-            font-size: 26px;
-        }
-
-        .searchBox {
-            width: 420px;
-            position: absolute;
-            top: 100px;
-            right: 13%;
-            left: auto;
-            z-index: 990;
-            background-color: #fff;
-            box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-            display: none;
-        }
-        .search-input {
-            position: relative;
-        }
-        .search-input input {
-            width: 100%;
-            border: 1px solid #e7e7e7;
-            background-color: #f6f6f6;
-            height: 44px;
-            padding: 8px 50px 8px 20px;
-            font-size: 1em;
-        }
-        .search-input button {
-            position: absolute;
-            right: 1px;
-            top: 1px;
-            height: 97%;
-            width: 15%;
-            border: none;
-            background-color: #f6f6f6;
-        }
-        .search-input input:focus {
-            outline: none;
-            border-color: var(--bg-color);
-        }
-
-        .infoBox {
-            width: auto;
-            min-width: 260px;
-            position: absolute;
-            top: 100px;
-            right: 13%;
-            left: auto;
-            z-index: 990;
-            background-color: #fff;
-            box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-            display: none;
-        }
-
-        .infoBox-content,
-        .cartBox-content,
-        .searchBox-content {
-            width: 100%;
-            height: 100%;
-            max-height: 100%;
-            overflow: hidden;
-            padding: 9px 20px 20px;
-        }
-
-        .headerToolIcon h2 {
-            font-size: 1.3em;
-            text-align: center;
-            padding-bottom: 9px;
-            color: var(--text-color);
-            border-bottom: 1px solid #e7e7e7;
-        }
-
-        .infoBox-content ul {
-            padding: 0;
-            margin: 0;
-        }
-
-        .infoBox-content ul li {
-            list-style-type: none;
-        }
-
-        .infoBox-content ul li:first-child {
-            color: black;
-            padding-left: 7px;
-        }
-
-        .infoBox-list li a {
-            text-decoration: none;
-            font-size: 14px;
-            color: black;
-            padding: 0;
-        }
-
-        .infoBox-list li a:hover {
-            color: var(--text-color);
-        }
-
-        .bi-dot {
-            color: black;
-        }
-
-        .cartBox {
-            width: 340px;
-            position: absolute;
-            top: 100px;
-            right: 13%;
-            left: auto;
-            z-index: 990;
-            background-color: #fff;
-            box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-            display: none;
-        }
-
-        .noneProduct {
-            padding: 0 0 10px;
-        }
-
-        .shopping-cart-icon {
-            margin: 0 auto 7px;
-            display: block;
-            width: 15%;
-            height: 15%;
-        }
-
-        .product {
-            margin-top: 50px;
-        }
-
-        .cartIcon {
-            justify-content: center;
-            display: flex;
-        }
-
-        .cartIcon i {
-            font-size: 2.5em;
-        }
-
-        .noneProduct p {
-            text-align: center;
-            font-size: 14px;
-            margin: 0;
-        }
-
-        .haveProduct {
-            margin-bottom: 8px;
-            display: none;
-        }
-
-        .bi-x-lg {
-            cursor: pointer;
-        }
-
-        .miniCartImg {
-            padding-left: 0;
-        }
-
-        .miniCartDetail {
-            padding-right: 0;
-            position: relative;
-        }
-
-        .miniCartDetail p {
-            font-size: 0.8em;
-            color: black;
-            font-weight: bold;
-            padding-right: 20px;
-        }
-
-        .miniCartDetail p span {
-            display: block;
-            text-align: left;
-            color: #677279;
-            font-weight: normal;
-            font-size: 12px;
-        }
-
-        .miniCart-quan span {
-            float: left;
-            width: auto;
-            color: black;
-            margin-right: 12px;
-            padding: 6px 12px;
-            text-align: center;
-            line-height: 1;
-            font-weight: normal;
-            font-size: 13px;
-            background: #f7f7f7;
-        }
-
-        .miniCart-price span {
-            color: #677279;
-            float: left;
-            font-weight: 500;
-        }
-
-        .miniCartDetail .deleteBtn {
-            position: absolute;
-            top: 0;
-            right: 0px;
-            line-height: 20px;
-            text-align: center;
-            width: 19px;
-            height: 19px;
-        }
-
-        .miniCartDetail .deleteBtn * {
-            color: black;
-        }
-
-        .sumPrice {
-            border-top: 1px solid #e7e7e7;
-        }
-
-        .sumPrice table {
-            width: 100%;
-        }
-
-        .sumPrice td {
-            width: 50%;
-        }
-
-        .sumPrice .tbTextLeft,
-        .tbTextRight {
-            padding: 10px 0;
-        }
-
-        .sumPrice .tbTextRight,
-        span {
-            text-align: right;
-            color: red;
-            font-weight: bold;
-        }
-
-        .miniCartButton {
-            width: 100%;
-            border-radius: 2px;
-            width: 100%;
-            background-color: var(--bg-color);
-            border: none;
-            color: white;
-            font-size: 13px;
-            height: 30px;
-            font-weight: bold;
-        }
-
-        .cartButton td:first-child {
-            padding-right: 5px;
-        }
-
-        .cartButton td:last-child {
-            padding-left: 5px;
-        }
-
-        .cartButton .btnRight {
-            transition: 0.3s;
-        }
-
-        .cartButton .btnRight:hover {
-            background-color: white;
-            border: 1px solid var(--bg-color);
-            color: var(--text-color);
-            transition: 0.3s;
-        }
-        /* end header */
-
-        hr {
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-
-        /* main content */
-        .main {
-            max-width: 1200px;
-            margin: 30px auto 50px;
-        }
-
-        .mainContent {
-            max-width: 100%;
-        }
-
-        .mainHeading {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .headingContent a {
-            text-decoration: none;
-            color: var(--text-color);
-            font-weight: bold;
-            box-sizing: border-box;
-        }
-
-        .productImg img {
-            width: 100%;
-        }
-
-        .productDetail {
-            padding: 15px 12px 15px;
-            background-color: rgba(255, 255, 255, 0.83);
-            position: relative;
-            transition: 0.3s;
-        }
-
-        .productDetail h3 {
-            font-size: 15px;
-            color: black;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .productDetail p {
-            margin: 0;
-        }
-
-        .price {
-            font-weight: bold;
-            color: black;
-        }
-
-        .productButton {
-            transition: 0.3s;
-            color: white;
-            width: 90%;
-            display: flex;
-            text-align: center;
-            padding: 5px;
-            position: absolute;
-            display: none;
-            transform: translateY(20%);
-            background-color: var(--bg-color);
-            border-radius: 4px;
-            justify-content: center;
-            line-height: 2;
-        }
-
-        .productDetail:hover .productButton {
-            display: flex;
-        }
-
-        .productDetail:hover {
-            transform: translateY(-50%);
-        }
-
-        .productButton * {
-            width: 50%;
-        }
-
-        .productButton .right {
-            background: white;
-            position: relative;
-            color: white;
-            background: transparent;
-            border-radius: 4px;
-            overflow: hidden;
-            border: none;
-            font-weight: bold;
-        }
-
-        .addBtn {
-            border: none;
-            background-color: var(--bg-color);
-            border-radius: 4px;
-        }
-
-        .addBtn span {
-            color: white;
-        }
-
-        .productButton .right:hover {
-            color: #a0816c;
-        }
-
-        .right span {
-            background-color: white;
-            height: 100%;
-            width: 0;
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            transition: 0.4s;
-            z-index: -1;
-        }
-
-        .productButton .right:hover span {
-            width: 100%;
-        }
-
-        /* END main content */
-
-        /* footer */
-        footer {
-            background-color: #f5f5f5;
-        }
-
-        .content-footer {
-            text-align: center;
-            padding: 30px;
-        }
-
-        .content-footer h3 {
-            color: #a0816c;
-        }
-
-        .bct {
-            width: 50%;
-        }
-
-        footer p {
-            font-size: 15px;
-        }
-
-        footer a {
-            text-decoration: none;
-            color: rgb(151, 143, 137);
-        }
-
-        .items-footer {
-            margin: 5%;
-        }
-
-        #highlight {
-            color: #a0816c;
-        }
-
-        #img-footer img {
-            padding: 0;
-        }
-
-        #img-footer {
-            margin: 0 auto;
-        }
-
-        .phone {
-            position: relative;
-        }
-
-        .bi-telephone {
-            cursor: pointer;
-            font-size: 3em;
-            /* width: 85px; */
-            /* height: 60px; */
-            /* display: flex; */
-            position: absolute;
-            top: -16%;
-            left: 15px;
-        }
-
-        .contact-item {
-            display: flex;
-        }
-
-        .contact-link {
-            margin-right: 10px;
-            border: 1px solid #a0816c;
-            border-radius: 5px;
-            padding: 5px;
-            width: 35.6px;
-            justify-content: center;
-            display: flex;
-        }
-
-        .contact-link:hover {
-            background-color: var(--bg-color);
-
-            .bi-facebook::before,
-            .bi-instagram::before {
-                color: white;
+        <title>Product Detail - GIO</title>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                font-family: 'Quicksand', sans-serif;
+                box-sizing: border-box;
+                color: rgb(151, 143, 137);
             }
-        }
+            :root {
+                --logo-color: #a0816c;
+                --nav-list-color: #a0816c;
+                --icon-color: #a0816c;
+                --text-color: #a0816c;
+                --bg-color: #a0816c;
+            }
+            body::-webkit-scrollbar {
+                width: 0.5em;
+            }
+            body::-webkit-scrollbar-track {
+                box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+            }
+            body::-webkit-scrollbar-thumb {
+                border-radius: 50px;
+                background-color: var(--bg-color);
+                outline: 1px solid slategrey;
+            }
+            hr {
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+            img {
+                width: 100%;
+            }
 
-        /* END footer */
-
-        @media (max-width: 768px) and (min-width: 601px) {
+            nav {
+                height: 70px;
+                justify-content: center;
+                display: flex;
+            }
+            .header_title {
+                display: flex;
+                text-align: center;
+                justify-content: center;
+                align-items: center;
+                background-color: #f5f5f5;
+                font-size: 0.8125rem;
+                font-weight: 500;
+                height: 30px;
+            }
+            .headerContent {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+            .headerContent, .headerList, .headerTool {
+                display: flex;
+                align-items: center;
+            }
+            .headerContent {
+                justify-content: space-around;
+            }
+            .logo a {
+                text-decoration: none;
+                color: var(--logo-color);
+                font-size: 1.5em;
+                font-weight: bold;
+            }
+            .headerList {
+                margin: 0;
+                list-style-type: none;
+            }
             .headerListItem {
-                font-size: 12px;
-                height: 18px;
+                transition: font-size 0.3s ease;
+                height: 24px;
             }
-
-            .headerListItem:hover {
-                font-size: 13px;
+            .headerListItem a {
+                margin: 0 10px;
+                padding: 22px 0;
+                text-decoration: none;
+                color: var(--text-color);
             }
-
             .dropdown-icon {
-                height: 18px;
+                margin-left: 2px;
+                font-size: 0.7500em;
+            }
+            .dropdownMenu {
+                position: absolute;
+                width: 200px;
+                padding: 0;
+                margin-top: 17px;
+                background-color: #fff;
+                display: none;
+                z-index: 1;
+                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+            }
+            .dropdownMenu li {
+                list-style-type: none;
+                margin: 0;
+                border-bottom: 1px solid rgb(235 202 178);
+            }
+            .dropdownMenu li a {
+                text-decoration: none;
+                padding: 5px 15px;
+                margin: 0;
+                width: 100%;
+                display: flex;
+                font-size: 0.9em;
+                color: var(--text-color);
+            }
+            .dropdownMenu li:hover {
+                background-color: #f1f1f1;
+            }
+            .headerListItem:hover .dropdownMenu {
+                display: block;
+            }
+            .headerTool a {
+                padding: 5px;
+            }
+            .headerToolIcon {
+                width: 45px;
+                justify-content: center;
+                display: flex;
+            }
+            .icon {
+                cursor: pointer;
+                font-size: 26px;
+            }
+            .searchBox {
+                width: 420px;
+                position: absolute;
+                top: 100px;
+                right: 13%;
+                left: auto;
+                z-index: 990;
+                background-color: #fff;
+                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+                display: none;
+            }
+            .search-input {
+                position: relative;
+            }
+            .search-input input {
+                width: 100%;
+                border: 1px solid #e7e7e7;
+                background-color: #f6f6f6;
+                height: 44px;
+                padding: 8px 50px 8px 20px;
+                font-size: 1em;
+            }
+            .search-input button {
+                position: absolute;
+                right: 1px;
+                top: 1px;
+                height: 42px;
+                width: 15%;
+                border: none;
+                background-color: #f6f6f6;
+            }
+            .search-input input:focus {
+                outline: none;
+                border-color: var(--bg-color);
+            }
+            footer {
+                background-color: #f5f5f5;
+            }
+            .content-footer {
+                text-align: center;
+                padding: 30px;
+            }
+            .items-footer {
+                margin: 5%;
+            }
+            #highlight {
+                color: #a0816c;
+            }
+            #img-footer {
+                margin: 0 auto;
+            }
+            #img-footer img {
+                padding: 0;
+            }
+            .phone {
+                position: relative;
+            }
+            .bi-telephone {
+                cursor: pointer;
+                font-size: 3em;
+                position: absolute;
+                top: -16%;
+                left: 15px;
+            }
+            .contact-item {
+                display: flex;
+            }
+            .contact-link {
+                margin-right: 10px;
+                border: 1px solid #a0816c;
+                border-radius: 5px;
+                padding: 5px;
+                width: 35.6px;
+                justify-content: center;
+                display: flex;
             }
 
-            .productDetail h3 {
-                height: 50px;
+            .product-detail-container {
+                max-width: 1100px;
+                margin: 40px auto;
             }
-        }
-        @media (max-width: 1024px) {
-            .infoBox,
-            .searchBox, .cartBox {
-                right: 0;
+
+            .product-image-col img {
+                width: 100%;
+                border-radius: 8px;
+                border: 1px solid #eee;
+                max-height: 700px;
+                object-fit: cover;
             }
-        }
 
-        .productImg img {
-            height: 378px;
-            object-fit: cover;
-        }
+            .product-info-col {
+                padding-left: 30px;
+            }
 
-    </style>
+            .product-title {
+                font-size: 28px;
+                font-weight: 700;
+                color: #333;
+                margin-bottom: 10px;
+            }
+
+            .product-sku {
+                font-size: 14px;
+                color: #888;
+                margin-bottom: 15px;
+            }
+
+            .product-price-box {
+                background-color: #fafafa;
+                border: 1px solid #f0f0f0;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .sale-price {
+                font-size: 28px;
+                font-weight: 700;
+                color: #d70000;
+            }
+
+            .original-price {
+                font-size: 20px;
+                color: #888;
+                text-decoration: line-through;
+            }
+
+            .sale-badge {
+                font-size: 14px;
+                font-weight: 600;
+                color: #d70000;
+                background-color: #ffeaea;
+                border: 1px solid #d70000;
+                border-radius: 4px;
+                padding: 3px 8px;
+            }
+
+            .selector-label {
+                font-size: 16px;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 10px;
+                display: block;
+            }
+
+            .size-selector {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 25px;
+            }
+            .size-option-radio {
+                display: none;
+            }
+            .size-option-label {
+                padding: 10px 20px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: 600;
+                color: #555;
+                transition: all 0.2s ease;
+            }
+            .size-option-label:hover {
+                border-color: var(--text-color, #a0816c);
+            }
+            .size-option-radio:checked + .size-option-label {
+                border-color: var(--bg-color, #a0816c);
+                background-color: var(--bg-color, #a0816c);
+                color: #fff;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+
+            .quantity-selector {
+                display: flex;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                width: 140px;
+                overflow: hidden;
+                margin-bottom: 30px;
+            }
+            .quantity-selector button {
+                width: 40px;
+                padding: 10px 0;
+                font-size: 20px;
+                line-height: 1;
+                border: none;
+                background-color: #f9f9f9;
+                color: #555;
+                cursor: pointer;
+            }
+            .quantity-selector button:hover {
+                background-color: #f0f0f0;
+            }
+            .quantity-selector input {
+                width: 60px;
+                border: none;
+                border-left: 1px solid #ddd;
+                border-right: 1px solid #ddd;
+                text-align: center;
+                font-weight: 600;
+                font-size: 16px;
+                color: #333;
+            }
+            .quantity-selector input[type=number]::-webkit-inner-spin-button,
+            .quantity-selector input[type=number]::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            .quantity-selector input[type=number] {
+                -moz-appearance: textfield;
+            }
+
+            .action-buttons {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                margin-bottom: 25px;
+            }
+            .btn-action {
+                width: 100%;
+                padding: 14px 20px;
+                text-align: center;
+                font-weight: 700;
+                font-size: 16px;
+                border-radius: 5px;
+                border: 2px solid var(--bg-color, #a0816c);
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+            }
+            .btn-add-to-cart {
+                background-color: var(--bg-color, #a0816c);
+                color: #fff;
+            }
+            .btn-add-to-cart:hover {
+                background-color: #8d7360;
+                border-color: #8d7360;
+                color: #fff;
+            }
+            .btn-buy-now {
+                background-color: #fff;
+                color: var(--text-color, #a0816c);
+            }
+            .btn-buy-now:hover {
+                background-color: var(--bg-color, #a0816c);
+                color: #fff;
+            }
+
+            .product-info-accordion {
+                border-top: 1px solid #eee;
+            }
+            .accordion-item {
+                border-bottom: 1px solid #eee;
+            }
+            .accordion-header {
+                padding: 18px 0;
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .accordion-header h6 {
+                font-weight: 600;
+                color: #333;
+                margin: 0;
+            }
+            .accordion-header .icon {
+                font-size: 20px;
+                transition: transform 0.3s ease;
+            }
+            .accordion-content {
+                display: none;
+                padding: 0 10px 20px 10px;
+                color: #555;
+            }
+            .accordion-content img {
+                border-radius: 5px;
+            }
+
+            .stock-popup {
+                position: fixed;
+                
+                top: 110px;
+                left: 50%;
+                transform: translateX(-50%);
+
+                min-width: 280px;
+                max-width: 600px;
+                padding: 12px 20px;
+                background-color: #fff;
+                color: #333;
+                border-radius: 8px;
+                font-size: 14px;
+                text-align: center;
+                box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+                border-left: 4px solid var(--bg-color, #a0816c);
+
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease, transform 0.25s ease;
+                z-index: 9999;
+            }
+
+            .stock-popup.show {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateX(-50%) translateY(0);
+            }
+
+
+        </style>
+    </head>
+
     <body>
+
         <header class="header">
             <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND </strong></div>
             <div class="headerContent">
-                <div class="logo"><a href="/Project_SWP391_Group4/productList">DOTAI</a></div>
+                <div class="logo"><a href="${pageContext.request.contextPath}/">GIO</a></div>
                 <nav>
                     <ul class="headerList">
-                        <li class="headerListItem"><a href="/Project_SWP391_Group4/productList">Home page</a></li>
+                        <li class="headerListItem"><a href="${pageContext.request.contextPath}/">Home Page</a></li>
                         <li class="headerListItem">
-                            <a href="http://localhost:8080/Project_SWP391_Group4/productList/male">Men's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
+                            <a href="${pageContext.request.contextPath}/productList/male">Men's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
                             <ul class="dropdownMenu">
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/male/t_shirt">T-shirt</a></li>
-
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/male/pant">Long pants</a></li>
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/male/short">Shorts</a></li>
-                                <!--<li><a href="">Discount</a></li>-->
+                                <li><a href="${pageContext.request.contextPath}/productList/male/t_shirt">T-shirt</a></li>
+                                <li><a href="${pageContext.request.contextPath}/productList/male/pant">Long Pants</a></li>
+                                <li><a href="${pageContext.request.contextPath}/productList/male/short">Shorts</a></li>
                             </ul>
                         </li>
                         <li class="headerListItem">
-                            <a href="http://localhost:8080/Project_SWP391_Group4/productList/female">Women's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
+                            <a href="${pageContext.request.contextPath}/productList/female">Women's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
                             <ul class="dropdownMenu">
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/female/t_shirt">T-shirt</a></li>
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/female/pant">Long pants</a></li>
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/female/dress">Dress</a></li>
-                                <!--<li><a href="">Discount</a></li>-->
-
+                                <li><a href="${pageContext.request.contextPath}/productList/female/t_shirt">T-shirt</a></li>
+                                <li><a href="${pageContext.request.contextPath}/productList/female/pant">Long Pants</a></li>
+                                <li><a href="${pageContext.request.contextPath}/productList/female/dress">Dress</a></li>
                             </ul>
                         </li>
-                        <!--<li class="headerListItem"><a href="">Accessory</a></li>-->
                         <li class="headerListItem">
-                            <a href="/Project_SWP391_Group4/aboutUs.jsp">Information<i class="bi bi-caret-down dropdown-icon"></i></a>
+                            <a href="${pageContext.request.contextPath}/aboutUs.jsp">Information<i class="bi bi-caret-down dropdown-icon"></i></a>
                             <ul class="dropdownMenu">
-                                <li><a href="/Project_SWP391_Group4/aboutUs.jsp">About Us</a></li>
-
-                                <li><a href="/Project_SWP391_Group4/contact.jsp">Contact</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderView">View order</a></li>
-                                <li><a href="/Project_SWP391_Group4/policy.jsp">Exchange policy</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderHistoryView">Order's history</a></li>
+                                <li><a href="${pageContext.request.contextPath}/aboutUs.jsp">About Us</a></li>
+                                <li><a href="${pageContext.request.contextPath}/contact.jsp">Contact</a></li>
+                                <li><a href="${pageContext.request.contextPath}/policy.jsp">Exchange Policy</a></li>
+                            </ul>
                         </li>
                     </ul>
                 </nav>
@@ -805,144 +524,162 @@
                                     <input oninput="searchByName(this)" name="search" type="text" size="20" placeholder="Search for products...">
                                     <button><i class="bi bi-search"></i></button>
                                 </div>
-                                <div class="search-list">
-                                    <div class="search-list" id="search-ajax">
-                                        <c:forEach items="${requestScope.productList}" var="product">
-
-                                        </c:forEach>
-                                    </div>
-                                </div>
+                                <div class="search-list" id="search-ajax"></div>
                             </div>
                         </div>
                     </div>
                     <div class="headerToolIcon">
-                        <a href="http://localhost:8080/Project_SWP391_Group4/profile"><i class="bi bi-person icon"></i></a>
-                        <!-- khi chưa login thì khi nhấp vào sẽ chuyển tới trang login /ps: tui khum bít làm :< -->     
+                        <a href="${pageContext.request.contextPath}/profile"><i class="bi bi-person icon"></i></a>
                     </div>
                     <div class="headerToolIcon">
-                        <a href="/Project_SWP_Group2/loadCart"><i class="bi bi-cart2 icon" onclick="toggleBox('box3')"></i></a>
-
+                        <a href="${pageContext.request.contextPath}/loadCart"><i class="bi bi-cart2 icon"></i></a>
                     </div>
                 </div>
             </div>
-
             <hr width="100%" , color="#d0a587" />
         </header>
-        <form action="cartInsert" method="get">
-            <div class="container">
+
+        <main class="product-detail-container">
+            <form action="cartInsert" method="get" id="productForm">
                 <div class="row">
-                    <div id="left" class="col-md-6">
-                        <img src="${p.picURL}"
-                             alt="">
+                    <div class="col-md-6 product-image-col">
+                        <img src="${p.picURL}" alt="${p.name}">
                     </div>
-                    <div id="right" class="col-md-6">
-                        <div>
-                            <h3 id="highlight">${p.name}</h3>
-                            <p name="id"><b>SKU: </b>${p.id}</p>
+
+                    <div class="col-md-6 product-info-col">
+                        <h1 class="product-title">${p.name}</h1>
+                        <p class="product-sku" name="id">SKU: ${p.id}</p>
+
+                        <c:set var="formattedPrice2">
+                            <fmt:formatNumber type="number" value="${p.price}" pattern="###,###" />
+                        </c:set>
+                        <c:set var="formattedPrice">
+                            <fmt:formatNumber type="number" value="${p.price - ((p.price * promoMap[p.promoID])/100)}" pattern="###,###" />
+                        </c:set>
+
+                        <div class="product-price-box">
+                            <span class="sale-price">${formattedPrice} VND</span>
+                            <c:if test="${promoMap[p.promoID] > 0}">
+                                <span class="original-price">${formattedPrice2} VND</span>
+                                <span class="sale-badge">SALE: ${promoMap[p.promoID]}%</span>
+                            </c:if>
                         </div>
-                        <div class="row">
-                            <div class="col-2">
-                                <div class="sale">SALE: ${promoMap[p.promoID]}%</div>
+
+                        <label class="selector-label">Size:</label>
+                        <div class="size-selector">
+                            <div class="size-option">
+                                <input type="radio" id="sizeS" name="size" value="S" class="size-option-radio" checked>
+                                <label for="sizeS" class="size-option-label">S</label>
                             </div>
-                            <c:set var="formattedPrice2">
-                                <fmt:formatNumber type="number" value="${p.price}" pattern="###,###" />
-                            </c:set>
-                            <div class="col-2">
-                                <div class="oriprice">${formattedPrice2}</div>
+                            <div class="size-option">
+                                <input type="radio" id="sizeM" name="size" value="M" class="size-option-radio">
+                                <label for="sizeM" class="size-option-label">M</label>
                             </div>
-                            <c:set var="formattedPrice">
-                                <fmt:formatNumber type="number" value="${p.price - ((p.price * promoMap[p.promoID])/100)}" pattern="###,###" />
-                            </c:set>
-                            <div class="col-2">
-                                <div class="price">${formattedPrice}</div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-3">Size:</div>
-                            <div class="col-9">
-                                <input type="radio" id="sizeS" name="size" value="S" checked>
-                                <label for="sizeS">S</label>
-                                <input type="radio" id="sizeM" name="size" value="M">
-                                <label for="sizeM">M</label>
-                                <input type="radio" id="sizeL" name="size" value="L">
-                                <label for="sizeL">L</label>
+                            <div class="size-option">
+                                <input type="radio" id="sizeL" name="size" value="L" class="size-option-radio">
+                                <label for="sizeL" class="size-option-label">L</label>
                             </div>
                         </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="quan">
-                                    <button id="decrementButton" type="button">-</button>
-                                    <input type="text" id="numberInput" value="1">
-                                    <button id="incrementButton" type="button">+</button>
+
+                        <label class="selector-label">Quantity:</label>
+                        <div class="quantity-selector quan">
+                            <button id="decrementButton" type="button">-</button>
+                            <input type="number" id="numberInput" value="1" min="1" readonly>
+                            <button id="incrementButton" type="button">+</button>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="check" type="button" class="btn-action btn-add-to-cart">
+                                ADD TO CART
+                            </button>
+
+                            <button type="submit" 
+                                    formaction="productBuy" 
+                                    name="id" 
+                                    value="${p.id}" 
+                                    class="btn-action btn-buy-now">
+                                BUY NOW
+                            </button>
+                        </div>
+
+                        <div class="product-info-accordion">
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick="toggleAccordion(this)">
+                                    <h6>PRODUCT INFORMATION</h6>
+                                    <i class="icon bi bi-chevron-down"></i>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>${p.description}</p>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="add">
-                                    <button id="check" type="button">ADD PRODUCT TO CART</button>
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick="toggleAccordion(this)">
+                                    <h6>SIZE CHART</h6>
+                                    <i class="icon bi bi-chevron-down"></i>
+                                </div>
+                                <div class="accordion-content">
+                                    <img src="${pageContext.request.contextPath}/images/male-tshirt-size.jpg" alt="Size Chart">
+                                    <img src="${pageContext.request.contextPath}/images/male-short-size.jpg" alt="Size Chart">
+                                    <img src="${pageContext.request.contextPath}/images/male-pant-size.jpg" alt="Size Chart">
+                                    <img src="${pageContext.request.contextPath}/images/female-tshirt-size.jpg" alt="Size Chart">
+                                    <img src="${pageContext.request.contextPath}/images/female-pant-size.jpg" alt="Size Chart">
+                                    <img src="${pageContext.request.contextPath}/images/female-dress-size.jpg" alt="Size Chart">
                                 </div>
                             </div>
                         </div>
-                        <hr>
-                        <h6 id="highlight">PRODUCT INFORMATION</h6>
-                        <img src="./images/size.jpg" alt="">
+
                         <input type="hidden" name="id" class="id" value="${p.id}">
                         <input type="hidden" name="price" class="price" value="${p.price - ((p.price * promoMap[p.promoID])/100)}">
                         <input type="hidden" name="quantity" id="quantityInput" value="1">
-
+                        <input type="hidden" name="name" value="${p.name}">
+                        <input type="hidden" name="picURL" value="${p.picURL}">
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </main>
+
         <footer>
             <div class="content-footer">
                 <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@dotai.vn & @fired.vn</p>
+                <p>@gio.vn & @fired.vn</p>
             </div>
 
             <div class="row" id="img-footer">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_1_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_2_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_3_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_4_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_5_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_6_img.jpg?v=55"
-                     alt="">
+                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_1_img.jpg?v=55" alt="">
+                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_2_img.jpg?v=55" alt="">
+                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_3_img.jpg?v=55" alt="">
+                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_4_img.jpg?v=55" alt="">
+                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_5_img.jpg?v=55" alt="">
+                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_6_img.jpg?v=55" alt="">
             </div>
 
             <div class="items-footer">
                 <div class="row">
                     <div class="col-sm-3">
-                        <h4 id="highlight">About Dotai</h4>
+                        <h4 id="highlight">About Gio</h4>
                         <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
-                        <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..."
-                             class="bct">
+                        <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..." class="bct">
                     </div>
                     <div class="col-sm-3">
                         <h4 id="highlight">Contact</h4>
                         <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
                         <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                        <p><b>Email:</b> info@dotai.vn</p>
+                        <p><b>Email:</b> info@gio.vn</p>
                     </div>
                     <div class="col-sm-3">
-                        <h4 id="highlight">Customer support</h4>
+                        <h4 id="highlight">Customer Support</h4>
                         <ul class="CS">
                             <li><a href="">Search</a></li>
-                            <li><a href="">Introduce</a></li>
+                            <li><a href="">Introduction</a></li>
                         </ul>
                     </div>
                     <div class="col-sm-3">
-                        <h4 id="highlight">Customer care</h4>
+                        <h4 id="highlight">Customer Care</h4>
                         <div class="row phone">
                             <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
                             <div class="col-9">
                                 <h4 id="highlight">0123.456.789</h4>
-                                <a href="">info@dotai.vn</a>
+                                <a href="">info@gio.vn</a>
                             </div>
                         </div>
                         <h5 id="highlight">Follow Us</h5>
@@ -953,46 +690,146 @@
                     </div>
                 </div>
             </div>
-
-
         </footer>
 
+        <!-- Popup thông báo tồn kho -->
+        <div id="stock-popup" class="stock-popup"></div>
 
+        <!-- jQuery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const decrementButton = document.getElementById('decrementButton');
-                const incrementButton = document.getElementById('incrementButton');
-                const numberInput = document.getElementById('numberInput');
-                const quantityInput = document.getElementById('quantityInput');
-                const check = document.getElementById('check');
-                decrementButton.addEventListener('click', function () {
-                    let currentValue = parseInt(numberInput.value);
-                    if (currentValue > 1) {
-                        numberInput.value = currentValue - 1;
-                        quantityInput.value = currentValue - 1;
-                    }
-                });
+                                    // Popup tự tắt sau 5s
+                                    let stockPopupTimer = null;
+                                    function showPopup(message) {
+                                        const popup = document.getElementById('stock-popup');
+                                        if (!popup)
+                                            return;
 
-                incrementButton.addEventListener('click', function () {
-                    let currentValue = parseInt(numberInput.value);
-                    numberInput.value = currentValue + 1;
-                    quantityInput.value = currentValue + 1;
+                                        popup.textContent = message;
+                                        popup.classList.add('show');
 
-                });
-                check.addEventListener('click', function () {
-                    if (quantityInput.value > ${p.quantity}) {
-                        alert("sold out");
-                        window.location = "productDetail?id=${p.id}";
-                    } else {
-                        document.getElementById("check").removeAttribute("type");
-                    }
+                                        if (stockPopupTimer) {
+                                            clearTimeout(stockPopupTimer);
+                                        }
+                                        stockPopupTimer = setTimeout(function () {
+                                            popup.classList.remove('show');
+                                        }, 5000);
+                                    }
 
+                                    // Accordion mô tả / size chart
+                                    function toggleAccordion(headerElement) {
+                                        const content = headerElement.nextElementSibling;
+                                        const icon = headerElement.querySelector('.icon');
 
-                });
+                                        if (content.style.display === "block") {
+                                            content.style.display = "none";
+                                            icon.classList.remove("bi-chevron-up");
+                                            icon.classList.add("bi-chevron-down");
+                                        } else {
+                                            content.style.display = "block";
+                                            icon.classList.remove("bi-chevron-down");
+                                            icon.classList.add("bi-chevron-up");
+                                        }
+                                    }
 
-            });
+                                    // Search box
+                                    function toggleBox(id) {
+                                        const el = document.getElementById(id);
+                                        if (el) {
+                                            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+                                        }
+                                    }
+
+                                    // AJAX search
+                                    function searchByName(name) {
+                                        var search = name.value;
+                                        $.ajax({
+                                            url: "/Project_SWP391_Group4/searchProductByAJAX",
+                                            type: "get",
+                                            data: {txt: search},
+                                            success: function (data) {
+                                                var row = document.getElementById("search-ajax");
+                                                if (row)
+                                                    row.innerHTML = data;
+                                            },
+                                            error: function (xhr) { }
+                                        });
+                                    }
+
+                                    // Nút +/- số lượng & kiểm tra tồn kho theo size
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        const decBtn = document.getElementById('decrementButton');
+                                        const incBtn = document.getElementById('incrementButton');
+                                        const numberInput = document.getElementById('numberInput');
+                                        const qtyInput = document.getElementById('quantityInput');
+                                        const form = document.getElementById('productForm');
+                                        const addToCartBtn = document.getElementById('check');
+
+                                        // Tồn kho theo size do server fill sẵn
+                                        const sizeStock = {
+                                            "S": <%= stockS%>,
+                                            "M": <%= stockM%>,
+                                            "L": <%= stockL%>
+                                        };
+
+                                        function setQty(v) {
+                                            const val = Math.max(1, parseInt(v, 10) || 1);
+                                            numberInput.value = val;
+                                            qtyInput.value = val;
+                                        }
+
+                                        incBtn.addEventListener('click', function () {
+                                            setQty((parseInt(numberInput.value, 10) || 1) + 1);
+                                        });
+
+                                        decBtn.addEventListener('click', function () {
+                                            setQty((parseInt(numberInput.value, 10) || 1) - 1);
+                                        });
+
+                                        // Khi đổi size, nếu vượt tồn kho thì hạ về mức tối đa
+                                        document.querySelectorAll("input[name='size']").forEach(r => {
+                                            r.addEventListener('change', () => {
+                                                const size = document.querySelector("input[name='size']:checked").value;
+                                                const max = sizeStock[size] || 0;
+                                                let cur = parseInt(numberInput.value, 10) || 1;
+                                                if (max > 0 && cur > max)
+                                                    setQty(max);
+                                            });
+                                        });
+
+                                        // GIỮ NGUYÊN TÊN HÀM: checkStock
+                                        function checkStock() {
+                                            const size = document.querySelector("input[name='size']:checked").value;
+                                            const stock = sizeStock[size] || 0;
+                                            const requested = parseInt(qtyInput.value, 10) || 1;
+
+                                            if (stock <= 0) {
+                                                showPopup("Sorry, size " + size + " is OUT OF STOCK.");
+                                                return false;
+                                            }
+                                            if (requested > stock) {
+                                                showPopup("Sorry, we only have " + stock + " item(s) for size " + size + ".");
+                                                return false;
+                                            }
+                                            return true;
+                                        }
+
+                                        // Add to cart (nút type="button")
+                                        addToCartBtn.addEventListener('click', function (e) {
+                                            if (!checkStock()) {
+                                                e.preventDefault();
+                                            } else {
+                                                form.submit();
+                                            }
+                                        });
+
+                                        // Buy now (submit form)
+                                        form.addEventListener('submit', function (e) {
+                                            if (!checkStock())
+                                                e.preventDefault();
+                                        });
+                                    });
         </script>
     </body>
-
 </html>

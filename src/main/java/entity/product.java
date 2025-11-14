@@ -1,4 +1,3 @@
-
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -7,21 +6,17 @@ package entity;
 
 /**
  *
- * @author LENOVO
+ *
  */
-public class product {
-    //    product_id int IDENTITY(1,1) primary key,
-//[name] varchar(255),
-//quantity int, 
-//[description] varchar(255),
-//pic_url varchar(255),
-//price int,
-//category_id int foreign key references category,
-//promo_id int foreign key references promo
+public class Product {
     int id, quantity, price, categoryID, promoID;
     String name, description, picURL;
+    
+    // BỔ SUNG: Trường is_active
+    private boolean is_active;
 
-    public product(int id, int quantity, int price, int categoryID, int promoID, String name, String description, String picURL) {
+    // SỬA: Constructor đầy đủ
+    public Product(int id, int quantity, int price, int categoryID, int promoID, String name, String description, String picURL, boolean is_active) {
         this.id = id;
         this.quantity = quantity;
         this.price = price;
@@ -30,12 +25,16 @@ public class product {
         this.name = name;
         this.description = description;
         this.picURL = picURL;
-    }
-    
-       public product() {
+        // BỔ SUNG: Gán giá trị is_active
+        this.is_active = is_active;
     }
 
-        public product( int quantity, int price, int categoryID, int promoID, String name, String description, String picURL) {
+    // Constructor rỗng (Giữ nguyên)
+    public Product() {
+    }
+
+    // SỬA: Constructor không có id (dùng khi insert)
+    public Product(int quantity, int price, int categoryID, int promoID, String name, String description, String picURL) {
         this.quantity = quantity;
         this.price = price;
         this.categoryID = categoryID;
@@ -43,10 +42,11 @@ public class product {
         this.name = name;
         this.description = description;
         this.picURL = picURL;
+        this.is_active = true; // Mặc định là true khi tạo mới
     }
-  
 
-
+    // --- (Tất cả Getter/Setter cho id, quantity, price, v.v. giữ nguyên) ---
+    
     public int getId() {
         return id;
     }
@@ -111,11 +111,22 @@ public class product {
         this.picURL = picURL;
     }
 
-    @Override
-    public String toString() {
-        return "product{" + "id=" + id + ", quantity=" + quantity + ", price=" + price + ", categoryID=" + categoryID + ", promoID=" + promoID + ", name=" + name + ", description=" + description + ", picURL=" + picURL + '}';
+    // --- BỔ SUNG: Getter/Setter cho is_active ---
+    
+    public boolean isIs_active() {
+        return is_active;
+    }
+
+    public void setIs_active(boolean is_active) {
+        this.is_active = is_active;
     }
     
-
+    // SỬA: Hàm toString()
+    @Override
+    public String toString() {
+        return "product{" + "id=" + id + ", quantity=" + quantity + ", price=" + price + 
+               ", categoryID=" + categoryID + ", promoID=" + promoID + ", name=" + name + 
+               ", description=" + description + ", picURL=" + picURL + 
+               ", is_active=" + is_active + '}';
+    }
 }
-

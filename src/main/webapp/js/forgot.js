@@ -2,116 +2,190 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
  */
-
 $(document).ready(function () {
-    $('.btn-send').click(function (e) {
+    // Initialize form elements
+    const $emailForm = $('#emailForm');
+    const $codeForm = $('#codeForm');
+    const $updateForm = $('#updateForm');
+    const $message = $('#message');
+    const $messageUpdate = $('#messageUpdate');
 
+    // Send verification code
+    $('.btn-send').click(function (e) {
         e.preventDefault();
-        var emailInput = document.getElementById("email");
-        var email = emailInput.value;
-        var emailForm = document.getElementById("emailForm");
-        var codeForm = document.getElementById("codeForm");
+        
+        const email = $("#email").val().trim();
+        
+        // Validation
+        if (!email) {
+            showMessage($message, "Please enter your email", "red");
+            return;
+        }
+        
+        if (!isValidEmail(email)) {
+            showMessage($message, "Please enter a valid email address", "red");
+            return;
+        }
+
+        // Show loading state
+        const $btn = $(this);
+        const originalText = $btn.text();
+        $btn.prop('disabled', true).text('Sending...');
 
         $.ajax({
             method: "POST",
-            url: "http://localhost:8080/Project_SWP_Group2/login/forgot",
-            data: {
-                email: email
+            url: "http://localhost:8080/Project_SWP391_Group4/login/forgot",
+            data: { email: email },
+            dataType: "json" // Expect JSON response
+        })
+        .done(function (data) {
+            // No need to parse, jQuery handles it with dataType: "json"
+            if (data.isSuccess) {
+                showMessage($message, "Verification code has been sent to your email. Please check your inbox and spam folder.", "#009900");
+                $emailForm.hide();
+                $codeForm.show();
+            } else {
+                showMessage($message, data.description || "Your email does not exist or there was an error sending the email.", "red");
             }
         })
-                .done(function (data) {
-                    var data1 = JSON.parse(data);
-//                    console.log(data1);
-                    if (data1.isSuccess) {
-                        document.cookie = "code=" + data1.data;
-                        document.cookie = "email=" + email;
-                        $("#message").html("Please enter the code sent to your email to continue");
-                        document.getElementById("message").style.color = "#009900";
+        .fail(function (xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+            let errorMsg = "Error occurred. Please try again.";
+            
+            if (xhr.responseJSON && xhr.responseJSON.description) {
+                errorMsg = xhr.responseJSON.description;
+            } else if (xhr.status === 0) {
+                errorMsg = "Cannot connect to server. Please check your connection.";
+            }
+            
+            showMessage($message, errorMsg, "red");
+        })
+        .always(function () {
+            // Reset button state
+            $btn.prop('disabled', false).text(originalText);
+        });
+    });
 
-                        emailForm.style.visibility = "hidden"
-                        codeForm.style.visibility = "visible";
-                        codeForm.style.position = "absolute";
-//                     
-                    } else {
-                        alert("Your email is not exist");
-
-                    }
-                });
-    })
-
+    // Verify code
     $('.btn-submit').click(function (e) {
-        var updateForm = document.getElementById("updateForm");
-        var codeForm = document.getElementById("codeForm");
         e.preventDefault();
-        var code = getCookie("code");
-        var codeInput = document.getElementById("code").value;
-//        console.log(code);
-        if (code === codeInput) {
-            codeForm.style.visibility = "hidden"
-            updateForm.style.visibility = "visible";
-            updateForm.style.position = "absolute";
-        } else {
-            $("#message").html("Incorrect code!");
-            document.getElementById("message").style.color = "red";
+        
+        const code = $("#code").val().trim();
+
+        if (!code) {
+            showMessage($message, "Please enter the verification code", "red");
+            return;
         }
 
-    })
+        // Show loading state
+        const $btn = $(this);
+        const originalText = $btn.text();
+        $btn.prop('disabled', true).text('Verifying...');
+
+        $.ajax({
+            method: "POST",
+            url: "http://localhost:8080/Project_SWP391_Group4/verifyCode",
+            data: { code: code },
+            dataType: "json"
+        })
+        .done(function (data) {
+            if (data.isSuccess) {
+                $codeForm.hide();
+                $updateForm.show();
+                $messageUpdate.text(""); // Clear previous messages
+            } else {
+                showMessage($message, data.description || "Invalid code!", "red");
+            }
+        })
+        .fail(function (xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+            showMessage($message, "Error verifying code. Please try again.", "red");
+        })
+        .always(function () {
+            // Reset button state
+            $btn.prop('disabled', false).text(originalText);
+        });
+    });
+
+    // Change password
     $('.btn-changePass').click(function (e) {
-        var pass1 = document.getElementById("password1").value;
-        var pass2 = document.getElementById("password2").value;
-        var email = getCookie("email");
         e.preventDefault();
-        if (pass1 === pass2) {
-            $.ajax({
-                method: "POST",
-                url: "http://localhost:8080/Project_SWP_Group2/login/update",
-                data: {
-                    email: email,
-                    password: pass1
-                }
-            })
-                    .done(function (data) {
-                        var data1 = JSON.parse(data);
-                        console.log(data1);
-                        if (data1.isSuccess) {
+        
+        const pass1 = $("#password1").val();
+        const pass2 = $("#password2").val();
 
-                            alert("Change password successfully")
-                            window.location.href = "login.jsp";
-//                            $("#messageUpdate").html("Change password successfully"); 
-//                            document.getElementById("messageUpdate").style.color = "#009900";
-////                     
-                        } else {
-
-                        }
-                    });
-        } else {
-            $("#messageUpdate").html("Password is not match!");
-            document.getElementById("messageUpdate").style.color = "red";
-//            alert('alo')
+        // Validation
+        if (!pass1 || !pass2) {
+            showMessage($messageUpdate, "Please enter both password fields", "red");
+            return;
         }
-//         
 
-    })
-
-
-})
-
-function getCookie(name) {
-    var cookieName = name + "=";
-    var decodedCookie = decodeURIComponent(document.cookie);
-    var cookieArray = decodedCookie.split(';');
-
-    for (var i = 0; i < cookieArray.length; i++) {
-        var cookie = cookieArray[i].trim();
-        if (cookie.indexOf(cookieName) === 0) {
-            return cookie.substring(cookieName.length, cookie.length);
+        if (pass1.length < 6) {
+            showMessage($messageUpdate, "Password must be at least 6 characters long", "red");
+            return;
         }
+
+        if (pass1 !== pass2) {
+            showMessage($messageUpdate, "Passwords do not match!", "red");
+            return;
+        }
+
+        // Show loading state
+        const $btn = $(this);
+        const originalText = $btn.text();
+        $btn.prop('disabled', true).text('Changing...');
+
+        $.ajax({
+            method: "POST",
+            url: "http://localhost:8080/Project_SWP391_Group4/login/update",
+            data: { password: pass1 },
+            dataType: "json"
+        })
+        .done(function (data) {
+            if (data.isSuccess) {
+                alert("Password changed successfully!");
+                window.location.href = "login.jsp";
+            } else {
+                showMessage($messageUpdate, data.description || "Failed to update password", "red");
+            }
+        })
+        .fail(function (xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+            showMessage($messageUpdate, "Error updating password. Please try again.", "red");
+        })
+        .always(function () {
+            // Reset button state
+            $btn.prop('disabled', false).text(originalText);
+        });
+    });
+
+    // Helper function to show messages
+    function showMessage($element, message, color) {
+        $element.text(message).css('color', color);
     }
-    return "";
 
-}
+    // Helper function to validate email format
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
 
-function deleteCookie(name) {
-    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    // Enter key support for forms
+    $('#email').keypress(function (e) {
+        if (e.which === 13) { // Enter key
+            $('.btn-send').click();
+        }
+    });
 
-}
+    $('#code').keypress(function (e) {
+        if (e.which === 13) { // Enter key
+            $('.btn-submit').click();
+        }
+    });
+
+    $('#password1, #password2').keypress(function (e) {
+        if (e.which === 13) { // Enter key
+            $('.btn-changePass').click();
+        }
+    });
+});

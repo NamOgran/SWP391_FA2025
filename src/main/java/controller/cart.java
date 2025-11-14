@@ -1,281 +1,249 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
-import DAO.DAOcart;
-import DAO.DAOproduct;
-import DAO.DAOpromo;
-import DAO.DAOsize;
-import entity.product;
-import entity.promo;
-import entity.size;
-import java.io.IOException;
-import java.io.PrintWriter;
+import DAO.CartDAO;
+import DAO.ProductDAO;
+import DAO.PromoDAO;
+import DAO.SizeDAO;
+import entity.Product;
+import entity.Promo;
+import entity.Size;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.HashMap;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import static url.cartURL.URL_CART_DECREASE;
-import static url.cartURL.URL_CART_DELETE;
-import static url.cartURL.URL_CART_INCREASE;
-import static url.cartURL.URL_CART_INSERT;
-import static url.cartURL.URL_CART_LIST;
-import static url.cartURL.URL_PAYMENT;
 
-/**
- *
- * @author Administrator
- */
-@WebServlet(name = "cart", urlPatterns = {URL_CART_INSERT, URL_CART_LIST, URL_CART_INCREASE, URL_CART_DECREASE, URL_CART_DELETE, URL_PAYMENT})
-public class cart extends HttpServlet {
+import static url.CartURL.URL_CART_DECREASE;
+import static url.CartURL.URL_CART_DELETE;
+import static url.CartURL.URL_CART_INCREASE;
+import static url.CartURL.URL_CART_INSERT;
+import static url.CartURL.URL_CART_LIST;
+import static url.CartURL.URL_PAYMENT;
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try ( PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet cart</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet cart at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
+@WebServlet(name = "cart", urlPatterns = {
+    URL_CART_INSERT, URL_CART_LIST, URL_CART_INCREASE, URL_CART_DECREASE, URL_CART_DELETE, URL_PAYMENT
+})
+public class Cart extends HttpServlet {
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        int sum = 0;
-        int temp = 0;
-        DAOproduct product = new DAOproduct();
-        DAOcart cart = new DAOcart();
-        DAOpromo promo = new DAOpromo();
-        String username = "";
-        Cookie arr[] = request.getCookies();
-        for (Cookie o : arr) {
-            if (o.getName().equals("input")) {
-                username = o.getValue();
+
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        HttpSession session = request.getSession(false);
+        entity.Customer acc = (session != null) ? (entity.Customer) session.getAttribute("acc") : null;
+
+        if (acc == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+
+        final int customer_id = acc.getCustomer_id();
+        final String urlPath = request.getServletPath();
+
+        ProductDAO productDAO = new ProductDAO();
+        CartDAO cartDAO = new CartDAO();
+        PromoDAO promoDAO = new PromoDAO();
+        SizeDAO sizeDAO = new SizeDAO();
+
+        // common params
+        String size = request.getParameter("size");
+        int productId = parseIntSafe(request.getParameter("id"), 0);
+        int quantity = parseIntSafe(request.getParameter("quantity"), 0);
+
+        switch (urlPath) {
+
+            // Thêm vào giỏ
+            case URL_CART_INSERT: {
+                if (productId <= 0 || quantity <= 0 || size == null || size.isBlank()) {
+                    response.sendRedirect(request.getContextPath() + "/error.jsp?message=Missing parameters for insert");
+                    return;
+                }
+
+                // ADD: kiểm tra nếu hết hàng -> chặn ngay
+                int availableQty = sizeDAO.getSizeQuantity(productId, size);
+                if (availableQty <= 0) {
+                    request.setAttribute("ms", "<script>alert('This product is out of stock!');</script>");
+                    request.setAttribute("p", productDAO.getProductById(productId));
+                    request.getRequestDispatcher("productDetail.jsp").forward(request, response);
+                    return;
+                }
+
+                // kiểm kho theo size
+                List<Size> sizes = sizeDAO.getAll();
+                Size matched = null;
+                for (Size s : sizes) {
+                    if (s.getProduct_id() == productId && size.equals(s.getSize_name())) {
+                        matched = s;
+                        break;
+                    }
+                }
+                if (matched == null) {
+                    response.sendRedirect(request.getContextPath() + "/error.jsp?message=Size not found for product");
+                    return;
+                }
+
+                // ADD: kiểm tra vượt quá tồn kho
+                if (quantity > matched.getQuantity()) {
+                    request.setAttribute("ms", "<script>alert('Quantity exceeds inventory (" + matched.getQuantity() + ").');</script>");
+                    request.setAttribute("p", productDAO.getProductById(productId));
+                    request.getRequestDispatcher("productDetail.jsp").forward(request, response);
+                    return;
+                }
+
+                // lấy đơn giá (đã áp promo theo product nếu có)
+                float unitPrice = calcUnitPriceWithPromo(productDAO, promoDAO, productId);
+
+                // đã có item cùng (product,size) chưa?
+                List<entity.Cart> current = cartDAO.getAll(customer_id);
+                entity.Cart existed = null;
+                for (entity.Cart c : current) {
+                    if (c.getProductID() == productId && size.equals(c.getSize_name())) {
+                        existed = c;
+                        break;
+                    }
+                }
+
+                if (existed != null) {
+                    int newQty = existed.getQuantity() + quantity;
+                    // ADD: kiểm tra tồn kho khi tăng số lượng
+                    if (newQty > matched.getQuantity()) {
+                        request.setAttribute("ms", "<script>alert('Sold out! Only " + matched.getQuantity() + " items left in stock!');</script>");
+                        request.setAttribute("p", productDAO.getProductById(productId));
+                        request.getRequestDispatcher("productDetail.jsp").forward(request, response);
+                        return;
+                    }
+                    cartDAO.updateCart(customer_id, productId, newQty, unitPrice, size);
+                } else {
+                    cartDAO.insertCart(quantity, unitPrice, customer_id, productId, size);
+                }
+
+                response.sendRedirect("loadCart?size=" + size);
+                break;
+            }
+
+            // Tăng số lượng (AJAX)
+            case URL_CART_INCREASE: {
+                response.setContentType("text/plain; charset=UTF-8");
+
+                if (productId <= 0 || quantity <= 0 || size == null || size.isBlank()) {
+                    response.getWriter().write("0,0,1");
+                    return;
+                }
+
+                //ADD: kiểm tra kho thật trước khi tăng
+                int stock = sizeDAO.getSizeQuantity(productId, size);
+                if (stock == 0 || quantity > stock) {
+                    response.getWriter().write("0,0,1"); // temp=1 sold out
+                    return;
+                }
+
+                cartDAO.updateQuantityOnly(customer_id, productId, size, quantity);
+
+                float unitPrice = calcUnitPriceWithPromo(productDAO, promoDAO, productId);
+                int lineTotal = Math.round(unitPrice * quantity);
+                int sum = cartDAO.getCartTotal(customer_id);
+                response.getWriter().write(lineTotal + "," + sum + ",0");
+                break;
+            }
+
+            // Giảm số lượng (AJAX)
+            case URL_CART_DECREASE: {
+                response.setContentType("text/plain; charset=UTF-8");
+
+                if (productId <= 0 || quantity <= 0 || size == null || size.isBlank()) {
+                    response.getWriter().write("0,0");
+                    return;
+                }
+
+                
+                if (quantity == 0) {
+                    cartDAO.deleteCartBySize(productId, customer_id, size);
+                    int sum = cartDAO.getCartTotal(customer_id);
+                    response.getWriter().write("0," + sum);
+                    return;
+                }
+
+                cartDAO.updateQuantityOnly(customer_id, productId, size, quantity);
+
+                float unitPrice = calcUnitPriceWithPromo(productDAO, promoDAO, productId);
+                int lineTotal = Math.round(unitPrice * quantity);
+                int sum = cartDAO.getCartTotal(customer_id);
+                response.getWriter().write(lineTotal + "," + sum);
+                break;
+            }
+
+            // Xoá 1 item theo (id,size) -> trả "OK,sum,count"
+            case URL_CART_DELETE: {
+                response.setContentType("text/plain; charset=UTF-8");
+
+                if (productId <= 0 || size == null || size.isBlank()) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("ERROR,0,0");
+                    return;
+                }
+
+                boolean ok = cartDAO.deleteCartBySize(productId, customer_id, size);
+                int sum = cartDAO.getCartTotal(customer_id);
+                int count = cartDAO.getCartCount(customer_id);
+
+                response.getWriter().write((ok ? "OK" : "ERROR") + "," + sum + "," + count);
+                break;
+            }
+
+            case URL_PAYMENT: {
+                response.sendRedirect("loadPayment?size=" + (size == null ? "" : size));
+                break;
+            }
+
+            case URL_CART_LIST: {
+                response.sendRedirect("loadCart");
+                break;
+            }
+
+            default: {
+                response.sendRedirect(request.getContextPath() + "/error.jsp?message=Unknown cart operation");
+                break;
             }
         }
-        String size = request.getParameter("size");
-        System.out.println(size + "cart");
-        int id = 0;
-        float price = 0;
-        int quantity = 0;
-        String urlPath = request.getServletPath();
-        String ms = "<script>\n"
-                + "        alert(\"Sold out!\")\n"
-                + "    </script>";
-        String idParam = request.getParameter("id");
-        String priceParam = request.getParameter("price");
-        String quantityParam = request.getParameter("quantity");
-        if (idParam != null) {
-            id = Integer.parseInt(idParam);
-        }
-        if (priceParam != null) {
-            price = Float.parseFloat(priceParam);
-        }
-        if (quantityParam != null) {
-            quantity = Integer.parseInt(quantityParam);
-        }
-        int totalQ = quantity;
-        List<product> list = product.getAll();
-        List<promo> promoList = promo.getAll();
-        List<entity.cart> list2 = cart.getAll(username);
-        DAOsize daoSize = new DAOsize();
-        List<size> sizeList = daoSize.getAll();
-        Map<Integer, Integer> promoMap = new HashMap<>();
-        for (promo promoM : promoList) {
-            promoMap.put(promoM.getPromoID(), promoM.getPromoPercent());
-        }
-        float price2 = 0;
-        System.out.println(id);
-        System.out.println(username);
-        switch (urlPath) {
-            case URL_CART_INSERT:
-                for (int i = 0; i < list.size(); i++) {
-                    if (id == (list.get(i).getId())) {
-                        price2 = quantity * price;
-                    }
-                }
-                for (int i = 0; i < list2.size(); i++) {
-                    if (id == (list2.get(i).getProductID()) && username.equals(list2.get(i).getUsername()) && size.equals(list2.get(i).getSize_name())) {
-                        quantity = list2.get(i).getQuantity() + quantity;
-                        for (int j = 0; j < sizeList.size(); j++) {
-                            if (id == (sizeList.get(j).getProduct_id()) && sizeList.get(j).getSize_name().equals(size) && quantity < (sizeList.get(j).getQuantity())) {
-                                price2 = quantity * price;
-                                cart.updateCart(username, id, quantity, price2, size);
-                                temp++;
-                            }
-                        }
+    }
 
-                    }
-                }
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        doGet(req, resp);
+    }
 
-                if (temp == 0) {
-                    for (int j = 0; j < sizeList.size(); j++) {
-                        if (id == (sizeList.get(j).getProduct_id()) && sizeList.get(j).getSize_name().equals(size) && quantity <= (sizeList.get(j).getQuantity())) {
-                            cart.insertCart(quantity, price2, username, id, size);
-                            temp++;
-                        }
-                        if (quantity > (sizeList.get(j).getQuantity()) && id == (sizeList.get(j).getProduct_id()) && sizeList.get(j).getSize_name().equals(size)) {
-                            product p = product.getProductById(id);
-                            request.setAttribute("ms", ms);
-                            request.setAttribute("p", p);
-                            request.setAttribute("promoMap", promoMap);
-                            request.getRequestDispatcher("productDetail.jsp").forward(request, response);
-
-                        }
-                    }
-                }
-
-                if (temp != 0 && !username.equals("")) {
-                    response.sendRedirect("loadCart?size=" + size);
-                }
-                if (username.equals("")) {
-                    response.sendRedirect("http://localhost:8080/Project_SWP391_Group4/profile");
-                }
-
-                break;
-            case URL_CART_INCREASE:
-
-                for (int i = 0; i < list2.size(); i++) {
-                    if (id == (list2.get(i).getProductID()) && username.equals(list2.get(i).getUsername()) && size.equals(list2.get(i).getSize_name())) {
-
-                        for (int j = 0; j < sizeList.size(); j++) {
-                            if (id == (sizeList.get(j).getProduct_id()) && sizeList.get(j).getSize_name().equals(size) && quantity <= (sizeList.get(j).getQuantity())) {
-                                for (int k = 0; k < list.size(); k++) {
-                                    if (list.get(k).getId() == id) {
-                                        price2 = quantity * (list.get(k).getPrice() - ((list.get(k).getPrice() * promoList.get(list.get(k).getPromoID() - 1).getPromoPercent()) / 100));
-
-                                    }
-                                }
-                                cart.updateCart(username, id, quantity, price2, size);
-
-                            }
-                            if (quantity > (sizeList.get(j).getQuantity()) && id == (sizeList.get(j).getProduct_id()) && sizeList.get(j).getSize_name().equals(size)) {
-                                product p = product.getProductById(id);
-                                request.setAttribute("ms", ms);
-                                request.setAttribute("p", p);
-                                temp++;
-                                request.setAttribute("temp", temp);
-
-                            }
-                        }
-                    }
-                }
-
-                List<entity.cart> cartUpdateIncrease = cart.getAll(username);
-                for (int i = 0; i < cartUpdateIncrease.size(); i++) {
-                    sum = sum + cartUpdateIncrease.get(i).getPrice();
-                    
-                }
-                System.out.println(sum);
-                System.out.println(temp);
-                response.getWriter().write(price2 + "," + sum + "," + temp);
-
-                break;
-
-            case URL_CART_DECREASE:
-                for (int i = 0; i < list2.size(); i++) {
-                    if (id == (list2.get(i).getProductID()) && username.equals(list2.get(i).getUsername()) && size.equals(list2.get(i).getSize_name())) {
-                        for (int j = 0; j < list.size(); j++) {
-                            if (id == (list.get(j).getId()) && quantity <= (list.get(j).getQuantity())) {
-                                price2 = quantity * (list.get(j).getPrice() - ((list.get(j).getPrice() * promoList.get(list.get(j).getPromoID() - 1).getPromoPercent()) / 100));
-                                cart.updateCart(username, id, quantity, price2, size);
-                            }
-                            if (quantity > (list.get(j).getQuantity()) && id == (list.get(j).getId())) {
-                                product p = product.getProductById(id);
-                                request.setAttribute("ms", ms);
-                                request.setAttribute("p", p);
-                                request.getRequestDispatcher("productDetail.jsp").forward(request, response);
-                            }
-                        }
-
-                    }
-                }
-
-                List<entity.cart> cartUpdateDecrease = cart.getAll(username);
-                for (int i = 0; i < cartUpdateDecrease.size(); i++) {
-                    sum = sum + cartUpdateDecrease.get(i).getPrice();
-                }
-                System.out.println(sum);
-
-                response.getWriter().write(price2 + "," + sum);
-                break;
-            case URL_CART_DELETE:
-                int quanP = 0;
-                cart.deleteCartBySize(id, username, size);
-                List<entity.cart> cartUpdateDelete = cart.getAll(username);
-                for (int i = 0; i < cartUpdateDelete.size(); i++) {
-                    sum = sum + cartUpdateDelete.get(i).getPrice();
-                    quanP++;
-                }
-                System.out.println(quanP);
-                System.out.println(sum);
-                response.getWriter().write(price2 + "," + sum + "," + quanP);
-
-                break;
-            case URL_PAYMENT:
-                response.sendRedirect("loadPayment?size=" + size);
-                break;
+    private static int parseIntSafe(String s, int def) {
+        try {
+            return (s == null || s.isBlank()) ? def : Integer.parseInt(s);
+        } catch (Exception e) {
+            return def;
         }
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request,
-            HttpServletResponse response
-    )
-            throws ServletException,
-             IOException {
-        processRequest(request, response);
+    // Lấy ĐƠN GIÁ sau khuyến mãi theo product.promo (nếu có)
+    private static float calcUnitPriceWithPromo(ProductDAO productDAO, PromoDAO promoDAO, int productId) {
+        Product p = productDAO.getProductById(productId);
+        if (p == null) {
+            return 0f;
+        }
+
+        int percent = 0;
+        int promoId = p.getPromoID();
+        if (promoId > 0) {
+            List<Promo> promos = promoDAO.getAll();
+            int idx = promoId - 1;
+            if (promos != null && idx >= 0 && idx < promos.size()) {
+                percent = promos.get(idx).getPromoPercent();
+            }
+        }
+        return p.getPrice() - (p.getPrice() * percent / 100.0f);
     }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
 }

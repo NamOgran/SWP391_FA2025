@@ -4,7 +4,7 @@
  */
 package DAO;
 
-import entity.imports;
+import entity.Imports;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -14,11 +14,11 @@ import java.util.List;
  *
  * @author thinh
  */
-public class DAOimport extends DBconnect.DBconnect {
+public class ImportDAO extends DBConnect.DBConnect {
 
-    public List<imports> getAllImport() {
-        List<imports> list = new ArrayList<>();
-        DAOimportDetail dao = new DAOimportDetail();
+    public List<Imports> getAllImport() {
+        List<Imports> list = new ArrayList<>();
+        ImportDetailDAO dao = new ImportDetailDAO();
 
         String sql = "select * from import "
                 + "order by status desc";
@@ -29,7 +29,7 @@ public class DAOimport extends DBconnect.DBconnect {
 //                System.out.println(dao.getPriceByImportID(rs.getString("import_id")));
 //                int price = dao.getPriceByImportID(rs.getString("import_id"));
 //                System.out.println(price);
-                imports o = new imports(rs.getInt("import_id"), dao.getQuantityByImportID(rs.getString("import_id")), dao.getPriceByImportID(rs.getString("import_id")), rs.getString("username"), rs.getString("status"), rs.getDate("importDate"));
+                Imports o = new Imports(rs.getInt("import_id"), dao.getQuantityByImportID(rs.getString("import_id")), dao.getPriceByImportID(rs.getString("import_id")), rs.getInt("staff_id"), rs.getString("status"), rs.getDate("importDate"));
 //                System.out.println(o.getTotal());
                 list.add(o);
             }
@@ -54,8 +54,36 @@ public class DAOimport extends DBconnect.DBconnect {
     }
 
     public static void main(String[] args) {
-        DAOimport d = new DAOimport();
+        ImportDAO d = new ImportDAO();
         System.out.println(d.getAllImport());
     }
-
+/**
+     * Lấy danh sách nhập hàng theo ID nhân viên.
+     * @param staffId ID nhân viên
+     * @return Danh sách Imports
+     */
+    public List<Imports> getImportsByStaffId(int staffId) {
+        List<Imports> list = new ArrayList<>();
+        ImportDetailDAO dao = new ImportDetailDAO(); // Để lấy total/quantity
+        String sql = "SELECT * FROM import WHERE staff_id = ? ORDER BY importDate DESC";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, staffId);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                Imports o = new Imports(
+                        rs.getInt("import_id"), 
+                        dao.getQuantityByImportID(rs.getString("import_id")), 
+                        dao.getPriceByImportID(rs.getString("import_id")), 
+                        rs.getInt("staff_id"), 
+                        rs.getString("status"), 
+                        rs.getDate("importDate")
+                );
+                list.add(o);
+            }
+        } catch (Exception e) {
+            System.err.println("ImportDAO.getImportsByStaffId: " + e.getMessage());
+        }
+        return list;
+    }
 }

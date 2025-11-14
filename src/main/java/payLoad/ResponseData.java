@@ -1,19 +1,30 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package payLoad;
 
-/**
- *
- * @author thinh
- */
 public class ResponseData {
+
     private boolean isSuccess;
     private String description;
     private Object data;
 
-    public boolean isIsSuccess() {
+    /**
+     * Hàm khởi tạo rỗng (no-argument constructor)
+     * Trình biên dịch yêu cầu hàm này.
+     */
+    public ResponseData() {
+    }
+
+    /**
+     * Hàm khởi tạo 3 tham số
+     * Đây là hàm mà StaffController đang cố gắng gọi.
+     */
+    public ResponseData(boolean isSuccess, String description, Object data) {
+        this.isSuccess = isSuccess;
+        this.description = description;
+        this.data = data;
+    }
+
+    // Getters and Setters
+    public boolean getIsSuccess() {
         return isSuccess;
     }
 
@@ -36,6 +47,4 @@ public class ResponseData {
     public void setData(Object data) {
         this.data = data;
     }
-    
-        
 }

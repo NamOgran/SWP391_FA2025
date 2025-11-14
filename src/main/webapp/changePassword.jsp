@@ -1,8 +1,4 @@
-<%-- 
-    Document   : changePassword
-    Created on : Mar 5, 2024, 9:00:58 AM
-    Author     : thinh
---%>
+
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -884,9 +880,9 @@
                             <a href="/Project_SWP391_Group4/aboutUs.jsp">Information<i class="bi bi-caret-down dropdown-icon"></i></a>
                             <ul class="dropdownMenu">
                                 <li><a href="/Project_SWP391_Group4/contact.jsp">Contact</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderView">View order</a></li>
+                            
                                 <li><a href="/Project_SWP391_Group4/policy.jsp">Exchange policy</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderHistoryView">Order's history</a></li>
+                              
                         </li>
                     </ul>
                 </nav>

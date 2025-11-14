@@ -4,10 +4,10 @@
  */
 package controller;
 
-import DAO.DAOproduct;
-import DAO.DAOpromo;
-import entity.product;
-import entity.promo;
+import DAO.ProductDAO;
+import DAO.PromoDAO;
+import entity.Product;
+import entity.Promo;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -19,29 +19,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static url.maleProductURL.URL_MALE_PRODUCT;
-import static url.maleProductURL.URL_MALE_PANT;
-import static url.maleProductURL.URL_MALE_SHORT;
-import static url.maleProductURL.URL_MALE_TSHIRT;
+import static url.MaleProductURL.URL_MALE_PRODUCT;
+import static url.MaleProductURL.URL_MALE_PANT;
+import static url.MaleProductURL.URL_MALE_SHORT;
+import static url.MaleProductURL.URL_MALE_TSHIRT;
 
 /**
  *
- * @author thinh
+ * 
  */
 @WebServlet(name = "maleProductController", urlPatterns = {URL_MALE_PRODUCT, URL_MALE_TSHIRT, URL_MALE_SHORT, URL_MALE_PANT})
-public class maleProductController extends HttpServlet {
+public class MaleProductController extends HttpServlet {
 
-    DAOproduct DAOproduct = new DAOproduct();
+    ProductDAO DAOproduct = new ProductDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String urlPath = request.getServletPath();
-        DAOpromo promo2 = new DAOpromo();
-        List<promo> promoList = promo2.getAll();
+        PromoDAO promo2 = new PromoDAO();
+        List<Promo> promoList = promo2.getAll();
         Map<Integer, Integer> promoMap = new HashMap<>();
-        for (promo promo : promoList) {
+        for (Promo promo : promoList) {
             promoMap.put(promo.getPromoID(), promo.getPromoPercent());
         }
         request.setAttribute("promoMap", promoMap);
@@ -64,7 +64,7 @@ public class maleProductController extends HttpServlet {
 
     private void getTShirt(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<product> list = DAOproduct.getMaleProductByType("t-shirt");
+        List<Product> list = DAOproduct.getMaleProductByType("t-shirt");
         request.setAttribute("productList", list);
         request.setAttribute("path", "../.");
         request.getRequestDispatcher("/productList.jsp").forward(request, response);
@@ -72,7 +72,7 @@ public class maleProductController extends HttpServlet {
 
     private void getPant(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<product> list = DAOproduct.getMaleProductByType("pant");
+        List<Product> list = DAOproduct.getMaleProductByType("pant");
         request.setAttribute("productList", list);
         request.setAttribute("path", "../.");
 
@@ -81,7 +81,7 @@ public class maleProductController extends HttpServlet {
 
     private void getShort(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<product> list = DAOproduct.getMaleProductByType("short");
+        List<Product> list = DAOproduct.getMaleProductByType("short");
         request.setAttribute("productList", list);
         request.setAttribute("path", "../.");
 
@@ -90,7 +90,7 @@ public class maleProductController extends HttpServlet {
 
     private void getMaleProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<product> list = DAOproduct.getMaleProduct();
+        List<Product> list = DAOproduct.getMaleProduct();
         request.setAttribute("productList", list);
         request.setAttribute("path", ".");
         request.getRequestDispatcher("/productList.jsp").forward(request, response);

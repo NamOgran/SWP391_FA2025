@@ -1,375 +1,396 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
-import DAO.DAOcart;
-import DAO.DAOorder;
-import DAO.DAOproduct;
-import DAO.DAOpromo;
-import DAO.DAOsize;
-import entity.orderDetail;
-import entity.orders;
-import entity.product;
-import entity.promo;
-import entity.size;
-import java.io.IOException;
-import java.io.PrintWriter;
+import DAO.CartDAO;
+import DAO.OrderDAO;
+import DAO.ProductDAO;
+import DAO.PromoDAO;
+import DAO.SizeDAO;
+import entity.OrderDetail;
+import entity.Orders;
+import entity.Product;
+import entity.Promo;
+import entity.Size;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static url.orderURL.INSERT_ORDERS;
-import static url.orderURL.INSERT_ORDERS_DETAILS;
-import static url.orderURL.URL_HISTORY_ORDERS;
-import static url.orderURL.URL_ORDER_LIST;
-import static url.orderURL.URL_UPDATE_STATUS;
-import static url.orderURL.URL_VIEW_ORDERS;
 
-/**
- *
- * @author Administrator
- */
-@WebServlet(name = "order", urlPatterns = {INSERT_ORDERS, INSERT_ORDERS_DETAILS, URL_ORDER_LIST, URL_UPDATE_STATUS, URL_VIEW_ORDERS, URL_HISTORY_ORDERS})
-public class order extends HttpServlet {
+import static url.OrderURL.INSERT_ORDERS;
+import static url.OrderURL.INSERT_ORDERS_DETAILS; // không dùng, giữ để compat
+import static url.OrderURL.URL_HISTORY_ORDERS;
+import static url.OrderURL.URL_ORDER_LIST;
+import static url.OrderURL.URL_UPDATE_STATUS;
+import static url.OrderURL.URL_VIEW_ORDERS;
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try ( PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet order</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet order at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
+@WebServlet(name = "order", urlPatterns = {
+    INSERT_ORDERS, INSERT_ORDERS_DETAILS, URL_ORDER_LIST, URL_UPDATE_STATUS, URL_VIEW_ORDERS, URL_HISTORY_ORDERS
+})
+public class Order extends HttpServlet {
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    private static final int SHIPPING_FEE = 20000;
+    private static final int FREE_SHIP_THRESHOLD = 200000;
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String size = request.getParameter("size");
-        float total = 0;
-        int totalQ = 0;
-        int temp = 0;
-        int quanS = 0;
-        int quantityP = 0;
-        String username = "";
-        Cookie arr[] = request.getCookies();
-        for (Cookie o : arr) {
-            if (o.getName().equals("input")) {
-                username = o.getValue();
-            }
+
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        HttpSession session = request.getSession(false);
+        entity.Customer acc = (session != null) ? (entity.Customer) session.getAttribute("acc") : null;
+        if (acc == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
         }
+
+        int customer_id = acc.getCustomer_id();
         String urlPath = request.getServletPath();
-        long currentTimeMillis = System.currentTimeMillis();
-        Date currentDate = new Date(currentTimeMillis);
-        String address = request.getParameter("address");
-        String newaddress = request.getParameter("newaddress");
-        String status = "Pending";
-        String phoneNumber = request.getParameter("phoneNumber");
-        String usernameStaff = request.getParameter("usernameStaff");
-        String id = request.getParameter("id");
-        String total1 = request.getParameter("total");
-        if (total1 != null) {
-            total = Float.parseFloat(total1);
-        }
-        DAOcart daoCart = new DAOcart();
-        List<entity.cart> cartList = daoCart.getAll(username);
-        DAOorder daoOrder = new DAOorder();
-        List<orders> orderList = daoOrder.getAllOrders();
-        List<orderDetail> orderDetailList = daoOrder.getAllOrdersDetail();
-        DAOproduct daoProduct = new DAOproduct();
-        List<product> productList = daoProduct.getAll();
-        DAOsize daoSize = new DAOsize();
-        List<size> sizeList = daoSize.getAll();
+
+        CartDAO daoCart = new CartDAO();
+        OrderDAO daoOrder = new OrderDAO();
+        ProductDAO daoProduct = new ProductDAO();
+        PromoDAO daoPromo = new PromoDAO();
+        SizeDAO daoSize = new SizeDAO();
+
+        List<Orders> orderList = daoOrder.getAllOrders();
+        List<OrderDetail> orderDetailList = daoOrder.getAllOrdersDetail();
+        List<Product> productList = daoProduct.getAll();
+        List<Orders> ordersUserList = daoOrder.orderUser(customer_id);
+
         Map<Integer, String> nameProduct = new HashMap<>();
-        for (product product : productList) {
-            nameProduct.put(product.getId(), product.getName());
+        for (Product p : productList) {
+            nameProduct.put(p.getId(), p.getName());
         }
-        DAOpromo daoPromo = new DAOpromo();
-        List<promo> promoList = daoPromo.getAll();
+
+        List<Promo> promoList = daoPromo.getAll();
         Map<Integer, Integer> promoMap = new HashMap<>();
-        for (promo promo : promoList) {
-            promoMap.put(promo.getPromoID(), promo.getPromoPercent());
+        for (Promo pr : promoList) {
+            promoMap.put(pr.getPromoID(), pr.getPromoPercent());
         }
+
         Map<Integer, Integer> priceProduct = new HashMap<>();
-        for (product product : productList) {
-            priceProduct.put(product.getId(), product.getPrice());
-        }
         Map<Integer, Integer> promoID = new HashMap<>();
-        for (product product : productList) {
-            promoID.put(product.getId(), product.getPromoID());
-        }
-        List<orders> ordersUserList = daoOrder.orderUser(username);
         Map<Integer, String> picUrlMap = new HashMap<>();
-        for (product product : productList) {
-            picUrlMap.put(product.getId(), product.getPicURL());
-        }
         Map<Integer, Integer> priceP = new HashMap<>();
-        for (product product : productList) {
-            priceP.put(product.getId(), product.getPrice());
+        for (Product p : productList) {
+            priceProduct.put(p.getId(), p.getPrice());
+            promoID.put(p.getId(), p.getPromoID());
+            picUrlMap.put(p.getId(), p.getPicURL());
+            priceP.put(p.getId(), p.getPrice());
         }
+
         Map<Integer, Integer> ordersQuantityMap = new HashMap<>();
-        for (orderDetail orders : orderDetailList) {
-            ordersQuantityMap.put(orders.getOrderID(), orders.getQuantity());
+        for (OrderDetail od : orderDetailList) {
+            ordersQuantityMap.put(od.getOrderID(), od.getQuantity());
         }
+
         Map<Integer, Integer> totalQuantityMap = new HashMap<>();
-        for (int i = 0; i < orderList.size(); i++) {
-            int quanO = 0;
-            for (int j = 0; j < orderDetailList.size(); j++) {
-                if (orderList.get(i).getOrderID() == orderDetailList.get(j).getOrderID()) {
-                    quanO = quanO + orderDetailList.get(j).getQuantity();
+        for (Orders od_item : orderList) {
+            int q = 0;
+            for (OrderDetail d : orderDetailList) {
+                if (od_item.getOrderID() == d.getOrderID()) {
+                    q += d.getQuantity();
                 }
             }
-            for (orders od : orderList) {
-                totalQuantityMap.put(orderList.get(i).getOrderID(), quanO);
-            }
+            totalQuantityMap.put(od_item.getOrderID(), q);
         }
+
         switch (urlPath) {
-            case INSERT_ORDERS:
-                if (newaddress.equals("")) {
-                    daoOrder.insertOrder(address, currentDate, status, phoneNumber, username, usernameStaff, total);
+
+            // ===== TẠO ĐƠN HÀNG =====
+            case INSERT_ORDERS: {
+                String size = request.getParameter("size");
+                String address = request.getParameter("address");
+                String newaddress = request.getParameter("newaddress");
+                String phoneNumber = request.getParameter("phoneNumber");
+                String status = "Pending";
+                Date currentDate = new Date(System.currentTimeMillis());
+
+                int staffRaw = parseIntSafe(request.getParameter("staff_id"), 0);
+                Integer staffId = (staffRaw > 0) ? Integer.valueOf(staffRaw) : null;
+
+                // ===== BUY NOW =====
+                String idParam = request.getParameter("id");
+                if (idParam != null && !idParam.trim().isEmpty()) {
+                    int productId = parseIntSafe(idParam, 0);
+                    int quantity = Math.max(1, parseIntSafe(request.getParameter("quantity"), 1));
+                    if (productId <= 0 || size == null || size.isBlank()) {
+                        response.sendRedirect(request.getContextPath() + "/error.jsp?message=Missing parameters for single buy");
+                        return;
+                    }
+
+                    // ADD: Chặn ngay trên server — product inactive / hết tổng tồn → popup + REDIRECT về Home
+                    Product pCheck = daoProduct.getProductById(productId);
+                    if (pCheck == null || !pCheck.isIs_active() || daoSize.getTotalQuantityByProductId(productId) <= 0) {
+                        // CHANGE: dùng session + redirect để rời buyNow (PRG), tránh ở lại trang và bấm lần 2
+                        if (session != null) session.setAttribute("popupMessage", "This product is out of stock!");
+                        response.sendRedirect("productList"); // ← về Home page
+                        return;
+                    }
+
+                    // ADD: Kiểm tra theo size (không đủ số lượng hoặc size hết) → popup + REDIRECT về Home
+                    Size s = daoSize.getSizeByProductIdAndName(productId, size);
+                    if (s == null || s.getQuantity() <= 0 || s.getQuantity() < quantity) {
+                        if (session != null) session.setAttribute("popupMessage", "This size is out of stock!");
+                        response.sendRedirect("productList"); // ← về Home page
+                        return;
+                    }
+
+                    // ===== Hợp lệ → tạo đơn =====
+                    float unitPriceF = calcUnitPriceWithPromoSafe(daoProduct, daoPromo, productId);
+                    int unitPrice = Math.max(0, Math.round(unitPriceF));
+                    int subtotal = unitPrice * quantity;
+                    int shipping = (subtotal > 0 && subtotal < FREE_SHIP_THRESHOLD) ? SHIPPING_FEE : 0;
+
+                    int promoIdFromReq = parseIntSafe(request.getParameter("promoId"), 0);
+                    int promoPctFromReq = parseIntSafe(request.getParameter("promoPct"), 0);
+                    int promoPercent = (promoIdFromReq > 0)
+                            ? findPromoPercentById(daoPromo, promoIdFromReq)
+                            : Math.max(0, promoPctFromReq);
+
+                    int discount = Math.round(subtotal * (promoPercent / 100.0f));
+                    int grand = Math.max(0, subtotal + shipping - discount);
+                    String addr = (newaddress != null && !newaddress.trim().isEmpty()) ? newaddress : address;
+
+                    int orderID = daoOrder.insertOrder(addr, currentDate, status, phoneNumber, customer_id, staffId, grand);
+                    if (orderID <= 0) {
+                        response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cannot create order");
+                        return;
+                    }
+
+                    daoOrder.insertOrderDetail(quantity, size, productId, orderID);
+
+                    //  ADD: Trừ kho size & cập nhật tổng tồn product
+                    int newQty = s.getQuantity() - quantity;
+                    daoSize.updateQuanSize(newQty, productId, size);
+                    int totalAfter = daoSize.getTotalQuantityByProductId(productId);
+                    daoProduct.updateQuan(totalAfter, productId);
+
+                    //  ADD: Popup đặt hàng thành công + REDIRECT Home (PRG)
+                    if (session != null) session.setAttribute("popupMessage", "Order placed successfully! Thank you for shopping at GIO Shop!");
+                    response.sendRedirect("productList");
+                    return;
                 }
-                if (!newaddress.equals("")) {
-                    daoOrder.insertOrder(newaddress, currentDate, status, phoneNumber, username, usernameStaff, total);
+
+                // ===== MUA TỪ GIỎ =====
+                List<entity.Cart> cartList = daoCart.getAll(customer_id);
+                if (cartList == null || cartList.isEmpty()) {
+                    response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cart is empty");
+                    return;
                 }
-                int orderID = daoOrder.getOrderId();
-                System.out.println(id);
-                if (id != null) {
-                    int id2 = Integer.parseInt(id);
-                    for (int i = 0; i < productList.size(); i++) {
-                        if (productList.get(i).getId() == id2) {
-                            if (productList.get(i).getQuantity() > 0) {
-                                quantityP = productList.get(i).getQuantity() - 1;
-                                daoOrder.insertOrderDetail(1, size, id2, orderID);
-                                response.sendRedirect("productList");
-                            }
-                            if (productList.get(i).getQuantity() <= 0) {
-                                String nameP = productList.get(i).getName();
-                                String quanP = String.valueOf(productList.get(i).getQuantity());
-                                String ms = "<script>\n"
-                                        + "        alert(\"Sold out! " + nameP + "Only have " + quanP + "left\")\n"
-                                        + "    </script>";
-                                request.setAttribute("ms", ms);
-                                request.setAttribute("productList", productList);
-                                request.getRequestDispatcher("product.jsp").forward(request, response);
-                            }
-                        }
+
+                // Kiểm kho từng item trong giỏ
+                StringBuilder issue = new StringBuilder();
+                boolean hasIssue = false;
+                for (entity.Cart c : cartList) {
+                    Size sz = daoSize.getSizeByProductIdAndName(c.getProductID(), c.getSize_name());
+                    if (sz == null || sz.getQuantity() <= 0 || c.getQuantity() > sz.getQuantity()) {
+                        Product p = daoProduct.getProductById(c.getProductID());
+                        String pname = (p != null) ? p.getName() : ("ID " + c.getProductID());
+                        hasIssue = true;
+                        issue.append("Sold out! '").append(pname).append("' (")
+                                .append(c.getSize_name()).append(") only ")
+                                .append((sz != null) ? sz.getQuantity() : 0)
+                                .append(" left.\\n");
                     }
                 }
-                if (id == null) {
-                    for (int i = 0; i < productList.size(); i++) {
-                        temp = 0;
-                        totalQ = 0;
-                        String sizeP = "";
-                        for (int j = 0; j < cartList.size(); j++) {
-                            if (productList.get(i).getId() == cartList.get(j).getProductID()) {
-                                if (productList.get(i).getQuantity() >= cartList.get(j).getQuantity()) {
-                                    for (int k = 0; k < sizeList.size(); k++) {
-                                        if (cartList.get(j).getProductID() == sizeList.get(k).getProduct_id() && cartList.get(j).getSize_name().equals(sizeList.get(k).getSize_name())) {
-                                            totalQ = totalQ + cartList.get(j).getQuantity();
-                                            sizeP = sizeList.get(k).getSize_name();
-                                        }
-                                    }
-                                    daoOrder.insertOrderDetail(totalQ, sizeP, cartList.get(j).getProductID(), orderID);
-                                    daoCart.deleteCart(cartList.get(j).getProductID(), username);
-                                    totalQ = 0;
-                                }
-                                if (productList.get(i).getQuantity() < cartList.get(j).getQuantity()) {
-                                    String nameP = productList.get(i).getName();
-                                    String quanP = String.valueOf(productList.get(i).getQuantity());
-                                    String ms = "<script>\n"
-                                            + "        alert(\"Sold out! " + nameP + "Only have " + quanP + "left\")\n"
-                                            + "    </script>";
-                                    request.setAttribute("ms", ms);
-                                    request.setAttribute("productList", productList);
-                                    request.getRequestDispatcher("product.jsp").forward(request, response);
-                                    temp++;
-                                }
-                            }
-                        }
-                    }
-                    if (temp == 0) {
-                        response.sendRedirect("productList");
-                    }
+                if (hasIssue) {
+                    // ADD: Báo popup & forward về giỏ (giữ nguyên hành vi cart)
+                    request.setAttribute("popupMessage", "Some products are out of stock!");
+                    request.setAttribute("productList", productList);
+                    request.getRequestDispatcher("cart.jsp").forward(request, response);
+                    return;
                 }
-                break;
-            case URL_ORDER_LIST:
-                int numberOfOrder = 0;
-                int numberOfProduct = 0;
-                int revenue = 0;
-                int numberOfCustomer = 0;
-                List<orders> orderListSort = daoOrder.getAllOrdersSort();
-                DAO.DAOproduct DAOproduct = new DAOproduct();
+
+                // Tính tiền giỏ
+                int subtotal = daoCart.getCartTotal(customer_id);
+                int promoPercent = 0;
+                Object sessPromo = (session != null) ? session.getAttribute("promoPercent") : null;
+                if (sessPromo instanceof Integer) promoPercent = (Integer) sessPromo;
+                int discount = Math.round(subtotal * (promoPercent / 100.0f));
+                int shipping = (subtotal > 0 && subtotal < FREE_SHIP_THRESHOLD) ? SHIPPING_FEE : 0;
+                int finalTotal = Math.max(0, subtotal + shipping - discount);
+                String addr = (newaddress != null && !newaddress.trim().isEmpty()) ? newaddress : address;
+
+                int orderID = daoOrder.insertOrder(addr, currentDate, status, phoneNumber, customer_id, staffId, finalTotal);
+                if (orderID <= 0) {
+                    response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cannot create order");
+                    return;
+                }
+
+                // Lưu chi tiết + trừ kho size + cập nhật tổng product + xoá giỏ
+                for (entity.Cart c : cartList) {
+                    daoOrder.insertOrderDetail(c.getQuantity(), c.getSize_name(), c.getProductID(), orderID);
+                    Size cur = daoSize.getSizeByProductIdAndName(c.getProductID(), c.getSize_name());
+                    if (cur != null) {
+                        int newQty = cur.getQuantity() - c.getQuantity();
+                        daoSize.updateQuanSize(newQty, c.getProductID(), c.getSize_name());
+                        daoProduct.updateQuan(daoSize.getTotalQuantityByProductId(c.getProductID()), c.getProductID());
+                    }
+                    daoCart.deleteCartBySize(c.getProductID(), customer_id, c.getSize_name());
+                }
+
+                // Clear promo session của giỏ (nếu có)
+                if (session != null) {
+                    session.removeAttribute("promoPercent");
+                    session.removeAttribute("promoCode");
+                    session.removeAttribute("promoType");
+                    session.removeAttribute("promoValue");
+                }
+
+                //ADD: Popup đặt hàng thành công (giỏ) + REDIRECT Home
+                if (session != null) session.setAttribute("popupMessage", "Order placed successfully! Thank you for shopping at GIO Shop!");
+                response.sendRedirect("productList");
+                return;
+            }
+
+            // ===== Dashboard staff (thống kê) =====
+            case URL_ORDER_LIST: {
+                int numberOfOrder;
+                int numberOfProduct;
+                int revenue;
+                int numberOfCustomer;
 
                 String date = request.getParameter("date");
+                if ("date".equals(date)) {
+                    int yearInt = parseIntSafe(request.getParameter("year"),
+                            java.time.Year.now().getValue());
 
-                if (date.equals("date")) {
-                    String year = request.getParameter("year");
+                    numberOfOrder = daoProduct.getNumberOfOrderByYear(yearInt);
+                    numberOfProduct = daoProduct.getNumberOfProductByYear(yearInt);
+                    revenue = daoProduct.getRevenueByYear(yearInt);
+                    numberOfCustomer = daoProduct.getNumberOfCustomerByYear(yearInt);
 
-                    int yearInt = Integer.parseInt(year);
+                    int r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0;
+                    r1 = daoProduct.getRevenueByMonth(1, yearInt);
+                    r2 = daoProduct.getRevenueByMonth(2, yearInt);
+                    r3 = daoProduct.getRevenueByMonth(3, yearInt);
+                    r4 = daoProduct.getRevenueByMonth(4, yearInt);
+                    r5 = daoProduct.getRevenueByMonth(5, yearInt);
+                    r6 = daoProduct.getRevenueByMonth(6, yearInt);
+                    r7 = daoProduct.getRevenueByMonth(7, yearInt);
+                    r8 = daoProduct.getRevenueByMonth(8, yearInt);
+                    r9 = daoProduct.getRevenueByMonth(9, yearInt);
+                    r10 = daoProduct.getRevenueByMonth(10, yearInt);
+                    r11 = daoProduct.getRevenueByMonth(11, yearInt);
+                    r12 = daoProduct.getRevenueByMonth(12, yearInt);
 
-                    numberOfOrder = DAOproduct.getNumberOfOrderByYear(yearInt);
-                    numberOfProduct = DAOproduct.getNumberOfProductByYear(yearInt);
-                    revenue = DAOproduct.getRevenueByYear(yearInt);
-                    numberOfCustomer = DAOproduct.getNumberOfCustomerByYear(yearInt);
+                    request.setAttribute("revenue1", r1);
+                    request.setAttribute("revenue2", r2);
+                    request.setAttribute("revenue3", r3);
+                    request.setAttribute("revenue4", r4);
+                    request.setAttribute("revenue5", r5);
+                    request.setAttribute("revenue6", r6);
+                    request.setAttribute("revenue7", r7);
+                    request.setAttribute("revenue8", r8);
+                    request.setAttribute("revenue9", r9);
+                    request.setAttribute("revenue10", r10);
+                    request.setAttribute("revenue11", r11);
+                    request.setAttribute("revenue12", r12);
 
-                    int revenue1 = DAOproduct.getRevenueByMonth(1, yearInt);
-                    int revenue2 = DAOproduct.getRevenueByMonth(2, yearInt);
-                    int revenue3 = DAOproduct.getRevenueByMonth(3, yearInt);
-                    int revenue4 = DAOproduct.getRevenueByMonth(4, yearInt);
-                    int revenue5 = DAOproduct.getRevenueByMonth(5, yearInt);
-                    int revenue6 = DAOproduct.getRevenueByMonth(6, yearInt);
-                    int revenue7 = DAOproduct.getRevenueByMonth(7, yearInt);
-                    int revenue8 = DAOproduct.getRevenueByMonth(8, yearInt);
-                    int revenue9 = DAOproduct.getRevenueByMonth(9, yearInt);
-                    int revenue10 = DAOproduct.getRevenueByMonth(10, yearInt);
-                    int revenue11 = DAOproduct.getRevenueByMonth(11, yearInt);
-                    int revenue12 = DAOproduct.getRevenueByMonth(12, yearInt);
-                    int quarter1 = revenue1 + revenue2 + revenue3;
-                    int quarter2 = revenue4 + revenue5 + revenue6;
-                    int quarter3 = revenue7 + revenue8 + revenue9;
-                    int quarter4 = revenue10 + revenue11 + revenue12;
-                    request.setAttribute("revenue1", revenue1);
-                    request.setAttribute("revenue2", revenue2);
-                    request.setAttribute("revenue3", revenue3);
-                    request.setAttribute("revenue4", revenue4);
-                    request.setAttribute("revenue5", revenue5);
-                    request.setAttribute("revenue6", revenue6);
-                    request.setAttribute("revenue7", revenue7);
-                    request.setAttribute("revenue8", revenue8);
-                    request.setAttribute("revenue9", revenue9);
-                    request.setAttribute("revenue10", revenue10);
-                    request.setAttribute("revenue11", revenue11);
-                    request.setAttribute("revenue12", revenue12);
-
-                    request.setAttribute("quarter1", quarter1);
-                    request.setAttribute("quarter2", quarter2);
-                    request.setAttribute("quarter3", quarter3);
-                    request.setAttribute("quarter4", quarter4);
+                    request.setAttribute("quarter1", r1 + r2 + r3);
+                    request.setAttribute("quarter2", r4 + r5 + r6);
+                    request.setAttribute("quarter3", r7 + r8 + r9);
+                    request.setAttribute("quarter4", r10 + r11 + r12);
 
                     request.setAttribute("numberOfProduct", numberOfProduct);
                     request.setAttribute("numberOfOrder", numberOfOrder);
                     request.setAttribute("revenue", revenue);
                     request.setAttribute("numberOfCustomer", numberOfCustomer);
-
-//            12 month
                 } else {
-                    numberOfProduct = DAOproduct.getNumberOfProduct();
-                    numberOfOrder = DAOproduct.getNumberOfOrder();
-                    revenue = DAOproduct.getRevenue();
-                    numberOfCustomer = DAOproduct.getNumberOfCustomer();
+                    int currentYear = java.time.Year.now().getValue();
 
-                    int revenue1 = DAOproduct.getRevenueByMonth(1, 2024);
-                    int revenue2 = DAOproduct.getRevenueByMonth(2, 2024);
-                    int revenue3 = DAOproduct.getRevenueByMonth(3, 2024);
-                    int revenue4 = DAOproduct.getRevenueByMonth(4, 2024);
-                    int revenue5 = DAOproduct.getRevenueByMonth(5, 2024);
-                    int revenue6 = DAOproduct.getRevenueByMonth(6, 2024);
-                    int revenue7 = DAOproduct.getRevenueByMonth(7, 2024);
-                    int revenue8 = DAOproduct.getRevenueByMonth(8, 2024);
-                    int revenue9 = DAOproduct.getRevenueByMonth(9, 2024);
-                    int revenue10 = DAOproduct.getRevenueByMonth(10, 2024);
-                    int revenue11 = DAOproduct.getRevenueByMonth(11, 2024);
-                    int revenue12 = DAOproduct.getRevenueByMonth(12, 2024);
-                    int quarter1 = revenue1 + revenue2 + revenue3;
-                    int quarter2 = revenue4 + revenue5 + revenue6;
-                    int quarter3 = revenue7 + revenue8 + revenue9;
-                    int quarter4 = revenue10 + revenue11 + revenue12;
+                    numberOfProduct = daoProduct.getNumberOfProduct();
+                    numberOfOrder = daoProduct.getNumberOfOrder();
+                    revenue = daoProduct.getRevenue();
+                    numberOfCustomer = daoProduct.getNumberOfCustomer();
 
-                    request.setAttribute("revenue1", revenue1);
-                    request.setAttribute("revenue2", revenue2);
-                    request.setAttribute("revenue3", revenue3);
-                    request.setAttribute("revenue4", revenue4);
-                    request.setAttribute("revenue5", revenue5);
-                    request.setAttribute("revenue6", revenue6);
-                    request.setAttribute("revenue7", revenue7);
-                    request.setAttribute("revenue8", revenue8);
-                    request.setAttribute("revenue9", revenue9);
-                    request.setAttribute("revenue10", revenue10);
-                    request.setAttribute("revenue11", revenue11);
-                    request.setAttribute("revenue12", revenue12);
-                    request.setAttribute("quarter1", quarter1);
-                    request.setAttribute("quarter2", quarter2);
-                    request.setAttribute("quarter3", quarter3);
-                    request.setAttribute("quarter4", quarter4);
+                    int r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0;
+                    r1 = daoProduct.getRevenueByMonth(1, currentYear);
+                    r2 = daoProduct.getRevenueByMonth(2, currentYear);
+                    r3 = daoProduct.getRevenueByMonth(3, currentYear);
+                    r4 = daoProduct.getRevenueByMonth(4, currentYear);
+                    r5 = daoProduct.getRevenueByMonth(5, currentYear);
+                    r6 = daoProduct.getRevenueByMonth(6, currentYear);
+                    r7 = daoProduct.getRevenueByMonth(7, currentYear);
+                    r8 = daoProduct.getRevenueByMonth(8, currentYear);
+                    r9 = daoProduct.getRevenueByMonth(9, currentYear);
+                    r10 = daoProduct.getRevenueByMonth(10, currentYear);
+                    r11 = daoProduct.getRevenueByMonth(11, currentYear);
+                    r12 = daoProduct.getRevenueByMonth(12, currentYear);
+
+                    request.setAttribute("revenue1", r1);
+                    request.setAttribute("revenue2", r2);
+                    request.setAttribute("revenue3", r3);
+                    request.setAttribute("revenue4", r4);
+                    request.setAttribute("revenue5", r5);
+                    request.setAttribute("revenue6", r6);
+                    request.setAttribute("revenue7", r7);
+                    request.setAttribute("revenue8", r8);
+                    request.setAttribute("revenue9", r9);
+                    request.setAttribute("revenue10", r10);
+                    request.setAttribute("revenue11", r11);
+                    request.setAttribute("revenue12", r12);
+
+                    request.setAttribute("quarter1", r1 + r2 + r3);
+                    request.setAttribute("quarter2", r4 + r5 + r6);
+                    request.setAttribute("quarter3", r7 + r8 + r9);
+                    request.setAttribute("quarter4", r10 + r11 + r12);
 
                     request.setAttribute("numberOfOrder", numberOfOrder);
                     request.setAttribute("numberOfProduct", numberOfProduct);
                     request.setAttribute("revenue", revenue);
                     request.setAttribute("numberOfCustomer", numberOfCustomer);
-
                 }
+
                 request.setAttribute("orderDetailList", orderDetailList);
-                request.setAttribute("orderList", orderListSort);
+                request.setAttribute("orderList", daoOrder.getAllOrdersSort());
                 request.setAttribute("nameProduct", nameProduct);
                 request.setAttribute("priceProduct", priceProduct);
                 request.setAttribute("promoMap", promoMap);
                 request.setAttribute("promoID", promoID);
-
                 request.getRequestDispatcher("staff.jsp").forward(request, response);
                 break;
-            case URL_UPDATE_STATUS:
-                System.out.println("dfkjadsfdsn");
-                int orderId = Integer.parseInt(request.getParameter("orderId"));
+            }
+
+            // ===== Cập nhật trạng thái đơn =====
+            case URL_UPDATE_STATUS: {
+                int orderId = parseIntSafe(request.getParameter("orderId"), 0);
                 String newStatus = request.getParameter("status");
                 daoOrder.updateStatus(newStatus, orderId);
-                if (newStatus.equals("Delivering")) {
-                    for (int i = 0; i < orderDetailList.size(); i++) {
-                        if (orderId == orderDetailList.get(i).getOrderID()) {
-                            for (int j = 0; j < sizeList.size(); j++) {
-                                if (sizeList.get(j).getProduct_id() == orderDetailList.get(i).getProductID() && sizeList.get(j).getSize_name().equals(orderDetailList.get(i).getSize_name())) {
-                                    quanS = sizeList.get(j).getQuantity() - orderDetailList.get(i).getQuantity();
-                                    daoSize.updateQuanSize(quanS, orderDetailList.get(i).getProductID(), sizeList.get(j).getSize_name());
-                                }
+
+                if ("Delivering".equals(newStatus)) {
+                    List<OrderDetail> details = daoOrder.getAllOrdersDetailByID(orderId);
+                    if (details != null) {
+                        for (OrderDetail od : details) {
+                            Size cur = daoSize.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                            if (cur != null) {
+                                int newQty = cur.getQuantity() - od.getQuantity();
+                                daoSize.updateQuanSize(newQty, od.getProductID(), cur.getSize_name());
                             }
                         }
                     }
-                    List<size> sizeList2 = daoSize.getAll();
-                    for (int i = 0; i < productList.size(); i++) {
-                        int quanP = 0;
-                        for (int j = 0; j < sizeList2.size(); j++) {
-                            if (sizeList2.get(j).getProduct_id() == productList.get(i).getId()) {
-                                quanP = quanP + sizeList2.get(j).getQuantity();
-                            }
-                        }
-                        daoProduct.updateQuan(quanP, productList.get(i).getId());
+                    for (Product p : daoProduct.getAll()) {
+                        int total = daoSize.getTotalQuantityByProductId(p.getId());
+                        daoProduct.updateQuan(total, p.getId());
                     }
-                    response.getWriter().write("success");
                 }
+                response.getWriter().write("success");
                 break;
-            case URL_VIEW_ORDERS:
+            }
+
+            // ===== Xem chi tiết đơn của user =====
+            case URL_VIEW_ORDERS: {
                 request.setAttribute("totalQuantityMap", totalQuantityMap);
                 request.setAttribute("promoID", promoID);
                 request.setAttribute("promoMap", promoMap);
@@ -381,19 +402,18 @@ public class order extends HttpServlet {
                 request.setAttribute("ordersUserList", ordersUserList);
                 request.getRequestDispatcher("viewOrder.jsp").forward(request, response);
                 break;
-            case URL_HISTORY_ORDERS:
-                int orderId3 = 0;
-                String orderId2 = request.getParameter("orderId");
-                if (orderId2 != null) {
-                    orderId3 = Integer.parseInt(orderId2);
-                }
+            }
+
+            // ===== Lịch sử đơn của user + đổi trạng thái từ lịch sử =====
+            case URL_HISTORY_ORDERS: {
+                String orderIdStr = request.getParameter("orderId");
                 String newStatus2 = request.getParameter("status");
-                if (newStatus2 != null) {
+                if (newStatus2 != null && !newStatus2.trim().isEmpty()) {
+                    int orderId3 = parseIntSafe(orderIdStr, 0);
                     daoOrder.updateStatus(newStatus2, orderId3);
-                    request.setAttribute("ordersUserList", ordersUserList);
                     response.getWriter().write("success");
-                }
-                if (newStatus2 == null) {
+                } else {
+                    ordersUserList = daoOrder.orderUser(customer_id);
                     request.setAttribute("totalQuantityMap", totalQuantityMap);
                     request.setAttribute("promoID", promoID);
                     request.setAttribute("promoMap", promoMap);
@@ -406,31 +426,41 @@ public class order extends HttpServlet {
                     request.getRequestDispatcher("ordersHistory.jsp").forward(request, response);
                 }
                 break;
+            }
+
+            default:
+                response.sendRedirect(request.getContextPath() + "/error.jsp?message=Unknown order operation");
         }
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        doGet(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+    private static int parseIntSafe(String s, int def) {
+        try { return (s == null || s.isBlank()) ? def : Integer.parseInt(s); }
+        catch (Exception e) { return def; }
+    }
 
+    private static int findPromoPercentById(PromoDAO daoPromo, int promoId) {
+        List<Promo> promos = daoPromo.getAll();
+        if (promos == null) return 0;
+        for (Promo pr : promos) {
+            if (pr != null && pr.getPromoID() == promoId) return Math.max(0, pr.getPromoPercent());
+        }
+        return 0;
+    }
+
+    private static float calcUnitPriceWithPromoSafe(ProductDAO productDAO, PromoDAO promoDAO, int productId) {
+        Product p = productDAO.getProductById(productId);
+        if (p == null) return 0f;
+        int percent = (p.getPromoID() > 0) ? findPromoPercentById(promoDAO, p.getPromoID()) : 0;
+        return p.getPrice() - (p.getPrice() * (percent / 100.0f));
+    }
+
+    private static float calcUnitPriceWithPromo(ProductDAO productDAO, PromoDAO promoDAO, int productId) {
+        return calcUnitPriceWithPromoSafe(productDAO, promoDAO, productId);
+    }
 }

@@ -3,44 +3,47 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package DAO;
-
-import entity.customer;
-import entity.staff;
+import entity.Customer;
+import entity.Staff;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 /**
  *
- * @author thinh
+ * 
  */
-public class DAOstaff extends DBconnect.DBconnect {
+public class StaffDAO extends DBConnect.DBConnect {
 
-    public List<staff> getAll() {
-        List<staff> listAccount = new ArrayList<>();
-        String sql = "select * \n"
-                + "from staff\n"
-                + "where username != 'admin'";
+    public List<Staff> getAll() {
+        List<Staff> list = new ArrayList<>();
+        String sql = "select * from staff";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
-                staff a = new staff(rs.getString("username"),
-                        rs.getString("email"), rs.getString("password"), rs.getString("address"), rs.getString("phoneNumber"), rs.getString("fullName"));
-                listAccount.add(a);
+                Staff a = new Staff();
+                a.setStaff_id(rs.getInt("staff_id"));
+                a.setUsername(rs.getString("username"));
+                a.setEmail(rs.getString("email"));
+                a.setPassword(rs.getString("password"));
+                a.setAddress(rs.getString("address"));
+                a.setPhoneNumber(rs.getString("phoneNumber"));
+                a.setFullName(rs.getString("fullName"));
+                a.setRole(rs.getString("role"));
+
+                list.add(a);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.out.println(e);
         }
-        return listAccount;
+        return list;
     }
 
-    public boolean signUp(staff c) {
-        String sql = "insert into staff(username, email, [password], [address], phoneNumber, fullName)\n"
-                + "values\n"
-                + "(?,?,?,?,?,?)";
+    public boolean signUp(Staff c) {
+        String sql = "insert into staff(username, email, password, address, phoneNumber, fullName, role) "
+                + "values (?,?,?,?,?,?,?)";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, c.getUsername());
@@ -49,6 +52,7 @@ public class DAOstaff extends DBconnect.DBconnect {
             st.setString(4, c.getAddress());
             st.setString(5, c.getPhoneNumber());
             st.setString(6, c.getFullName());
+            st.setString(7, c.getRole());
             st.executeUpdate();
             return true;
         } catch (Exception e) {
@@ -72,6 +76,13 @@ public class DAOstaff extends DBconnect.DBconnect {
         return false;
     }
 
+    // === START: UPDATED delete() METHOD ===
+    /**
+     * Xóa một staff bằng username.
+     * Trả về false nếu có lỗi (ví dụ: vi phạm ràng buộc khóa ngoại).
+     * @param username Tên người dùng để xóa
+     * @return true nếu xóa thành công, false nếu thất bại (VD: còn orders, imports)
+     */
     public boolean delete(String username) {
         String sql = "delete from staff where username = ?";
         try {
@@ -79,11 +90,18 @@ public class DAOstaff extends DBconnect.DBconnect {
             st.setString(1, username);
             st.executeUpdate();
             return true;
-        } catch (Exception e) {
-            System.out.println(e);
+        } catch (SQLException e) {
+            // Lỗi 547 là lỗi Foreign Key (SQL Server)
+            if (e.getErrorCode() == 547) {
+                System.err.println("StaffDAO.delete FK ERROR: Không thể xóa " + username + " vì có dữ liệu liên quan (VD: orders, imports). " + e.getMessage());
+            } else {
+                System.err.println("StaffDAO.delete SQL ERROR: " + e.getMessage());
+            }
         }
-        return false;
+        return false; // Trả về false nếu có lỗi (bao gồm cả lỗi FK)
     }
+    // === END: UPDATED delete() METHOD ===
+
 
     public boolean updateStaffProfile(String username, String email, String address, String phoneNumber, String fullName) {
         String sql = "update staff\n"
@@ -108,8 +126,8 @@ public class DAOstaff extends DBconnect.DBconnect {
         return false;
     }
 
-    public List<staff> search(String name) {
-        List<staff> list = new ArrayList<>();
+    public List<Staff> search(String name) {
+        List<Staff> list = new ArrayList<>();
         String sql = "select * from customer\n"
                 + "where fullName like ?\n"
                 + "union all\n"
@@ -122,7 +140,7 @@ public class DAOstaff extends DBconnect.DBconnect {
 
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
-                staff p = new staff(rs.getString("username"),
+                Staff p = new Staff(rs.getString("username"),
                         rs.getString("email"), rs.getString("password"), rs.getString("address"),
                         rs.getString("phoneNumber"), rs.getString("fullName"));
                 list.add(p);
@@ -133,19 +151,29 @@ public class DAOstaff extends DBconnect.DBconnect {
         return list;
     }
 
-    public staff getStaffByEmailOrUsername(String input) {
-        String sql = "select * from staff where email = ? or username = ?";
+    public Staff getStaffByEmailOrUsername(String input) {
+        String sql = "select * from staff where username = ? or email = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
+            // SỬA LỖI: Phải gán tham số 'input'
             st.setString(1, input);
             st.setString(2, input);
-
             ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                staff c = new staff(rs.getString("username"), rs.getString("email"), rs.getString("password"), rs.getString("address"), rs.getString("phoneNumber"), rs.getString("fullName"));
+            if (rs.next()) {
+                // SỬA LỖI: Sử dụng constructor rỗng và setter để gán đúng
+                Staff c = new Staff();
+                c.setStaff_id(rs.getInt("staff_id"));
+                c.setUsername(rs.getString("username"));
+                c.setEmail(rs.getString("email"));
+                c.setPassword(rs.getString("password"));
+                c.setAddress(rs.getString("address"));
+                c.setPhoneNumber(rs.getString("phoneNumber"));
+                c.setFullName(rs.getString("fullName"));
+                c.setRole(rs.getString("role")); // Quan trọng
                 return c;
             }
         } catch (Exception e) {
+            System.out.println(e);
         }
         return null;
     }
@@ -166,6 +194,32 @@ public class DAOstaff extends DBconnect.DBconnect {
             System.out.println(e);
         }
         return false;
+    }
+
+    public Staff getStaffByEmailOrUsernameAndPassword(String input, String password) {
+        Staff s = null;
+        String sql = "SELECT * FROM staff WHERE (username = ? OR email = ?) AND password = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, input);
+            st.setString(2, input);
+            st.setString(3, password);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                s = new Staff();
+                s.setStaff_id(rs.getInt("staff_id"));
+                s.setUsername(rs.getString("username"));
+                s.setEmail(rs.getString("email"));
+                s.setPassword(rs.getString("password"));
+                s.setFullName(rs.getString("fullName"));
+                s.setAddress(rs.getString("address"));
+                s.setPhoneNumber(rs.getString("phoneNumber"));
+                s.setRole(rs.getString("role"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return s;
     }
 
     public boolean updateStaffProfile(String email, String address, String phoneNumber, String fullName) {

@@ -9,11 +9,11 @@
     </servlet>
     <servlet>
         <servlet-name>productList</servlet-name>
-        <servlet-class>controller.home</servlet-class>
+        <servlet-class>controller.Home</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>load</servlet-name>
-        <servlet-class>controller.load</servlet-class>
+        <servlet-class>controller.Load</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>load</servlet-name>

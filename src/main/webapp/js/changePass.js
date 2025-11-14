@@ -14,7 +14,7 @@ $(document).ready(function () {
         if (newPassword1 === newPassword2) {
             $.ajax({
                 method: "Get",
-                url: "http://localhost:8080/Project_SWP_Group2/profile/changePassword",
+                url: "http://localhost:8080/Project_SWP391_Group4/profile/changePassword",
                 data: {
                     input: input,
                     currentPassword: currentPass,

@@ -1,14 +1,32 @@
-<%-- 
-    Document   : staff
-    Created on : Mar 11, 2024, 3:57:50 PM
-    Author     : Administrator
---%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@page import="java.text.NumberFormat"%>
 <%@page import="java.text.DecimalFormat"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ page import="entity.Staff" %>
+<%-- === BỔ SUNG BASE_URL === --%>
+<c:set var="BASE_URL" value="${pageContext.request.contextPath}" />
+
+<%
+    Staff s = (Staff) session.getAttribute("staff");
+// Nếu chưa đăng nhập → quay lại login
+    if (s == null) {
+        response.sendRedirect(request.getContextPath() + "/login.jsp");
+        return;
+    }
+
+// === SỬA ĐỔI TẠI ĐÂY ===
+// Nếu là admin → chuyển về AdminController (servlet /admin)
+    if ("admin".equalsIgnoreCase(s.getRole())) {
+        response.sendRedirect(request.getContextPath() + "/admin");
+        return;
+    }
+// === KẾT THÚC SỬA ĐỔI ===
+%>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,11 +36,9 @@
         <title>Dashboard</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
               integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
-        <!-- bootstrap -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <!-- bootstrap icon -->
-        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'> <!-- font family -->
-        <link rel="icon" href="/Project_SWP391_Group4/images/LG1.png" type="image/x-icon">
+        <link href='https://fonts.googleapis.com/css?family=Quicksand' 
+              rel='stylesheet'> <link rel="icon" href="${BASE_URL}/images/LG1.png" type="image/x-icon"> <%-- SỬA ĐƯỜNG DẪN --%>
         <script src="https://kit.fontawesome.com/1bd876819f.js" crossorigin="anonymous"></script>
         <style>
             * {
@@ -74,7 +90,7 @@
             .main {
                 display: flex;
                 height: calc(100% - 50px);
-                /*                overflow-y: scroll;
+                /* overflow-y: scroll;
                                 scrollbar-width: none;*/
             }
 
@@ -436,7 +452,6 @@
 
             .green {
                 background-color: #6fcaea;
-
             }
             .blue {
 
@@ -594,16 +609,102 @@
                 border-radius: 5px;
                 border: none;
             }
+
+            /* === CSS CHO DROPDOWN CHI TIẾT ĐƠN HÀNG === */
+.order-detail-cell {
+    padding: 0 !important; /* Xóa padding mặc định của cell */
+    background-color: #f8f9fa; /* Màu nền hơi xám cho vùng chi tiết */
+}
+.detail-table {
+    width: 100%;
+    margin: 0;
+    border: none; /* Bỏ viền của bảng con */
+}
+.detail-table th {
+    padding: 10px 15px;
+    background-color: #e9ecef; /* Màu header cho bảng con */
+    color: #333;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+}
+.detail-table td {
+    padding: 10px 15px;
+    border-top: 1px solid #e0e0e0; /* Đường kẻ mỏng giữa các item */
+    text-align: left;
+}
+/* Căn cột cuối (giá) sang phải */
+.detail-table th:last-child,
+.detail-table td:last-child {
+    text-align: right;
+}
+
+/* CSS để đổi icon con mắt khi bấm */
+.view-btn i.bi-eye-slash {
+    display: none; /* Ẩn icon "mắt-đóng" mặc định */
+}
+.view-btn.active i.bi-eye {
+    display: none; /* Ẩn icon "mắt-mở" khi active */
+}
+.view-btn.active i.bi-eye-slash {
+    display: inline-block; /* Hiện icon "mắt-đóng" khi active */
+}
+/* 1. MÀU ĐỎ CHO CANCELLED (Như bạn muốn) */
+.stt-Cancelled {
+    background-color: #d893a3 !important; /* Màu đỏ */
+    color: #b30021 !important;
+}
+
+/* 2. MÀU XANH BIỂN CHO DELIVERING (Như bạn muốn) */
+.stt-Delivering {
+    background-color: #6fcaea !important; /* Màu xanh biển */
+}
+
+/* 3. MÀU XANH LÁ CHO COMPLETED (Như bạn muốn) */
+.stt-Completed {
+    background-color: #86e49d !important; /* Màu xanh lá */
+    color: #006b21 !important;
+}
+
+/* 4. MÀU VÀNG CHO CÁC TRẠNG THÁI CÒN LẠI */
+.stt-Pending{
+    background-color: #ebc474 !important; /* Màu vàng */
+}
+
+/* === CSS CHO FORM TÌM KIẾM === */
+.search-form {
+    display: flex;
+    margin-bottom: 15px;
+    max-width: 400px;
+}
+.search-input {
+    flex-grow: 1; /* Input chiếm hết phần trống */
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px 0 0 5px;
+    outline: none;
+}
+.search-btn {
+    border: none;
+    background-color: #a0816c; /* Màu chủ đạo của bạn */
+    color: white;
+    padding: 0 12px;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+}
+.search-btn:hover {
+    background-color: #af907b;
+}
+
         </style>
     </head>
 
     <body>
         <header>
             <div class="header-top">
-                <div class="logo">DOTAI</div>
+                <div class="logo">GIO</div>
                 <div class="admin-info">
                     <div class="admin-name"><i class="bi bi-person-fill"></i>: Staff</div>
-                    <div class="signout"><a href="/Project_SWP391_Group4/cookieHandle"><i class="bi bi-box-arrow-right"></i> Sign out</a></div>
+                    <div class="signout"><a href="${BASE_URL}/cookieHandle"><i class="bi bi-box-arrow-right"></i> Sign out</a></div> <%-- SỬA ĐƯỜNG DẪN --%>
                 </div>
             </div>
         </header>
@@ -620,6 +721,10 @@
                     <li class="nav-link" data-target="product-manage">
                         <a href="#" ><i class="bi bi-box"></i> <span>Products Management</span> </a>
                     </li>
+                    <li class="nav-link" data-target="customer-manage">
+                        <a href="#"><i class="bi bi-people"></i> <span>Customer management</span></a>
+                    </li>
+
                     <li class="nav-link" data-target="personal-info">
                         <a href="#" ><i class="bi bi-person-fill"></i> <span>Personal information</span> </a>
                     </li>
@@ -631,24 +736,15 @@
             </nav>
 
             <div class="main-content">
-                <!-- product management -->
                 <div class="product-manage">
                     <h3>Product Management</h3>
                     <hr>
                     <div class="filter">
-                        <!--<form action="" method="">-->
                         <select id="sortID"  id="filter-price" onchange="sort()">
                             <option value="Increase">Sort by price ascending</option>
                             <option value="Decrease">Sort by price in descending</option>
                         </select>
-                        <!--<button class="btn-sort"> Submit</button>-->
-                        <!--</form>-->
-                        <!--<form action="" method="">-->
                         <input id="search" type="text" placeholder="Search" oninput="search()">
-                        <!--<button class="btn-search"> Search</button>-->
-
-                        <!--</form>-->
-                        <!-- <button class="filter-add-btn">Add new product</button> -->
                     </div>
                     <div class="product-table">
                         <table class="table">
@@ -659,7 +755,6 @@
                                     <th scope="col">Category ID</th>
                                     <th scope="col">Price</th>
                                     <th scope="col">Quantity</th>
-                                    <!-- <th scope="col"></th> -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -706,7 +801,7 @@
                         </div>
                     </div>
                     <div>
-                        <form action="statistic" method="post">
+                        <form action="${BASE_URL}/statistic" method="post"> <%-- SỬA ĐƯỜNG DẪN --%>
                             <select id="mySelect" name="year">
                                 <option value="">--Select Year--</option>
                                 <option value="2024">2024</option>
@@ -731,69 +826,135 @@
 
                 </div>
 
-                <div class="order-manage">
-                    <h3>Order Management</h3>
-                    <hr>
-                    <div class="order-main">
-                        <table class="order-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Address</th>
-                                    <th>Order Date</th>
-                                    <th class="th-status">Status</th>
-                                    <th>Amount</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <c:forEach items="${requestScope.orderList}" var="order">                               
-                                    <tr>
-                                        <td>${order.orderID}</td>
-                                        <td>${order.usernameCustomer}</td>
-                                        <td class="tb-address">${order.address}</td>
-                                        <td>${order.date}</td>
-                                        <td><p class="status stt-pending" id="id${order.orderID}" onchange="handleColor()">${order.status}</p></td>
-                                            <c:set var="formattedPrice">
-                                                <fmt:formatNumber type="number" value="${order.total}" pattern="###,###" />
-                                            </c:set>
-                                        <td><strong><i class="bi bi-currency-dollar"></i>${formattedPrice}</strong></td>
-                                        <td class="action-btn">
+<div class="order-manage">
+    <h3>Order Management</h3>
+    <hr>
+    <form action="${BASE_URL}/staff" method="GET" class="search-form">
 
-                                            <c:if test="${order.status eq 'Pending'}">
-                                                <button class="accept-btn" onclick="updateOrderStatus(${order.orderID}, 'Delivering')"><i class="bi bi-check-lg"></i></button>
-                                                <button class="reject-btn" onclick="updateOrderStatus(${order.orderID}, 'Cancelled')"><i class="bi bi-x-lg"></i></button>
-                                                </c:if>
-                                            <button class="view-btn"><i class="bi bi-eye"></i></button>
-                                        </td>
+    <input type="hidden" name="activeTab" value="order-manage">
+
+    <input type="text" class="search-input" name="searchId" 
+           placeholder="Search by Order ID..." value="${param.searchId}">
+
+    <button type="submit" class="search-btn"><i class="bi bi-search"></i></button>
+</form>
+    
+    <div class="order-main">
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Order Date</th>
+                    <th class="th-status">Status</th>
+                    <th>Amount</th>
+                    <th></th> <%-- Cột cho các nút action --%>
+                </tr>
+            </thead>
+            <tbody>
+                <c:forEach items="${requestScope.orderList}" var="order">
+                    
+                    <%-- 1. HÀNG CHÍNH CỦA ĐƠN HÀNG --%>
+                    <tr class="order-summary-row">
+                        <td>${order.orderID}</td>
+                        <td>${customerUsernameMap[order.customer_id]}</td>
+                        <td class="tb-address">${order.address}</td>
+                        
+                        <%-- Định dạng lại ngày tháng cho đẹp hơn --%>
+                        <td><fmt:formatDate value="${order.date}" pattern="yyyy-MM-dd" /></td> 
+                        
+                        <%-- Đặt class động theo status (Vd: stt-Delivering, stt-Cancelled) --%>
+                        <td><p class="status stt-${order.status}" id="id${order.orderID}">${order.status}</p></td>
+                        
+                        <c:set var="formattedPrice">
+                            <fmt:formatNumber type="number" value="${order.total}" pattern="###,###" />
+                        </c:set>
+                        <td><strong><i class="bi bi-currency-dollar"></i>${formattedPrice}</strong></td>
+                        
+                       <%-- THAY THẾ KHỐI <td class="action-btn"> CŨ BẰNG KHỐI NÀY --%>
+
+<td class="action-btn" id="action-cell-${order.orderID}">
+    
+    <%-- 1. Nếu trạng thái là Pending (hoặc Processing) --%>
+    <c:if test="${order.status eq 'Pending' or order.status eq 'Processing'}">
+        <%-- Nút duyệt đơn -> Delivering --%>
+        <button class="accept-btn" onclick="updateOrderStatus(${order.orderID}, 'Delivering')" title="Duyệt đơn">
+            <i class="bi bi-check-lg"></i>
+        </button>
+        <%-- Nút hủy đơn -> Cancelled --%>
+        <button class="reject-btn" onclick="updateOrderStatus(${order.orderID}, 'Cancelled')" title="Hủy đơn">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </c:if>
+
+    <%-- 2. Nếu trạng thái là Delivering (hoặc Shipped) --%>
+    <c:if test="${order.status eq 'Delivering' or order.status eq 'Shipped'}">
+        <%-- Nút hoàn thành đơn -> Completed --%>
+        <button class="accept-btn" onclick="updateOrderStatus(${order.orderID}, 'Completed')" title="Hoàn thành đơn">
+            <i class="bi bi-truck"></i> <%-- Icon xe tải --%>
+        </button>
+    </c:if>
+
+    <%-- 3. Nếu là Completed hoặc Cancelled, không hiển thị nút nào --%>
+
+    <%-- Nút xem chi tiết (Luôn hiển thị) --%>
+    <button class="view-btn"><i class="bi bi-eye"></i></button>
+</td>                                                                  
+                    </tr>
+
+                    <%-- 2. HÀNG CHI TIẾT (BỊ ẨN) --%>
+                    <tr class="order-detail-row" style="display: none;">
+                        <%-- Gộp 7 cột làm một --%>
+                        <td colspan="7" class="order-detail-cell"> 
+                            
+                            <%-- Bảng chi tiết bên trong --%>
+                            <table class="detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product ID</th>
+                                        <th>Product Name</th>
+                                        <th>Size</th>
+                                        <th>Quantity</th>
+                                        <th>Total Price</th>
                                     </tr>
-                                <tbody class="item">
+                                </thead>
+                                <tbody>
+                                    <%-- Lặp qua danh sách chi tiết, chỉ hiển thị nếu khớp orderID --%>
                                     <c:forEach items="${requestScope.orderDetailList}" var="orderDetail">
                                         <c:if test="${order.orderID eq orderDetail.orderID}">
                                             <tr>
-                                                <td></td>
-                                                <td>
-                                                    ${orderDetail.productID}
-                                                </td>
-                                                <td>${nameProduct[orderDetail.productID]}</td>
+                                                <td>${orderDetail.productID}</td>
+                                                
+                                                <%-- Tra cứu tên sản phẩm từ Map --%>
+                                                <td>${nameProduct[orderDetail.productID]}</td> 
+                                                
                                                 <td>${orderDetail.size_name}</td>
                                                 <td>${orderDetail.quantity}</td>
-                                                <c:set var="formattedPrice2">
-                                                    <fmt:formatNumber type="number" value="${(priceProduct[orderDetail.productID] - (priceProduct[orderDetail.productID] * promoMap[promoID[orderDetail.productID]])/100) * orderDetail.quantity}" pattern="###,###" />
+                                                
+                                                <%-- Tính toán giá cuối cùng (đã bao gồm khuyến mãi) --%>
+                                                <c:set var="itemPrice" value="${priceProduct[orderDetail.productID]}" />
+                                                <c:set var="promoPercent" value="${promoMap[promoID[orderDetail.productID]]}" />
+                                                <c:set var="finalPrice" value="${(itemPrice - (itemPrice * (promoPercent != null ? promoPercent : 0) / 100)) * orderDetail.quantity}" />
+                                                
+                                                <c:set var="formattedDetailPrice">
+                                                    <fmt:formatNumber type="number" value="${finalPrice}" pattern="###,###" />
                                                 </c:set>
-                                                <td>${formattedPrice2}</td>
-                                                <td></td>
+                                                
+                                                <td>${formattedDetailPrice} đ</td>
                                             </tr>
                                         </c:if>
                                     </c:forEach>
                                 </tbody>
-                            </c:forEach>
-
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                            </table>
+                            
+                        </td>
+                    </tr>
+                </c:forEach>
+            </tbody>
+        </table>
+    </div>
+</div>
 
                 <div class="personal-info">
                     <h3>Personal Information</h3>
@@ -806,19 +967,15 @@
                             <table class="profile-info">
                                 <tr id="fullName">
                                     <th>Fullname:</th>
-                                    <!--<td>Thanh Dy</td>-->
                                 </tr>
                                 <tr id="phoneNumber">
                                     <th>Phone number:</th>
-                                    <!--<td>12345</td>-->
                                 </tr>
                                 <tr id="email">
                                     <th>Email:</th>
-                                    <!--<td>xyz@gmail.com</td>-->
                                 </tr>
                                 <tr id="address">
                                     <th>Address:</th>
-                                    <!--<td>Can Tho</td>-->
                                 </tr>
                             </table>
                         </div>
@@ -884,12 +1041,44 @@
                     </div>
                 </div>
 
+                <!-- dis customer -->
+                <div class="customer-manage">
+                    <h3>Customers management</h3>
+                    <hr>
+
+                    <!-- Toolbar tìm kiếm giống import: gọn, không submit/clear -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <input id="customer-search" class="form-control" style="max-width:320px"
+                               type="text" placeholder="Search name / email / username">
+                        <div class="ms-3 text-muted small">Total: <strong id="customer-total">0</strong></div>
+                    </div>
+
+                    <div class="order-main">
+                        <table class="order-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Username</th>
+                                    <th>Full name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th class="tb-address">Address</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="customer-list">
+                                <!-- JS sẽ đổ dữ liệu vào đây -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- dis customer -->
+
+
                 <div class="import-goods">
                     <h3>Import goods</h3>
                     <hr>
-                    <!-- <div class="add-goods-btn">
-                        <button><a href="/admin/addProduct.html">Add import goods</a></button>
-                    </div> -->
                     <div class="order-main">
                         <table class="order-table" >
                             <thead>
@@ -916,21 +1105,19 @@
         </div>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script src="/Project_SWP391_Group4/js/jquery-3.7.0.min.js"></script>
-        <script src="/Project_SWP391_Group4/js/jquery.validate.min.js"></script>
+        <script src="${BASE_URL}/js/jquery-3.7.0.min.js"></script> <%-- SỬA ĐƯỜNG DẪN --%>
+        <script src="${BASE_URL}/js/jquery.validate.min.js"></script> <%-- SỬA ĐƯỜNG DẪN --%>
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
+
 
                                     const chartData = {
                                         labels: ["quarter 1", "quarter 2", "quarter 3", "quarter 4"],
                                         data: [${quarter1},${quarter2},${quarter3},${quarter4}],
                                     };
-
-
                                     const myChart = document.querySelector(".my-chart");
                                     const ul = document.querySelector(".programming-stats .details ul");
-
                                     new Chart(myChart, {
                                         type: "doughnut",
                                         data: {
@@ -944,10 +1131,7 @@
                                         }
 
                                     });
-
-
                                     const ctx = document.querySelector('.my-chart-line');
-
                                     new Chart(ctx, {
                                         type: 'bar',
                                         data: {
@@ -968,12 +1152,6 @@
                                             }
                                         }
                                     });
-
-
-
-
-
-
                                     $(document).ready(function (e) {
                                         $('.btn-changePass').click(function (e) {
                                             e.preventDefault();
@@ -984,7 +1162,8 @@
                                             if (newPassword1 === newPassword2) {
                                                 $.ajax({
                                                     method: "POST",
-                                                    url: "http://localhost:8080/Project_SWP391_Group4/staff/profile/changepass",
+                                                    // === SỬA ĐỔI AJAX URL ===
+                                                    url: "${BASE_URL}/staff/profile/changepass",
                                                     data: {
                                                         input: input,
                                                         currentPassword: currentPass,
@@ -1024,7 +1203,8 @@
                                         var phone = document.getElementById('update-profile-phone').value;
                                         $.ajax({
                                             method: "POST",
-                                            url: "http://localhost:8080/Project_SWP391_Group4/staff/profile/update",
+                                            // === SỬA ĐỔI AJAX URL ===
+                                            url: "${BASE_URL}/staff/profile/update",
                                             data: {
                                                 username: username,
                                                 email: email,
@@ -1044,6 +1224,7 @@
                                                     }
                                                 })
                                     }
+
 
                                     function toggleEditPersonal(profile) {
                                         var edit = document.getElementById('edit-personal');
@@ -1083,7 +1264,8 @@
                                         var input = document.getElementById('search').value;
                                         $.ajax({
                                             method: "POST",
-                                            url: "http://localhost:8080/Project_SWP391_Group4/staff/product/search",
+                                            // === SỬA ĐỔI AJAX URL ===
+                                            url: "${BASE_URL}/staff/product/search",
                                             data: {
                                                 input: input
                                             }
@@ -1123,11 +1305,13 @@
                                                     }
                                                 })
                                     }
+
                                     function sort(e) {
                                         var option = document.getElementById('sortID').value;
                                         $.ajax({
                                             method: "POST",
-                                            url: "http://localhost:8080/Project_SWP391_Group4/staff/product/sort",
+                                            // === SỬA ĐỔI AJAX URL ===
+                                            url: "${BASE_URL}/staff/product/sort",
                                             data: {
                                                 option: option
                                             }
@@ -1181,7 +1365,6 @@
                                                 return cookie.substring(name.length + 1); // Lấy phần giá trị của cookie (sau dấu '=')
                                             }
                                         }
-
                                         // Nếu không tìm thấy cookie có tên mong muốn, trả về null
                                         return null;
                                     }
@@ -1190,20 +1373,20 @@
                                         var input = getCookie("input");
                                         $.ajax({
                                             method: "POST",
-                                            url: "http://localhost:8080/Project_SWP391_Group4/staff/profile",
+                                            // === SỬA ĐỔI AJAX URL ===
+                                            url: "${BASE_URL}/staff/profile",
                                             data: {
                                                 input: input
                                             }
                                         })
                                                 .done(function (data) {
                                                     var data1 = JSON.parse(data);
-
                                                     var cells = document.querySelectorAll(".profile-info td");
-
                                                     cells.forEach(function (cell) {
                                                         cell.remove();
                                                     });
-                                                    //                                                                                    console.log(data1.data);
+                                                    //                                                         
+                                                    console.log(data1.data);
                                                     if (data1.isSuccess) {
                                                         var trName = document.getElementById("fullName");
                                                         var trEmail = document.getElementById("email");
@@ -1235,13 +1418,16 @@
                                     function productList() {
                                         $.ajax({
                                             method: "POST",
-                                            url: "http://localhost:8080/Project_SWP391_Group4/staff/product",
+                                            // === SỬA ĐỔI AJAX URL ===
+                                            url: "${BASE_URL}/staff/product",
                                             data: {
                                             }
                                         })
                                                 .done(function (data) {
-                                                    var data1 = JSON.parse(data);
-                                                    //                                                                                    console.log(data1.data);
+                                                    var
+                                                            data1 = JSON.parse(data);
+                                                    //                                              
+                                                    console.log(data1.data);
                                                     if (data1.isSuccess) {
                                                         document.querySelector("table tbody").innerHTML = ""
                                                         //                                                                                       
@@ -1280,11 +1466,12 @@
 
                                     function hideButtons1(button) {
                                         var id = button.getAttribute("data-id");
-//                                       
-//                                        console.log(id);
+                                        //                                       
+                                        //                                        console.log(id);
                                         $.ajax({
                                             method: "POST",
-                                            url: "http://localhost:8080/Project_SWP391_Group4/staff/import/update",
+                                            // === SỬA ĐỔI AJAX URL ===
+                                            url: "${BASE_URL}/staff/import/update",
                                             data: {
                                                 id: id
                                             }
@@ -1294,8 +1481,9 @@
                                                     var data1 = JSON.parse(data);
                                                     console.log(data1);
                                                     if (data1.isSuccess) {
-                                                        // Cập nhật nội dung và class của thẻ có class "status"
-//                                                        button.classList.add('d-n');
+                                                        // Cập nhật nội dung và 
+                                                        // class của thẻ có class "status"
+                                                        //                                                        button.classList.add('d-n');
                                                         listImport();
                                                     } else {
                                                         // Xử lý khi có lỗi từ máy chủ
@@ -1310,49 +1498,41 @@
                                     function listImport() {
                                         $.ajax({
                                             method: "POST",
-                                            url: "http://localhost:8080/Project_SWP391_Group4/staff/import",
+                                            // === SỬA ĐỔI AJAX URL ===
+                                            url: "${BASE_URL}/staff/import",
                                             data: {
                                             }
                                         })
                                                 .done(function (data) {
                                                     var data1 = JSON.parse(data);
-
-//                                                    console.log(data1.data);
+                                                    //              
+                                                    console.log(data1.data);
                                                     if (data1.isSuccess) {
                                                         document.querySelector("table #import-list").innerHTML = ""
                                                         var importList = data1.data.list;
                                                         var importDetailList = data1.data.listDetail;
-//                                                        console.log(importDetailList);
+                                                        //                                                        console.log(importDetailList);
                                                         var i = 0;
                                                         importList.forEach(function (item) {
                                                             var newDiv = document.createElement("div");
                                                             var newTr = document.createElement("tr");
-//                                                            newTr.classList.add('class'+item.id)
+                                                            //                                                            newTr.classList.add('class'+item.id)
                                                             var numCell = document.createElement("td");
                                                             var nameCell = document.createElement("td");
                                                             var quantityCell = document.createElement("td");
-
                                                             var dateCell = document.createElement("td");
                                                             var statusCell = document.createElement("td");
                                                             var priceCell = document.createElement("td");
                                                             var btnCell = document.createElement("td");
-
-
                                                             btnCell.classList.add('action-btn');
-
-
                                                             numCell.textContent = ++i;
                                                             nameCell.textContent = item.username;
                                                             quantityCell.textContent = item.quantity;
                                                             dateCell.textContent = item.date;
-
                                                             //statusCell.textContent = item.status;
                                                             statusCell.innerHTML = '<p class="status stt-' + item.status + '">' + item.status + '</p>';
-
                                                             priceCell.textContent = item.total.toLocaleString('vi-VN');
                                                             btnCell.innerHTML = '<button class="view-btn"><i class="bi bi-eye"></i></button><button class="accept-btn ' + item.status + '" data-id="' + item.id + '"onclick="hideButtons1(this)"><i class="bi bi-check-lg"></i></button>';
-
-
                                                             newTr.appendChild(numCell);
                                                             newTr.appendChild(nameCell);
                                                             newTr.appendChild(quantityCell);
@@ -1360,31 +1540,23 @@
                                                             newTr.appendChild(statusCell);
                                                             newTr.appendChild(priceCell);
                                                             newTr.appendChild(btnCell);
-
-
-
                                                             document.querySelector("table #import-list").appendChild(newTr);
-
                                                             var body = document.createElement("tbody");
                                                             body.classList.add("item");
-
                                                             importDetailList.forEach(function (detail) {
 
                                                                 if (item.id === detail.importID) {
                                                                     var blankCell1 = document.createElement("td");
                                                                     var blankCell2 = document.createElement("td");
                                                                     var blankCell3 = document.createElement("td");
-
                                                                     var productNameCell = document.createElement("td");
                                                                     var quantityProductCell = document.createElement("td");
                                                                     var sizeCell = document.createElement("td");
                                                                     var priceProductCell = document.createElement("td");
                                                                     var newTrBody = document.createElement("tr");
-
                                                                     newTrBody.style.backgroundColor = "white"
                                                                     blankCell1.textContent = detail.productID;
                                                                     productNameCell.textContent = detail.productName;
-
                                                                     productNameCell.textContent = detail.productName;
                                                                     quantityProductCell.textContent = detail.quantity;
                                                                     sizeCell.textContent = detail.sizeName;
@@ -1394,22 +1566,17 @@
                                                                     newTrBody.appendChild(quantityProductCell);
                                                                     newTrBody.appendChild(sizeCell);
                                                                     newTrBody.appendChild(blankCell2);
-
                                                                     newTrBody.appendChild(priceProductCell);
                                                                     newTrBody.appendChild(blankCell3);
-
                                                                     body.appendChild(newTrBody);
-
                                                                 }
                                                                 document.querySelector("table #import-list").appendChild(body);
-
                                                             })
 
 
                                                         })
                                                         const viewBtn = document.querySelectorAll('.view-btn');
                                                         const dropdownItem = document.querySelectorAll('.item');
-
                                                         viewBtn.forEach(function (edit, i) {
                                                             edit.addEventListener('click', function () {
                                                                 if (dropdownItem[i].style.display === "none") {
@@ -1425,58 +1592,68 @@
                                                 })
                                     }
                                     ;
+                                    // === KHỐI CODE JAVASCRIPT MỚI (THAY THẾ DÒNG 426-439) ===
+document.addEventListener('DOMContentLoaded', function () {
 
-                                    document.addEventListener('DOMContentLoaded', function () {
+    const links = document.querySelectorAll('.nav-link');
+    const contentDivs = document.querySelectorAll('.main-content > div');
 
-                                        const links = document.querySelectorAll('.nav-link');
-                                        links.forEach(function (link) {
-                                            link.addEventListener('click', function (e) {
-                                                e.preventDefault();
-                                                const target = this.getAttribute('data-target');
-                                                const contentDivs = document.querySelectorAll('.main-content > div');
-                                                console.log(target);
-                                                contentDivs.forEach(function (div) {
-                                                    console.log(div.classList);
-                                                    if (div.classList.contains(target)) {
-                                                        div.style.display = 'block';
-                                                    } else {
-                                                        div.style.display = 'none';
-                                                    }
-                                                });
+    // 1. HÀM CHUYỂN TAB (TÁCH RA ĐỂ TÁI SỬ DỤNG)
+    function activateTab(target) {
+        contentDivs.forEach(function (div) {
+            if (div.classList.contains(target)) {
+                div.style.display = 'block';
+            } else {
+                div.style.display = 'none';
+            }
+        });
 
+        // Tải dữ liệu động khi click tab (nếu cần)
+        // (Không load 'order-manage' vì nó đã được tải bởi Controller)
+        switch (target) {
+            case 'product-manage':
+                productList();
+                break;
+            case 'personal-info':
+                profile();
+                break;
+            case 'import-goods':
+                listImport();
+                break;
+        }
+    }
 
+    // 2. GẮN SỰ KIỆN CLICK CHO CÁC LINK
+    links.forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = this.getAttribute('data-target');
+            activateTab(target);
+        });
+    });
 
-                                                switch (target) {
-                                                    case 'product-manage':
-                                                        productList();
-                                                        break;
-                                                    case 'personal-info':
-                                                        profile();
-                                                        break;
-                                                    case 'import-goods':
+    // 3. LOGIC KÍCH HOẠT TAB KHI TẢI TRANG (TỪ URL)
+    // Lấy activeTab mà StaffDashboardController đã gửi
+    const initialTab = "${activeTab}"; 
 
-                                                        listImport();
-                                                        break;
-                                                    case 'order-manage':
-
-                                                }
-                                            });
-                                        });
-                                    });
-
+    if (initialTab) {
+        activateTab(initialTab);
+    } else {
+        // Mặc định là 'statistic'
+        activateTab('statistic');
+    }
+});
+// === KẾT THÚC KHỐI CODE THAY THẾ ===
                                     let status = document.querySelectorAll('.status');
                                     status.forEach(element => {
                                         if (element.innerHTML === 'Cancelled') {
                                             element.classList.add('red');
                                         } else if (element.innerHTML === 'Delivering') {
                                             element.classList.add('green');
-
                                         } else if (element.innerHTML === 'Delivered') {
                                             element.classList.add('blue');
                                         }
                                     });
-
-
                                     const handleColor = () => {
                                         let status = document.querySelectorAll('.status');
                                         status.forEach(element => {
@@ -1484,51 +1661,89 @@
                                                 element.classList.add('red');
                                             } else if (element.innerHTML === 'Delivering') {
                                                 element.classList.add('green');
-
                                             } else if (element.innerHTML === 'Delivered') {
 
                                                 element.classList.add('blue');
                                             }
                                         });
                                     };
-
-
                                     var acceptBtns = document.querySelectorAll('.accept-btn');
                                     var rejectBtns = document.querySelectorAll('.reject-btn');
-
                                     // Thiết lập sự kiện cho tất cả các nút
                                     acceptBtns.forEach(function (btn) {
                                         btn.addEventListener('click', hideButtons);
                                     });
-
                                     rejectBtns.forEach(function (btn) {
                                         btn.addEventListener('click', hideButtons);
                                     });
-
                                     // Hàm để ẩn cả hai nút trong cùng một thẻ td
                                     function hideButtons(event) {
-                                        var clickedBtn = event.target; // Lấy nút đã được nhấp vào
-                                        var tdElement = clickedBtn.closest('.action-btn'); // Tìm thẻ td gần nhất chứa nút đã được nhấp vào
-                                        var acceptBtn = tdElement.querySelector('.accept-btn'); // Lấy nút chấp nhận trong thẻ td
-                                        var rejectBtn = tdElement.querySelector('.reject-btn'); // Lấy nút từ chối trong thẻ td
+                                        var clickedBtn = event.target;
+                                        // Lấy nút đã được nhấp vào
+                                        var tdElement = clickedBtn.closest('.action-btn');
+                                        // Tìm thẻ td gần nhất chứa nút đã được nhấp vào
+                                        var acceptBtn = tdElement.querySelector('.accept-btn');
+                                        // Lấy nút chấp nhận trong thẻ td
+                                        var rejectBtn = tdElement.querySelector('.reject-btn');
+                                        // Lấy nút từ chối trong thẻ td
                                         acceptBtn.style.display = 'none';
                                         rejectBtn.style.display = 'none';
-
                                     }
                                     function updateOrderStatus(orderId, status) {
                                         let id = document.querySelector(`#id` + orderId);
                                         $.ajax({
-                                            url: '/Project_SWP_Group2/orderUpdateStatus',
-                                            method: 'GET',
+                                            // 1. Sửa URL thành URL mới
+                                            url: '${BASE_URL}/staff/order/update',
+
+                                            // 2. Dùng POST để cập nhật
+                                            method: 'POST',
+                                            dataType: 'json', // 3. Báo cho jQuery biết chúng ta mong đợi JSON
                                             data: {
                                                 orderId: orderId,
                                                 status: status
                                             },
                                             success: function (response) {
-                                                console.log(id);
-                                                id.innerHTML = status;
+                                                // 4. Chỉ cập nhật web KHI backend báo thành công
+                                                if (response.isSuccess) {
+                                                    console.log("Cập nhật thành công:", orderId, status);
 
-                                                handleColor();
+                                                    // 1. Cập nhật chữ của status (ví dụ: "Pending" -> "Delivering")
+                                                    let statusText = document.querySelector(`#id` + orderId);
+                                                    statusText.innerHTML = status;
+
+                                                    // 2. Cập nhật class để đổi màu
+                                                    // (ví dụ: class "stt-Pending" -> "stt-Delivering")
+                                                    statusText.className = "status stt-" + status;
+
+                                                    // 3. Cập nhật lại các nút trong ô action
+                                                    let actionCell = document.querySelector(`#action-cell-` + orderId);
+                                                    // Lấy HTML của nút "view" (con mắt) để giữ lại
+                                                    let viewButtonHTML = actionCell.querySelector('.view-btn').outerHTML;
+
+                                                    let newButtonHTML = ""; // HTML cho các nút mới
+
+                                                    if (status === 'Delivering') {
+                                                        // Nếu vừa đổi sang Delivering, tạo nút "Completed" (xe tải)
+                                                        newButtonHTML =
+                                                                `<button class="accept-btn" onclick="updateOrderStatus(${orderId}, 'Completed')" title="Hoàn thành đơn">
+                    <i class="bi bi-truck"></i>
+                 </button>`;
+                                                    } else if (status === 'Completed' || status === 'Cancelled') {
+                                                        // Nếu vừa đổi sang Completed hoặc Cancelled, không còn nút nào
+                                                        newButtonHTML = "";
+                                                    }
+
+                                                    // Cập nhật lại HTML của ô action
+                                                    actionCell.innerHTML = newButtonHTML + viewButtonHTML;
+
+                                                } else {
+                                                    alert("Cập nhật thất bại từ server.");
+                                                }
+                                            },
+                                            error: function (xhr, status, error) {
+                                                // 5. Báo lỗi nếu 404 hoặc 500
+                                                console.error("AJAX Error:", status, error);
+                                                alert("Lỗi khi gửi yêu cầu cập nhật.");
                                             }
                                         });
                                     }
@@ -1546,7 +1761,210 @@
                                             });
                                         })
                                     });
-        </script>
-    </body>
+<!-- ==== CUSTOMER MANAGE ==== -->
+                                    // Gọi danh sách tất cả khách hàng
+                                    function listCustomers() {
+                                        $.ajax({
+                                            method: "POST",
+                                            url: "${BASE_URL}/staff/customer",
+                                            dataType: "json"
+                                        }).done(function (resp) {
+                                            if (!resp || !resp.isSuccess) {
+                                                console.error(resp);
+                                                return;
+                                            }
+                                            renderCustomerRows(resp.data || []);
+                                        });
+                                    }
+
+                                    // Tìm kiếm theo từ khoá (gõ tới đâu lọc tới đó)
+                                    function searchCustomers(q) {
+                                        q = (q || "").trim();
+                                        if (q.length === 0) {
+                                            listCustomers();
+                                            return;
+                                        }
+                                        $.ajax({
+                                            method: "POST",
+                                            url: "${BASE_URL}/staff/customer/search",
+                                            data: {input: q},
+                                            dataType: "json"
+                                        }).done(function (resp) {
+                                            if (!resp || !resp.isSuccess) {
+                                                console.error(resp);
+                                                return;
+                                            }
+                                            renderCustomerRows(resp.data || []);
+                                        });
+                                    }
+
+                                    // bảng khách hàng + gắn nút View
+                                    function renderCustomerRows(list) {
+                                        const tbody = document.querySelector("#customer-list");
+                                        const total = document.querySelector("#customer-total");
+                                        tbody.innerHTML = "";
+                                        let i = 0;
+
+                                        if (!list.length) {
+                                            if (total)
+                                                total.textContent = "0";
+                                            tbody.innerHTML = '<tr><td colspan="7"><div class="empty">No customers found.</div></td></tr>';
+                                            return;
+                                        }
+
+                                        list.forEach(function (cst) {
+                                            // Hàng chính
+                                            const tr = document.createElement("tr");
+                                            tr.innerHTML =
+                                                    '<td>' + (++i) + '</td>' +
+                                                    '<td>' + (cst.username || '') + '</td>' +
+                                                    '<td>' + (cst.fullName || '') + '</td>' +
+                                                    '<td>' + (cst.email || '') + '</td>' +
+                                                    '<td>' + (cst.phoneNumber || '') + '</td>' +
+                                                    '<td>' + (cst.address || '') + '</td>' +
+                                                    '<td class="action-btn">' +
+                                                    '<button class="view-btn" data-id="' + cst.customer_id + '"><i class="bi bi-eye"></i></button>' +
+                                                    '</td>';
+                                            tbody.appendChild(tr);
+
+                                            // Hàng con (ẩn) chứa orders của customer
+                                            const subBody = document.createElement("tbody");
+                                            subBody.classList.add("item");
+                                            subBody.setAttribute("data-customer", cst.customer_id);
+                                            tbody.appendChild(subBody);
+                                        });
+
+                                        if (total)
+                                            total.textContent = String(list.length);
+
+                                        // Gắn click cho nút View sau khi render xong
+                                        tbody.querySelectorAll(".view-btn").forEach(function (btn) {
+                                            btn.addEventListener("click", function () {
+                                                const id = this.getAttribute("data-id");
+                                                toggleCustomerOrders(this, id);
+                                            });
+                                        });
+                                    }
+
+                                    // Bung/thu đơn hàng của 1 customer
+                                    function toggleCustomerOrders(button, customerId) {
+                                        const tr = button.closest("tr");
+                                        const next = tr.nextElementSibling; // tbody.item
+                                        if (!next || !next.classList.contains("item"))
+                                            return;
+
+                                        if (next.style.display === "" || next.style.display === "none") {
+                                            if (!next.hasChildNodes() || next.innerHTML.trim() === "") {
+                                                loadCustomerOrders(customerId, next, function () {
+                                                    next.style.display = "contents";
+                                                });
+                                            } else {
+                                                next.style.display = "contents";
+                                            }
+                                        } else {
+                                            next.style.display = "none";
+                                        }
+                                    }
+
+                                    // Tải đơn hàng theo customer và render vào tbody con
+                                    function loadCustomerOrders(customerId, containerTbody, cb) {
+                                        $.ajax({
+                                            method: "POST",
+                                            url: "${BASE_URL}/staff/customer/detail",
+                                            data: {id: customerId},
+                                            dataType: "json"
+                                        }).done(function (resp) {
+                                            if (!resp || !resp.isSuccess) {
+                                                console.error(resp);
+                                                cb && cb();
+                                                return;
+                                            }
+
+                                            const orders = (resp.data && resp.data.orders) ? resp.data.orders : [];
+                                            containerTbody.innerHTML = "";
+
+                                            if (!orders.length) {
+                                                const empty = document.createElement("tr");
+                                                empty.style.backgroundColor = "white";
+                                                empty.innerHTML = '<td colspan="7" class="text-muted">No orders.</td>';
+                                                containerTbody.appendChild(empty);
+                                                cb && cb();
+                                                return;
+                                            }
+
+                                            orders.forEach(function (o) {
+                                                const row = document.createElement("tr");
+                                                row.style.backgroundColor = "white";
+                                                row.innerHTML =
+                                                        '<td>' + (o.orderID ?? o.order_id ?? '') + '</td>' +
+                                                        '<td>' + formatDateForTable(o.date) + '</td>' +
+                                                        '<td>' + (o.address || '') + '</td>' +
+                                                        '<td>' + (o.phone_number || o.phoneNumber || '') + '</td>' +
+                                                        '<td><p class="status">' + (o.status || '') + '</p></td>' +
+                                                        '<td>' + formatCurrencyVND(o.total) + '</td>' +
+                                                        '<td></td>';
+                                                containerTbody.appendChild(row);
+                                            });
+
+                                            handleColor();
+                                            cb && cb();
+                                        });
+                                    }
+
+                                    // Debounce tìm kiếm input
+                                    let custTimer = null;
+                                    document.addEventListener("DOMContentLoaded", function () {
+                                        const input = document.getElementById("customer-search");
+                                        if (input) {
+                                            input.addEventListener("input", function (e) {
+                                                clearTimeout(custTimer);
+                                                custTimer = setTimeout(function () {
+                                                    searchCustomers(e.target.value);
+                                                }, 350);
+                                            });
+                                        }
+                                    });
+
+                                    // Utils
+                                    function formatCurrencyVND(n) {
+                                        try {
+                                            return (n ?? 0).toLocaleString('vi-VN');
+                                        } catch (e) {
+                                            return n;
+                                        }
+                                    }
+                                    function formatDateForTable(d) {
+                                        try {
+                                            const date = new Date(d);
+                                            if (isNaN(date.getTime()))
+                                                return d || "";
+                                            return date.toLocaleDateString('vi-VN');
+                                        } catch (e) {
+                                            return d || "";
+                                        }
+                                    }
+                                    // === SCRIPT CHO DROPDOWN CHI TIẾT ĐƠN HÀNG ===
+
+                                    // Dùng 'on' để áp dụng cho cả các phần tử được load bằng AJAX (nếu có)
+                                    $(document).on('click', '.view-btn', function () {
+                                        // "this" là nút <button> vừa được bấm
+
+                                        // 1. Tìm hàng chi tiết (là hàng <tr> ngay sau hàng <tr> cha của nút)
+                                        var detailRow = $(this).closest('tr').next('.order-detail-row');
+
+                                        // 2. Hiển thị/ẩn hàng đó với hiệu ứng trượt
+                                        detailRow.slideToggle(200); // 200ms animation
+
+                                        // 3. Đổi icon cho nút (thêm/xóa class 'active')
+                                        $(this).toggleClass('active');
+
+                                        // Thêm icon "mắt-đóng" (bi-eye-slash) nếu nó chưa tồn tại
+                                        if ($(this).find('.bi-eye-slash').length === 0) {
+                                            $(this).append('<i class="bi bi-eye-slash"></i>');
+                                        }
+                                    });
+</script>
+
+</body>
 
 </html>

@@ -1,8 +1,4 @@
-<%-- 
-    Document   : aboutUs
-    Created on : Mar 4, 2024, 7:12:14 PM
-    Author     : thinh
---%>
+
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -685,7 +681,7 @@
         <header class="header">
             <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND </strong></div>
             <div class="headerContent">
-                <div class="logo"><a href="/Project_SWP391_Group4/productList">DOTAI</a></div>
+                <div class="logo"><a href="/Project_SWP391_Group4/productList">GIO</a></div>
                 <nav>
                     <ul class="headerList">
                         <li class="headerListItem"><a href="/Project_SWP391_Group4/productList">Home page</a></li>
@@ -705,9 +701,9 @@
                                 <li><a href="/Project_SWP391_Group4/aboutUs.jsp">About Us</a></li>
 
                                 <li><a href="/Project_SWP391_Group4/contact.jsp">Contact</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderView">View order</a></li>
+                              
                                 <li><a href="/Project_SWP391_Group4/policy.jsp">Exchange policy</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderHistoryView">Order's history</a></li>
+                           
                         </li>
                     </ul>
                 </nav>
@@ -751,7 +747,7 @@
                 <div class="col-md-9">
                     <div class="introduce">
                         <h2>Introduce</h2>
-                        <p>First of all, Dotai would like to sincerely thank you for your continued interest and
+                        <p>First of all, GIO would like to sincerely thank you for your continued interest and
                             follow-up over the years.</p><br>
 
                         <p>Developed from a small online store hidden in an alley on Nguyen Trai Street, Ninh Kieu
@@ -806,7 +802,7 @@
         <footer>
             <div class="content-footer">
                 <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@dotai.vn & @fired.vn</p>
+                <p>@gio.vn & @fired.vn</p>
             </div>
 
             <div class="row" id="img-footer">
@@ -821,7 +817,7 @@
             <div class="items-footer">
                 <div class="row">
                     <div class="col-sm-3">
-                        <h4 id="highlight">About Dotai</h4>
+                        <h4 id="highlight">About GIO</h4>
                         <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
                         <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..." class="bct">
                     </div>
@@ -829,7 +825,7 @@
                         <h4 id="highlight">Contact</h4>
                         <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
                         <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                        <p><b>Email:</b> info@dotai.vn</p>
+                        <p><b>Email:</b> info@gio.vn</p>
                     </div>
                     <div class="col-sm-3">
                         <h4 id="highlight">Customer support</h4>
@@ -844,7 +840,7 @@
                             <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
                             <div class="col-9"> 
                                 <h4 id="highlight">0123.456.789</h4>
-                                <a href="">info@dotai.vn</a>
+                                <a href="">info@gio.vn</a>
                             </div>
                         </div>
                         <h5 id="highlight">Follow Us</h5>

@@ -4,35 +4,51 @@
  */
 package entity;
 
-/**
- *
- * @author thinh
- */
-public class customer {
+public class Customer {
 
-    private String username, email, password, address, phoneNumber, fullName;
+    private int customer_id;
+    private String username;
+    private String email;
+    private String password;
+    private String address;
+    private String phoneNumber;
+    private String fullName;
+    private String google_id;
 
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public customer(String username, String email, String password, String address, String phoneNumber, String fullName) {
+    // Constructor đầy đủ (khi đọc từ DB)
+    public Customer(int customer_id, String username, String email, String password,
+            String address, String phoneNumber, String fullName, String google_id) {
+        this.customer_id = customer_id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.fullName = fullName;
+        this.google_id = google_id;
     }
 
-    public customer() {
+    // Constructor khi đăng ký (DB tự sinh customer_id)
+    public Customer(String username, String email, String password,
+            String address, String phoneNumber, String fullName, String google_id) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.fullName = fullName;
+        this.google_id = google_id;
     }
 
-   
+    // Getters & Setters
+    public int getCustomer_id() {
+        return customer_id;
+    }
+
+    public void setCustomer_id(int customer_id) {
+        this.customer_id = customer_id;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -73,4 +89,27 @@ public class customer {
         this.phoneNumber = phoneNumber;
     }
 
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getGoogle_id() {
+        return google_id;
+    }
+
+    public void setGoogle_id(String google_id) {
+        this.google_id = google_id;
+    }
+
+    @Override
+    public String toString() {
+        return "Customer{" + "customer_id=" + customer_id + ", username=" + username
+                + ", email=" + email + ", password=" + password + ", address=" + address
+                + ", phoneNumber=" + phoneNumber + ", fullName=" + fullName
+                + ", google_id=" + google_id + '}';
+    }
 }

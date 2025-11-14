@@ -12,24 +12,23 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
-import DAO.DAOproduct;
-import DAO.DAOpromo;
-import entity.promo;
+import DAO.ProductDAO;
+import DAO.PromoDAO;
+import entity.Promo;
 import java.util.HashMap;
 import java.util.Map;
-import static url.productURL.URL_PRODUCT_DETAIL;
-import entity.product;
-
-import entity.product;
+import static url.ProductURL.URL_PRODUCT_DETAIL;
+import entity.Product;
+import entity.Product;
 import jakarta.servlet.http.Cookie;
-import static url.productURL.URL_PRODUCT_LIST;
+import static url.ProductURL.URL_PRODUCT_LIST;
 
 /**
  *
- * @author LENOVO
+ * 
  */
 @WebServlet(name = "productList", urlPatterns = {URL_PRODUCT_LIST, URL_PRODUCT_DETAIL})
-public class home extends HttpServlet {
+public class Home extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -57,31 +56,31 @@ public class home extends HttpServlet {
         }
     }
 
-    DAOproduct DAOproduct = new DAOproduct();
-    DAOpromo promo = new DAOpromo();
+    ProductDAO DAOproduct = new ProductDAO();
+    PromoDAO promo = new PromoDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String urlPath = request.getServletPath();
-        List<promo> promoList = promo.getAll();
+        List<Promo> promoList = promo.getAll();
         Map<Integer, Integer> promoMap = new HashMap<>();
-        for (promo promo : promoList) {
+        for (Promo promo : promoList) {
             promoMap.put(promo.getPromoID(), promo.getPromoPercent());
         }
         switch (urlPath) {
             case URL_PRODUCT_DETAIL:
-                List<product> productList2 = DAOproduct.getAll();
+                List<Product> productList2 = DAOproduct.getAll();
                 int id = Integer.parseInt(request.getParameter("id"));
-                product p = DAOproduct.getProductById(id);
+                Product p = DAOproduct.getProductById(id);
                 request.setAttribute("promoMap", promoMap);
                 request.setAttribute("p", p);
                 request.getRequestDispatcher("productDetail.jsp").forward(request, response);
                 break;
 
             case URL_PRODUCT_LIST:
-                DAOproduct DAOproduct = new DAOproduct();
-                List<product> productList = DAOproduct.get8RandomProduct();
+                ProductDAO DAOproduct = new ProductDAO();
+                List<Product> productList = DAOproduct.get8RandomProduct();
                 request.setAttribute("promoMap", promoMap);
                 request.setAttribute("productList", productList);
                 request.getRequestDispatcher("index.jsp").forward(request, response);

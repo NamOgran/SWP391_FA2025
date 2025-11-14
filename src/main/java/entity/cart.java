@@ -4,28 +4,23 @@
  */
 package entity;
 
-/**
- *
- * @author Administrator
- */
-public class cart {
+public class Cart {
     int cart_id;
-    String username;
+    int customer_id; // <-- Đã đổi từ String username sang int customer_id
     int product_id;
     int quantity;
-    int price;
+    float price; // <-- Đã đổi từ int sang float
     String size_name;
 
-    public cart(int cart_id, String username, int product_id, int quantity, int price, String size_name) {
+    // Constructor mới: nhận customer_id (int) và price (float)
+    public Cart(int cart_id, int customer_id, int product_id, int quantity, float price, String size_name) {
         this.cart_id = cart_id;
-        this.username = username;
+        this.customer_id = customer_id;
         this.product_id = product_id;
         this.quantity = quantity;
         this.price = price;
         this.size_name = size_name;
     }
-
-    
 
     public int getCartID() {
         return cart_id;
@@ -35,12 +30,14 @@ public class cart {
         this.cart_id = cart_id;
     }
 
-    public String getUsername() {
-        return username;
+    // Getter cho customer_id
+    public int getCustomer_id() {
+        return customer_id;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    // Setter cho customer_id (nhận int)
+    public void setCustomer_id(int customer_id) { // <-- SỬA: Thay đổi kiểu tham số
+        this.customer_id = customer_id;
     }
 
     public int getProductID() {
@@ -59,11 +56,13 @@ public class cart {
         this.quantity = quantity;
     }
 
-    public int getPrice() {
+    // Getter cho price (float)
+    public float getPrice() { // <-- SỬA: Kiểu trả về float
         return price;
     }
 
-    public void setPrice(int price) {
+    // Setter cho price (float)
+    public void setPrice(float price) { // <-- SỬA: Kiểu tham số float
         this.price = price;
     }
 
@@ -77,8 +76,6 @@ public class cart {
 
     @Override
     public String toString() {
-        return "cart{" + "cart_id=" + cart_id + ", username=" + username + ", product_id=" + product_id + ", quantity=" + quantity + ", price=" + price + ", size_name=" + size_name + '}';
+        return "cart{" + "cart_id=" + cart_id + ", customer_id=" + customer_id + ", product_id=" + product_id + ", quantity=" + quantity + ", price=" + price + ", size_name=" + size_name + '}';
     }
-
-    
 }

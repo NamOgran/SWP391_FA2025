@@ -4,15 +4,15 @@
  */
 package controller;
 
-import DAO.DAOorder;
-import DAO.DAOproduct;
-import DAO.DAOpromo;
-import DAO.DAOsize;
-import entity.orderDetail;
-import entity.orders;
-import entity.product;
-import entity.promo;
-import entity.size;
+import DAO.OrderDAO;
+import DAO.ProductDAO;
+import DAO.PromoDAO;
+import DAO.SizeDAO;
+import entity.OrderDetail;
+import entity.Orders;
+import entity.Product;
+import entity.Promo;
+import entity.Size;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -27,10 +27,10 @@ import java.util.Map;
 
 /**
  *
- * @author LENOVO
+ * 
  */
 @WebServlet(name = "statistic", urlPatterns = {"/statistic"})
-public class statistic extends HttpServlet {
+public class Statistic extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -75,7 +75,7 @@ public class statistic extends HttpServlet {
         int numberOfProduct = 0;
         int revenue = 0;
         int numberOfCustomer = 0;
-        DAO.DAOproduct DAOproduct = new DAOproduct();
+        DAO.ProductDAO DAOproduct = new ProductDAO();
         String date = request.getParameter("date");
 
         if (date.equals("date")) {
@@ -186,8 +186,7 @@ public class statistic extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response, int customer_id)
             throws ServletException, IOException {
         String username = "";
         Cookie arr[] = request.getCookies();
@@ -196,50 +195,50 @@ public class statistic extends HttpServlet {
                 username = o.getValue();
             }
         }
-                DAOorder daoOrder = new DAOorder();
-        List<orders> orderList = daoOrder.getAllOrders();
-        List<orderDetail> orderDetailList = daoOrder.getAllOrdersDetail();
-        DAOproduct daoProduct = new DAOproduct();
-        List<product> productList = daoProduct.getAll();
-        DAOsize daoSize = new DAOsize();
-        List<size> sizeList = daoSize.getAll();
+                OrderDAO daoOrder = new OrderDAO();
+        List<Orders> orderList = daoOrder.getAllOrders();
+        List<OrderDetail> orderDetailList = daoOrder.getAllOrdersDetail();
+        ProductDAO daoProduct = new ProductDAO();
+        List<Product> productList = daoProduct.getAll();
+        SizeDAO daoSize = new SizeDAO();
+        List<Size> sizeList = daoSize.getAll();
         Map<Integer, String> nameProduct = new HashMap<>();
-        for (product product : productList) {
+        for (Product product : productList) {
             nameProduct.put(product.getId(), product.getName());
         }
-        DAOpromo daoPromo = new DAOpromo();
-        List<promo> promoList = daoPromo.getAll();
+        PromoDAO daoPromo = new PromoDAO();
+        List<Promo> promoList = daoPromo.getAll();
         Map<Integer, Integer> promoMap = new HashMap<>();
-        for (promo promo : promoList) {
+        for (Promo promo : promoList) {
             promoMap.put(promo.getPromoID(), promo.getPromoPercent());
         }
         Map<Integer, Integer> priceProduct = new HashMap<>();
-        for (product product : productList) {
+        for (Product product : productList) {
             priceProduct.put(product.getId(), product.getPrice());
         }
         Map<Integer, Integer> promoID = new HashMap<>();
-        for (product product : productList) {
+        for (Product product : productList) {
             promoID.put(product.getId(), product.getPromoID());
         }
-        List<orders> ordersUserList = daoOrder.orderUser(username);
+        List<Orders> ordersUserList = daoOrder.orderUser(customer_id);
         Map<Integer, String> picUrlMap = new HashMap<>();
-        for (product product : productList) {
+        for (Product product : productList) {
             picUrlMap.put(product.getId(), product.getPicURL());
         }
         Map<Integer, Integer> priceP = new HashMap<>();
-        for (product product : productList) {
+        for (Product product : productList) {
             priceP.put(product.getId(), product.getPrice());
         }
         Map<Integer, Integer> ordersQuantityMap = new HashMap<>();
-        for (orderDetail orders : orderDetailList) {
+        for (OrderDetail orders : orderDetailList) {
             ordersQuantityMap.put(orders.getOrderID(), orders.getQuantity());
         }
         int numberOfOrder = 0;
         int numberOfProduct = 0;
         int revenue = 0;
         int numberOfCustomer = 0;
-        List<orders> orderListSort = daoOrder.getAllOrdersSort();
-        DAO.DAOproduct DAOproduct = new DAOproduct();
+        List<Orders> orderListSort = daoOrder.getAllOrdersSort();
+        DAO.ProductDAO DAOproduct = new ProductDAO();
 
         String date = request.getParameter("date");
 

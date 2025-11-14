@@ -4,9 +4,14 @@
  */
 package controller;
 
-import DAO.DAOcustomer;
+import DAO.CustomerDAO;
+import Utils.EmailUtil;
 import com.google.gson.Gson;
-import entity.customer;
+import entity.Customer;
+import jakarta.mail.Message;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -19,28 +24,31 @@ import jakarta.servlet.http.HttpSession;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Properties;
 import java.util.Random;
-import javax.mail.Message;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 import payLoad.ResponseData;
-import static url.customerURL.URL_FORGOT_PASS;
-import static url.customerURL.URL_LOGIN_CUSTOMER;
-
-import static url.customerURL.URL_SIGNUP;
-import static url.customerURL.URL_UPDATE_PASS;
+import static url.CustomerURL.URL_FORGOT_PASS;
+import static url.CustomerURL.URL_LOGIN_CUSTOMER;
+import static url.CustomerURL.URL_SIGNUP;
+import static url.CustomerURL.URL_UPDATE_PASS;
+import static url.CustomerURL.URL_VERIFY;
 
 /**
  *
- * @author thinh
+ *
  */
-@WebServlet(name = "customerController", urlPatterns = {URL_LOGIN_CUSTOMER, URL_SIGNUP, URL_FORGOT_PASS, URL_UPDATE_PASS})
-public class customerController extends HttpServlet {
+@WebServlet(name = "customerController", urlPatterns = {
+    "/login/signup", 
+    "/login/forgot", 
+    "/login/update", 
+    "/login/verifyCode" 
+})
+public class CustomerController extends HttpServlet {
 
-    private Gson gson = new Gson();
-    DAOcustomer daoCustomer = new DAOcustomer();
+    private final Gson gson = new Gson();
+    CustomerDAO daoCustomer = new CustomerDAO();
+    private static final long OTP_EXPIRY_TIME_MS = 10 * 60 * 1000;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -48,9 +56,6 @@ public class customerController extends HttpServlet {
 //        processRequest(request, response);
         String urlPath = request.getServletPath();
         switch (urlPath) {
-            case URL_LOGIN_CUSTOMER:
-                login(request, response);
-                break;
             case URL_SIGNUP:
                 signUp(request, response);
                 break;
@@ -73,52 +78,176 @@ public class customerController extends HttpServlet {
         }
     }
 
-    protected void updatePass(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String password = request.getParameter("password");
-        password = getMd5(password);
+    protected void forgotPass(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String email = request.getParameter("email");
-
-
-//        deleteCookie(request, response);
-
-        boolean isSuccess = daoCustomer.updatePasswordByEmailOrUsername(password, email);
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setDescription("");
-        data.setData("");
-        String json = gson.toJson(data);
         PrintWriter pw = response.getWriter();
-        pw.print(json);
+        ResponseData data = new ResponseData();
+        data.setIsSuccess(false);
+
+        // 1. Kiểm tra email có tồn tại không
+        boolean isExist = daoCustomer.checkEmail(email);
+        if (!isExist) {
+            data.setDescription("Email không tồn tại trong hệ thống.");
+            pw.print(gson.toJson(data));
+            pw.flush();
+            return;
+        }
+
+        try {
+            // 2. Tạo OTP an toàn (6 chữ số)
+            String otp = generateNumericOTP(6);
+
+            // 3. Gửi email (Sử dụng EmailUtil ở file 3)
+            String subject = "[GIO Shop] Yêu cầu khôi phục mật khẩu";
+            String content = "Mã xác thực của bạn là: " + otp
+                    + "\n\nMã này sẽ hết hạn sau 10 phút."
+                    + "\n\nNếu bạn không yêu cầu, vui lòng bỏ qua email này.";
+
+            // Hàm sendEmail sẽ tự xử lý các lỗi (SSL, Port, v.v.)
+            EmailUtil.sendEmail(email, subject, content);
+
+            // 4. Lưu thông tin bảo mật vào Session
+            HttpSession session = request.getSession();
+            session.setAttribute("otpHash", getMd5(otp)); // Lưu HASH, không lưu mã thật
+            session.setAttribute("otpExpiry", System.currentTimeMillis() + OTP_EXPIRY_TIME_MS);
+            session.setAttribute("resetEmail", email); // Lưu email để dùng ở bước 3
+
+            data.setIsSuccess(true);
+            data.setDescription("Gửi mã thành công.");
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            String chiTietLoi = ex.toString().replace("\"", "'");
+            data.setDescription("Lỗi Runtime. Chi tiết: " + chiTietLoi);
+        }
+
+        pw.print(gson.toJson(data));
         pw.flush();
     }
 
-    protected void forgotPass(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String email = request.getParameter("email");
-        boolean isSuccess = daoCustomer.checkEmail(email);
+    /**
+     * BƯỚC 2: Xác thực mã OTP So sánh HASH và thời gian hết hạn.
+     */
+    protected void verifyCode(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String inputCode = request.getParameter("code");
+        HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới
+
+        PrintWriter pw = response.getWriter();
         ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setDescription("");
-        data.setData("");
+        data.setIsSuccess(false);
+
+        if (session == null) {
+            data.setDescription("Phiên làm việc đã hết hạn. Vui lòng thử lại.");
+            pw.print(gson.toJson(data));
+            pw.flush();
+            return;
+        }
+
+        // Lấy dữ liệu an toàn từ session
+        String sessionOtpHash = (String) session.getAttribute("otpHash");
+        Long sessionExpiryTime = (Long) session.getAttribute("otpExpiry");
+        String sessionEmail = (String) session.getAttribute("resetEmail");
+
+        if (sessionOtpHash == null || sessionExpiryTime == null || sessionEmail == null) {
+            data.setDescription("Phiên không hợp lệ hoặc đã hết hạn.");
+            pw.print(gson.toJson(data));
+            pw.flush();
+            return;
+        }
+
+        // 1. Kiểm tra hết hạn
+        if (System.currentTimeMillis() > sessionExpiryTime) {
+            data.setDescription("Mã OTP đã hết hạn.");
+            // Xóa session cũ
+            session.removeAttribute("otpHash");
+            session.removeAttribute("otpExpiry");
+            session.removeAttribute("resetEmail");
+            pw.print(gson.toJson(data));
+            pw.flush();
+            return;
+        }
+
+        // 2. Kiểm tra mã (so sánh hash)
+        if (getMd5(inputCode).equals(sessionOtpHash)) {
+            data.setIsSuccess(true);
+            data.setDescription("Xác thực thành công");
+
+            // Đánh dấu đã xác thực
+            session.setAttribute("codeVerified", true);
+
+            // Xóa OTP ngay sau khi dùng
+            session.removeAttribute("otpHash");
+            session.removeAttribute("otpExpiry");
+        } else {
+            data.setDescription("Mã OTP không chính xác.");
+        }
+
+        pw.print(gson.toJson(data));
+        pw.flush();
+    }
+
+    /**
+     * BƯỚC 3: Cập nhật mật khẩu mới Chỉ cho phép nếu session đã được đánh dấu
+     * "codeVerified".
+     */
+    protected void updatePass(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String password = request.getParameter("password");
+        HttpSession session = request.getSession(false);
+
+        PrintWriter pw = response.getWriter();
+        ResponseData data = new ResponseData();
+        data.setIsSuccess(false);
+
+        if (session == null) {
+            data.setDescription("Phiên làm việc đã hết hạn. Vui lòng thử lại.");
+            pw.print(gson.toJson(data));
+            pw.flush();
+            return;
+        }
+
+        // Kiểm tra quyền (phải qua bước 2)
+        Boolean codeVerified = (Boolean) session.getAttribute("codeVerified");
+        String email = (String) session.getAttribute("resetEmail");
+
+        if (codeVerified == null || !codeVerified || email == null) {
+            data.setDescription("Chưa xác thực OTP. Không được phép đổi mật khẩu.");
+            pw.print(gson.toJson(data));
+            pw.flush();
+            return;
+        }
+
+        // Hash mật khẩu mới
+        String passwordHash = getMd5(password);
+
+        // Gọi DAO (Giả sử DAO đã được sửa lỗi)
+        boolean isSuccess = daoCustomer.updatePasswordByEmailOrUsername(passwordHash, email);
 
         if (isSuccess) {
-            String code = getCode(request, response, email);
-            data.setData(code);
+            data.setIsSuccess(true);
+            data.setDescription("Cập nhật mật khẩu thành công.");
 
-//            request.setAttribute("email", email);
-//            request.setAttribute("message", "<div id=\"message\" style=\"color: green\">Please enter the code sent to your email to continue</div>");
-//            request.getRequestDispatcher("/forgot.jsp").forward(request, response);
+            // Dọn dẹp session sau khi hoàn tất
+            session.removeAttribute("codeVerified");
+            session.removeAttribute("resetEmail");
+            // Hoặc session.invalidate() để hủy toàn bộ
+
+        } else {
+            data.setDescription("Không thể cập nhật mật khẩu. Lỗi cơ sở dữ liệu.");
         }
-//        else {
-//
-////            request.setAttribute("email", email);
-////            request.setAttribute("message", "<div id=\"message\" style=\"color: red\">Your email is not exist</div>");
-////            request.getRequestDispatcher("/forgot.jsp").forward(request, response);
-//        }
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
+
+        pw.print(gson.toJson(data));
         pw.flush();
+    }
+
+    // Hàm tạo OTP 6 số (an toàn hơn)
+    public static String generateNumericOTP(int length) {
+        String numbers = "0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(numbers.charAt(random.nextInt(numbers.length())));
+        }
+        return sb.toString();
     }
 
     public static String getCode(HttpServletRequest request, HttpServletResponse response, String email) throws ServletException, IOException {
@@ -134,9 +263,10 @@ public class customerController extends HttpServlet {
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
 
-        javax.mail.Session session = javax.mail.Session.getInstance(props, new javax.mail.Authenticator() {
-            protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
-                return new javax.mail.PasswordAuthentication(userName, password);
+        jakarta.mail.Session session = jakarta.mail.Session.getInstance(props, new jakarta.mail.Authenticator() {
+            @Override
+            protected jakarta.mail.PasswordAuthentication getPasswordAuthentication() {
+                return new jakarta.mail.PasswordAuthentication(userName, password);
             }
         });
         String code = generateRandomString(5);
@@ -174,16 +304,24 @@ public class customerController extends HttpServlet {
 
     protected void login(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String input = request.getParameter("input");
-        String password = request.getParameter("password");
-        password = getMd5(password);
-        boolean isSuccess = daoCustomer.checkLogin(input, password);
-        if (isSuccess) {
-            response.sendRedirect("/Project_SWP391_Group4/productList");
+        String password = getMd5(request.getParameter("password"));
+
+        boolean isLoginSuccessful = daoCustomer.checkLogin(input, password);
+
+        if (isLoginSuccessful) {
+            Customer loggedInCustomer = daoCustomer.getCustomerByEmailOrUsername(input);
+            if (loggedInCustomer != null) {
+                HttpSession session = request.getSession();
+                session.setAttribute("acc", loggedInCustomer);
+                response.sendRedirect(request.getContextPath() + "/productList");
+            } else {
+                request.setAttribute("message", "<div style='color:red'>Cannot load customer data!</div>");
+                request.getRequestDispatcher("/login.jsp").forward(request, response);
+            }
         } else {
-            request.setAttribute("message", "<div id=\"message\" style=\"color: red\">Incorrect username or password</div>");
+            request.setAttribute("message", "<div style='color:red'>Invalid username or password!</div>");
             request.getRequestDispatcher("/login.jsp").forward(request, response);
         }
-
     }
 
     public static String getMd5(String input) {
@@ -213,25 +351,29 @@ public class customerController extends HttpServlet {
 
     protected void signUp(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        password = getMd5(password);
+        String password = getMd5(request.getParameter("password"));
         String email = request.getParameter("email");
         String address = request.getParameter("address");
         String phoneNumber = request.getParameter("phoneNumber");
         String fullName = request.getParameter("fullName");
+        String google_id = request.getParameter("google_id");
+        if (google_id == null) {
+            google_id = ""; // tránh null
+        }
 
-        customer c = new customer(username, email, password, address, phoneNumber, fullName);
-
+        Customer c = new Customer(username, email, password, address, phoneNumber, fullName, google_id);
         boolean isSuccess = daoCustomer.signUp(c);
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData("");
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
 
+        if (isSuccess) {
+            // Nếu đăng ký thành công → chuyển sang trang đăng nhập
+            HttpSession session = request.getSession();
+            session.setAttribute("msg", "Đăng ký thành công! Vui lòng đăng nhập.");
+            response.sendRedirect(request.getContextPath() + "/profile");
+        } else {
+            // Nếu thất bại → quay lại signup.jsp với thông báo lỗi
+            request.setAttribute("message", "<div style='color:red'>Đăng ký thất bại, vui lòng thử lại!</div>");
+            request.getRequestDispatcher("/view/login/signup.jsp").forward(request, response);
+        }
     }
 
     /**

@@ -1,25 +1,26 @@
 <%-- 
-    Document   : login
+    Document   : login (UPGRADED - Yody Style)
     Created on : Feb 28, 2024, 5:18:02 PM
-    Author     : thinh
+    Author     : duyentq
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<!DOCTYPE html>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Login</title>
-        <link rel="stylesheet" href="/Project_SWP391_Group4/boostrap/bootstrap.min.css"/>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> <!-- bootstrap icon -->
-        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'> <!-- font family -->
-
+        <title>Login - GIO</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+              integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'>
         <link rel="icon" href="/Project_SWP391_Group4/images/LG1.png" type="image/x-icon">
 
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         <style>
+            /* === CSS GỐC (GIỮ NGUYÊN) === */
             * {
                 margin: 0;
                 padding: 0;
@@ -27,11 +28,9 @@
                 box-sizing: border-box;
                 color: rgb(151, 143, 137);
             }
-
             img {
                 width: 100%;
             }
-
             :root {
                 --logo-color: #a0816c;
                 --nav-list-color: #a0816c;
@@ -39,27 +38,25 @@
                 --text-color: #a0816c;
                 --bg-color: #a0816c;
             }
-
+            body {
+                background-color: #f8f9fa;
+            } /* Nền xám nhạt */
             body::-webkit-scrollbar {
                 width: 0.5em;
             }
-
             body::-webkit-scrollbar-track {
                 box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
             }
-
             body::-webkit-scrollbar-thumb {
                 border-radius: 50px;
                 background-color: var(--bg-color);
                 outline: 1px solid slategrey;
             }
-
             nav {
                 height: 70px;
                 justify-content: center;
                 display: flex;
             }
-
             .header_title {
                 display: flex;
                 text-align: center;
@@ -70,62 +67,41 @@
                 font-weight: 500;
                 height: 30px;
             }
-
             .headerContent {
                 max-width: 1200px;
                 margin: 0 auto;
             }
-
-            .headerContent,
-            .headerList,
-            .headerTool {
+            .headerContent, .headerList, .headerTool {
                 display: flex;
                 align-items: center;
             }
-
             .headerContent {
                 justify-content: space-around;
             }
-
             .logo a {
                 text-decoration: none;
                 color: var(--logo-color);
                 font-size: 1.5em;
                 font-weight: bold;
             }
-
-            .logo a:hover {
-                color: var(--logo-color);
-            }
-
             .headerList {
                 margin: 0;
                 list-style-type: none;
             }
-
-            /* hiệu ứng hover */
             .headerListItem {
                 transition: font-size 0.3s ease;
                 height: 24px;
             }
-
-            .headerListItem:hover {
-                font-size: 18px;
-            }
-
-            /* hiệu ứng hover */
             .headerListItem a {
                 margin: 0 10px;
                 padding: 22px 0;
                 text-decoration: none;
                 color: var(--text-color);
             }
-
             .dropdown-icon {
                 margin-left: 2px;
                 font-size: 0.7500em;
             }
-
             .dropdownMenu {
                 position: absolute;
                 width: 200px;
@@ -136,42 +112,34 @@
                 z-index: 1;
                 box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
             }
-
             .dropdownMenu li {
                 list-style-type: none;
                 margin: 0;
                 border-bottom: 1px solid rgb(235 202 178);
             }
-
             .dropdownMenu li a {
                 text-decoration: none;
                 padding: 5px 15px;
                 margin: 0;
-                width: fit-content;
+                width: 100%;
                 display: flex;
                 font-size: 0.9em;
-                width: 100%;
                 color: var(--text-color);
             }
-
             .dropdownMenu li:hover {
-                background-color: #f1f1f1
+                background-color: #f1f1f1;
             }
-
             .headerListItem:hover .dropdownMenu {
                 display: block;
             }
-
             .headerTool a {
                 padding: 5px;
             }
-
             .headerToolIcon {
                 width: 45px;
                 justify-content: center;
                 display: flex;
             }
-
             .icon {
                 cursor: pointer;
                 font-size: 26px;
@@ -202,7 +170,7 @@
                 position: absolute;
                 right: 1px;
                 top: 1px;
-                height: 97%;
+                height: 42px;
                 width: 15%;
                 border: none;
                 background-color: #f6f6f6;
@@ -211,383 +179,37 @@
                 outline: none;
                 border-color: var(--bg-color);
             }
-            .infoBox {
-                width: auto;
-                min-width: 260px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-
-            .infoBox-content,
-            .cartBox-content,
-            .searchBox-content {
-                width: 100%;
-                height: 100%;
-                max-height: 100%;
-                overflow: hidden;
-                padding: 9px 20px 20px;
-            }
-
-            .headerToolIcon h2 {
-                font-size: 1.3em;
-                text-align: center;
-                padding-bottom: 9px;
-                color: var(--text-color);
-                border-bottom: 1px solid #e7e7e7;
-            }
-            .infoBox-content ul {
-                padding: 0;
-                margin: 0;
-            }
-
-            .infoBox-content ul li {
-                list-style-type: none;
-            }
-            .infoBox-content ul li:first-child {
-                color: black;
-                padding-left: 7px;
-            }
-
-            .infoBox-list li a {
-                text-decoration: none;
-                font-size: 14px;
-                color: black;
-                padding: 0;
-            }
-
-            .infoBox-list li a:hover {
-                color: var(--text-color);
-            }
-
-            .bi-dot {
-                color: black;
-            }
-
-            .cartBox {
-                width: 340px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-
-            .noneProduct {
-                padding: 0 0 10px;
-            }
-
-            .shopping-cart-icon {
-                margin: 0 auto 7px;
-                display: block;
-                width: 15%;
-                height: 15%;
-            }
-
-            .product {
-                margin-top: 50px;
-            }
-
-            .cartIcon {
-                justify-content: center;
-                display: flex;
-            }
-
-            .cartIcon i {
-                font-size: 2.5em;
-            }
-
-            .noneProduct p {
-                text-align: center;
-                font-size: 14px;
-                margin: 0;
-            }
-
-            .haveProduct {
-                margin-bottom: 8px;
-                display: none;
-            }
-
-            .bi-x-lg {
-                cursor: pointer;
-            }
-
-            .miniCartImg {
-                padding-left: 0;
-            }
-
-            .miniCartDetail {
-                padding-right: 0;
-                position: relative;
-            }
-
-            .miniCartDetail p {
-                font-size: 0.8em;
-                color: black;
-                font-weight: bold;
-                padding-right: 20px;
-            }
-
-            .miniCartDetail p span {
-                display: block;
-                text-align: left;
-                color: #677279;
-                font-weight: normal;
-                font-size: 12px;
-            }
-
-            .miniCart-quan span {
-                float: left;
-                width: auto;
-                color: black;
-                margin-right: 12px;
-                padding: 6px 12px;
-                text-align: center;
-                line-height: 1;
-                font-weight: normal;
-                font-size: 13px;
-                background: #f7f7f7;
-            }
-
-            .miniCart-price span {
-                color: #677279;
-                float: left;
-                font-weight: 500;
-            }
-
-            .miniCartDetail .deleteBtn {
-                position: absolute;
-                top: 0;
-                right: 0px;
-                line-height: 20px;
-                text-align: center;
-                width: 19px;
-                height: 19px;
-            }
-
-            .miniCartDetail .deleteBtn * {
-                color: black;
-            }
-
-            .sumPrice {
-                border-top: 1px solid #e7e7e7;
-            }
-
-            .sumPrice table {
-                width: 100%;
-            }
-
-            .sumPrice td {
-                width: 50%;
-            }
-
-            .sumPrice .tbTextLeft,
-            .tbTextRight {
-                padding: 10px 0;
-            }
-
-            .sumPrice .tbTextRight,
-            span {
-                text-align: right;
-                color: red;
-                font-weight: bold;
-            }
-
-            .miniCartButton {
-                width: 100%;
-                border-radius: 2px;
-                width: 100%;
-                background-color: var(--bg-color);
-                border: none;
-                color: white;
-                font-size: 13px;
-                height: 30px;
-                font-weight: bold;
-            }
-
-            .cartButton td:first-child {
-                padding-right: 5px;
-            }
-
-            .cartButton td:last-child {
-                padding-left: 5px;
-            }
-
-            .cartButton .btnRight {
-                transition: 0.3s;
-            }
-
-            .cartButton .btnRight:hover {
-                background-color: white;
-                border: 1px solid var(--bg-color);
-                color: var(--text-color);
-                transition: 0.3s;
-            }
-            /* end header */
             hr {
                 margin-top: 0;
                 margin-bottom: 10px;
             }
-
-            /* main content */
-            .main {
-                max-width: 1200px;
-                margin: 30px auto 50px;
-            }
-
-            .mainContent {
-                max-width: 100%;
-            }
-
-            .mainHeading {
-                text-align: center;
-                margin-bottom: 30px;
-            }
-
-            .headingContent a {
-                text-decoration: none;
-                color: var(--text-color);
-                font-weight: bold;
-                box-sizing: border-box;
-            }
-
-            .productImg img {
-                width: 100%;
-            }
-
-            .productDetail {
-                padding: 15px 12px 15px;
-                background-color: rgba(255, 255, 255, 0.83);
-                position: relative;
-                transition: 0.3s;
-            }
-
-            .productDetail h3 {
-                font-size: 15px;
-                color: black;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .productDetail p {
-                margin: 0;
-            }
-
-            .price {
-                font-weight: bold;
-                color: black;
-            }
-
-            .productButton {
-                transition: 0.3s;
-                color: white;
-                width: 90%;
-                display: flex;
-                text-align: center;
-                padding: 5px;
-                position: absolute;
-                display: none;
-                transform: translateY(20%);
-                background-color: var(--bg-color);
-                border-radius: 4px;
-                justify-content: center;
-                line-height: 2;
-            }
-            .productDetail:hover .productButton {
-                display: flex;
-            }
-            .productDetail:hover {
-                transform: translateY(-50%);
-            }
-            .productButton *{
-                width: 50%;
-            }
-            .productButton .right{
-                background: white;
-                position: relative;
-                color: white;
-                background: transparent;
-                border-radius: 4px;
-                overflow: hidden;
-                border: none;
-                font-weight: bold;
-            }
-            .addBtn {
-                border: none;
-                background-color: var(--bg-color);
-                border-radius: 4px;
-            }
-            .addBtn span {
-                color: white;
-            }
-            .productButton .right:hover {
-                color:#a0816c;
-            }
-
-            .right span {
-                background-color: white;
-                height: 100%;
-                width: 0;
-                position: absolute;
-                left: 0;
-                bottom: 0;
-                transition: 0.4s;
-                z-index: -1;
-            }
-
-            .productButton .right:hover span {
-                width: 100%;
-            }
-            /* END main content */
-
-            /* footer */
             footer {
                 background-color: #f5f5f5;
             }
-
             .content-footer {
                 text-align: center;
                 padding: 30px;
             }
-
-            .content-footer h3 {
-                color: #a0816c;
-            }
-
-            .bct {
-                width: 50%;
-            }
-
-            footer p {
-                font-size: 15px;
-            }
-
-            footer a {
-                text-decoration: none;
-                color: rgb(151, 143, 137);
-            }
-
             .items-footer {
-                margin: 5%;
+                margin: 5% 5% 0 5%;
             }
-
+            body {
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+            footer {
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
             #highlight {
                 color: #a0816c;
             }
-
+            #img-footer img {
+                padding: 0;
+            }
             #img-footer {
                 margin: 0 auto;
             }
-
             .phone {
                 position: relative;
             }
@@ -598,11 +220,9 @@
                 top: -16%;
                 left: 15px;
             }
-
             .contact-item {
                 display: flex;
             }
-
             .contact-link {
                 margin-right: 10px;
                 border: 1px solid #a0816c;
@@ -612,251 +232,266 @@
                 justify-content: center;
                 display: flex;
             }
-
             .contact-link:hover {
                 background-color: var(--bg-color);
             }
-
             .contact-link:hover .bi-facebook::before,
             .contact-link:hover .bi-instagram::before {
                 color: white;
             }
-
-            /* Google Login Styles */
-            .google-login-section {
-                margin: 20px 0;
-                text-align: center;
+            .search-info {
+                display: flex;
+                margin: 10px 0;
+            }
+            .title {
+                width: 88%;
+            }
+            .search-img {
+                width: 12%;
+            }
+            .search-info a {
+                padding: 0;
+            }
+            .search-img a img {
+                width: 100%;
+            }
+            .title a {
+                text-decoration: none;
+                color: #cfb997;
+            }
+            .title p {
+                margin: 0;
+                margin-top: 14px;
+                font-size: .8em;
+            }
+            .search-list {
+                max-height: 280px;
+                overflow-y: scroll;
+                scrollbar-width: none;
+            }
+            @media (max-width: 1024px) {
+                .infoBox, .searchBox, .cartBox {
+                    right: 0;
+                }
             }
 
+            /* === STYLE MỚI CHO TRANG LOGIN.JSP === */
+
+            .main-content-wrapper {
+                max-width: 1200px;
+                margin: 40px auto;
+                padding: 0 15px;
+            }
+
+            .login-card {
+                max-width: 480px; /* Độ rộng card */
+                margin: 0 auto;
+                background: #fff;
+                border: 1px solid #f0f0f0;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(18, 38, 63, .05);
+                padding: 30px 35px;
+            }
+
+            .login-card h2 {
+                color: #a0816c;
+                margin-top: 0;
+                margin-bottom: 10px;
+                font-size: 26px;
+                font-weight: 700;
+                font-family: "Quicksand", sans-serif;
+                text-align: center;
+            }
+            .login-card h3 {
+                font-size: 16px;
+                color: #9E9E9E;
+                margin-top: 0;
+                margin-bottom: 25px;
+                font-family: "Quicksand", sans-serif;
+                text-align: center;
+                font-weight: 500;
+            }
+
+            /* Google Login (Style từ file gốc) */
             .google-login-btn {
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 width: 100%;
-                padding: 12px 20px;
+                padding: 10px 20px;
                 background-color: #fff;
                 border: 2px solid #ddd;
-                border-radius: 5px;
-                font-size: 16px;
-                font-weight: 500;
+                border-radius: 8px;
+                font-size: 15px;
+                font-weight: 600;
                 color: #333;
                 cursor: pointer;
                 transition: all 0.3s ease;
             }
-
             .google-login-btn:hover {
                 background-color: #f5f5f5;
                 border-color: #ccc;
             }
-
             .google-login-btn img {
                 width: 20px;
                 height: 20px;
                 margin-right: 10px;
             }
 
+            /* Dải phân cách "or" */
             .divider {
                 display: flex;
                 align-items: center;
-                margin: 20px 0;
-                color: #666;
+                margin: 25px 0;
+                color: #999;
+                font-weight: 500;
             }
-
             .divider::before,
             .divider::after {
                 content: "";
                 flex: 1;
                 border-bottom: 1px solid #ddd;
             }
-
             .divider span {
                 padding: 0 15px;
-                background-color: white;
             }
 
-            /* Login Form Styles */
-            #wrapper h2 {
-                color: #a0816c;
-                margin-top: 0px;
-                font-size: 30px;
-                font-family: "Quicksand", sans-serif;
+            /* Form Input hiện đại */
+            .form-label {
+                font-weight: 600;
+                color: #444;
             }
-
-            #wrapper h3 {
-                font-size: 19px;
-                color: #9E9E9E;
-                margin-top: -11px;
-                font-family: "Quicksand", sans-serif;
-            }
-
-            #wrapper h4 {
-                text-align: left;
-                font-family: "Quicksand", sans-serif;
+            .form-control, .form-select {
+                height: 48px;
+                padding: 10px 15px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
                 font-size: 15px;
-                color: #9E9E9E;
+            }
+            .form-control:focus, .form-select:focus {
+                border-color: var(--bg-color, #a0816c);
+                box-shadow: 0 0 0 2px rgba(160, 129, 108, 0.2);
             }
 
-            .highlight {
-                color: #7069f0;
-            }
-
-            .highlight2 {
-                color: #CFB997;
-            }
-
-            #wrapper {
-                text-align: center;
+            /* Căn giữa reCAPTCHA */
+            .g-recaptcha-wrapper {
                 display: flex;
                 justify-content: center;
-                align-items: center;
-                min-height: 80vh;
+                margin-bottom: 20px;
+                transform: scale(0.95);
+                transform-origin: center;
             }
 
-            form {
-                border: 1px solid #a0816c;
-                border-radius: 5px;
-                padding: 30px;
-                margin: 30px 0;
-            }
-
-            input {
-                margin: 8px 0;
-                height: fit-content;
-                width: 300px;
-                outline: none;
-                border: 1px solid#a0816c;
-                padding: 5px;
-                border-radius: 0;
-                font-size: inherit;
-                display: center;
-            }
-
-            .form-group {
-                position: relative;
-                display: flex;
-                margin-top: 5px;
-            }
-
-            #account {
-                background-color: #FFFFFF;
-                color: black;
-                width: 100%;
-                height: 32px;
-                text-align: center;
-                border: 1px solid#a0816c;
-                border-radius: 0;
-                margin-top: 10px;
-                font-size: inherit;
-            }
-
-            select {
-                border:1px solid #a0816c;
-                padding: 5px;
-                font-size: 16px;
-            }
-
-            select:focus{
-                outline: none;
-                border: 1px solid #a0816c;
-            }
-
-            .policyText {
-                margin: 10px 0;
-            }
-
-            .policyText h4 {
-                margin: 0;
-            }
-
-            label {
-                position: absolute;
-                padding: 0px 5px;
-                left: 10px;
-                top: 35%;
-                pointer-events: none;
-                transform: translateY(-10%);
-                background: #fff;
-                transition: all 0.3s ease-in-out;
-                font-size: inherit;
-            }
-
-            .form-group input:focus+label,
-            .form-group input:valid+label {
-                top: 0px;
-                font-size: 13px;
-                font-weight: 500;
-                color: #a0816c;
-            }
-
-            .form-group input:focus {
-                border: 2px solid #a0816c;
-            }
-
-            .login {
-                background: #a0816c;
+            /* Nút Login */
+            .btn-login-submit {
+                background: var(--bg-color, #a0816c);
                 color: #fff;
-                padding: 10px 0;
+                padding: 12px 0;
                 outline: none;
                 width: 100%;
-                height: fit-content;
-                font-size: 19px;
+                font-size: 16px;
+                font-weight: 700;
                 border: none;
+                border-radius: 8px;
+                transition: opacity 0.3s ease;
             }
-
-            .login:hover {
+            .btn-login-submit:hover {
                 opacity: 0.85;
             }
 
-            .other-options {
-                padding: 5px 0;
+            /* Links (Forgot/Signup) */
+            .login-links {
+                padding-top: 20px;
+                text-align: center;
+            }
+            .login-links p {
+                margin: 8px 0;
+                font-size: 15px;
+                color: #555;
+            }
+            .login-links a {
+                color: var(--text-color, #a0816c);
+                font-weight: 600;
+                text-decoration: none;
+            }
+            .login-links a:hover {
+                text-decoration: underline;
             }
 
-            .other-options p {
-                margin: 0;
-                font-size: 0.9em;
+            /* === CSS CHO THÔNG BÁO MỚI === */
+            .toast-alert {
+                position: fixed;
+                top: 80px; /* Dưới header */
+                right: 20px;
+                padding: 15px 20px;
+                background-color: #fff;
+                border: 1px solid #f0f0f0;
+                border-left: 5px solid #28a745; /* Green for success */
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                opacity: 1;
+                transition: opacity 0.5s ease-in-out;
+            }
+            .toast-alert.success i.bi-check-circle-fill {
+                color: #28a745;
+            }
+            .toast-alert .toast-message {
+                color: #333;
+                font-weight: 600;
+            }
+            .toast-alert .toast-close {
+                cursor: pointer;
+                color: #aaa;
+                margin-left: 15px;
+            }
+            .toast-alert .toast-close:hover {
+                color: #333;
+            }
+            /* Tạo hiệu ứng phát sáng nâu */
+            .glow-brown {
+                border: 1px solid #8B4513; /* màu nâu */
+                box-shadow: 0 0 10px #8B4513;
+                transition: box-shadow 0.3s ease, border-color 0.3s ease;
             }
 
-            .bao {
-                width: 44%;
-                margin: 0 auto;
-            }
-
-            @media (max-width: 768px) and (min-width: 601px) {
-                .headerListItem {
-                    font-size: 12px;
-                    height: 18px;
-                }
-                .headerListItem:hover {
-                    font-size: 13px;
-                }
-                .dropdown-icon {
-                    height: 18px;
-                }
-                .productDetail h3 {
-                    height: 50px;
-                }
-                .infoBox {
-                    right:  0;
-                }
-                .bao {
-                    width: 90%;
-                }
-            }
-
-            @media (max-width: 600px) {
-                .bao {
-                    width: 95%;
-                }
-                .google-login-btn {
-                    font-size: 14px;
-                    padding: 10px 15px;
-                }
+            /* Khi hover hoặc focus thì sáng mạnh hơn */
+            .glow-brown:hover,
+            .glow-brown:focus {
+                border-color: #A0522D;
+                box-shadow: 0 0 5px #A0522D;
+                outline: none;
             }
         </style>
     </head>
 
     <body>
-        <!-- header -->
+        <c:if test="${not empty sessionScope.successMessage}">
+            <div class="toast-alert success" id="toast-alert">
+                <i class="bi bi-check-circle-fill"></i>
+                <span class="toast-message">${sessionScope.successMessage}</span>
+                <i class="bi bi-x-lg toast-close" onclick="document.getElementById('toast-alert').style.display = 'none';"></i>
+            </div>
+
+            <script>
+                // Tự động ẩn sau 5 giây
+                setTimeout(function () {
+                    var alert = document.getElementById('toast-alert');
+                    if (alert) {
+                        alert.style.opacity = '0';
+                        setTimeout(function () {
+                            alert.style.display = 'none';
+                        }, 600);
+                    }
+                }, 5000);
+            </script>
+
+            <%-- RẤT QUAN TRỌNG: Xóa attribute để không hiện lại --%>
+            <c:remove var="successMessage" scope="session" />
+        </c:if>
         <header class="header">
             <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND </strong></div>
             <div class="headerContent">
@@ -887,7 +522,7 @@
                                 <li><a href="/Project_SWP391_Group4/contact.jsp">Contact</a></li>
                                 <li><a href="/Project_SWP391_Group4/viewOrder.jsp">View order</a></li>
                                 <li><a href="/Project_SWP391_Group4/policy.jsp">Exchange policy</a></li>
-                                <li><a href="">Order's history</a></li>
+                                <li><a href="/Project_SWP391_Group4/orderHistoryView">Order's history</a></li>
                             </ul>
                         </li>
                     </ul>
@@ -902,12 +537,7 @@
                                     <input oninput="searchByName(this)" name="search" type="text" size="20" placeholder="Search for products...">
                                     <button><i class="bi bi-search"></i></button>
                                 </div>
-                                <div class="search-list">
-                                    <div class="search-list" id="search-ajax">
-                                        <c:forEach items="${requestScope.productList}" var="product">
-                                        </c:forEach>
-                                    </div>
-                                </div>
+                                <div class="search-list" id="search-ajax"></div>
                             </div>
                         </div>
                     </div>
@@ -915,70 +545,69 @@
                         <a href="http://localhost:8080/Project_SWP391_Group4/profile"><i class="bi bi-person icon"></i></a>
                     </div>
                     <div class="headerToolIcon">
-                        <i class="bi bi-cart2 icon" onclick="toggleBox('box3')"></i>
+                        <a href="${pageContext.request.contextPath}/loadCart"><i class="bi bi-cart2 icon"></i></a>
                     </div>
                 </div>
             </div>
             <hr width="100%" , color="#d0a587" />
         </header>
-        <!-- end header -->
+        <main class="main-content-wrapper">
+            <div class="row">
+                <div class="col-lg-7 col-md-9 mx-auto"> 
 
-        <div id="wrapper">
-            <form id="loginForm" action="http://localhost:8080/Project_SWP391_Group4/login/customer" method="POST">
-                <div class="bao">
-                    <h2>LOG IN</h2>
-                    <h3>Enter your email and password</h3>
-                    <hr>
-                    
-                    <!-- Google Login Button -->
-                    <div class="google-login-section">
-                        <button type="button" class="google-login-btn" onclick="loginWithGoogle()">
-                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo">
-                            Continue with Google
-                        </button>
-                    </div>
-                    
-                    <div class="divider">
-                        <span>or</span>
-                    </div>
+                    <div class="login-card">
+                        <h2>LOG IN</h2>
+                        <h3>Enter your email and password</h3>
 
-                    <div class="form-group">
-                        <input type="text" name="input" id="input" required>
-                        <label for="email">Username/Email</label>
-                    </div>
-                    <div class="form-group">
-                        <input type="password" name="password" required>
-                        <label for="password">Password</label>
-                    </div>
-                    
-                    <div>
-                        <b>Join With Account</b>
-                        <select id="account" onchange="getURL()" name="account">
-                            <option value="customer">Customer</option>
-                            <option value="staff">Staff</option>
-                        </select>
-                    </div>
+                        <div class="google-login-section">
+                            <button type="button" class="google-login-btn" onclick="loginWithGoogle()">
+                                <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo">
+                                Continue with Google
+                            </button>
+                        </div>
 
-                    <div class="policyText">
-                        <h4>This site is protected by reCAPTCHA and the Google <a href="#" class="highlight">Privacy Policy</a> and <a href="#" class="highlight">Terms of Service</a> apply.</h4>
-                    </div>
-                    <div class="g-recaptcha" data-sitekey="6LdZuIkpAAAAAJkyWF_aBPQcctXb-PqjyNorBG28"></div><br>
-                    <div id="error">${message}</div>
-                    <button class="login">Log In</button>
-                    
-                    <div class="other-options">
-                        <p>Create new account?<a href="http://localhost:8080/Project_SWP391_Group4/signup.jsp" class="highlight2"> Join with us</a></p>
-                        <p>Forgotten password?<a href="http://localhost:8080/Project_SWP391_Group4/forgot.jsp" class="highlight2"> Reset Password</a></p>
+                        <div class="divider">
+                            <span>or</span>
+                        </div>
+
+                        <c:if test="${not empty message}">
+                            <div class="alert alert-danger p-2 text-center" id="error">${message}</div>
+                        </c:if>
+
+                        <form id="loginForm" action="loginProcess" method="POST">
+
+                            <div class="mb-3">
+                                <label for="input" class="form-label">Username or Email</label>
+                                <input type="text" class="form-control" name="input" id="input" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" id="password" required>
+                            </div>
+                            <div class="policyText">
+                                <small class="text-muted d-block mb-2" style="margin-top: -10px;">This site is protected by reCAPTCHA and the Google <a href="#" class="highlight">Privacy Policy</a> and <a href="#" class="highlight">Terms of Service</a> apply.</small>
+                            </div>
+                            <div class="g-recaptcha-wrapper">
+                                <div class="g-recaptcha" data-sitekey="6LdZuIkpAAAAAJkyWF_aBPQcctXb-PqjyNorBG28"></div>
+                            </div>
+
+                            <button class="btn-login-submit login" type="submit">Log In</button>
+
+                            <div class="login-links">
+                                <p>Create new account? <a href="http://localhost:8080/Project_SWP391_Group4/signup.jsp"> Join with us</a></p>
+                                <p>Forgotten password? <a href="http://localhost:8080/Project_SWP391_Group4/forgot.jsp"> Reset Password</a></p>
+                            </div>
+                        </form>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </main>
 
-        <!-- footer -->
         <footer>
             <div class="content-footer">
                 <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@dotai.vn & @fired.vn</p>
+                <p>@gio.vn & @fired.vn</p>
             </div>
 
             <div class="row" id="img-footer">
@@ -993,7 +622,7 @@
             <div class="items-footer">
                 <div class="row">
                     <div class="col-sm-3">
-                        <h4 id="highlight">About Dotai</h4>
+                        <h4 id="highlight">About GIO</h4>
                         <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
                         <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..." class="bct">
                     </div>
@@ -1001,7 +630,7 @@
                         <h4 id="highlight">Contact</h4>
                         <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
                         <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                        <p><b>Email:</b> info@dotai.vn</p>
+                        <p><b>Email:</b> info@gio.vn</p>
                     </div>
                     <div class="col-sm-3">
                         <h4 id="highlight">Customer support</h4>
@@ -1016,7 +645,7 @@
                             <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
                             <div class="col-9"> 
                                 <h4 id="highlight">0123.456.789</h4>
-                                <a href="">info@dotai.vn</a>
+                                <a href="">info@gio.vn</a>
                             </div>
                         </div>
                         <h5 id="highlight">Follow Us</h5>
@@ -1028,57 +657,34 @@
                 </div>
             </div>
         </footer>
-        <!-- end footer -->
-
-        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <script src="/Project_SWP391_Group4/js/jquery-3.7.0.min.js"></script>
         <script src="/Project_SWP391_Group4/js/jquery.validate.min.js"></script>
-        <script src="/Project_SWP391_Group4/js/login.js"></script>
 
-        <script>
-            // Hàm xử lý login với Google
-            function loginWithGoogle() {
-                // Thay thế bằng Client ID thực tế của bạn từ Google Cloud Console
-                const clientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-                const redirectUri = 'http://localhost:8080/Project_SWP391_Group4/google-callback';
-                const scope = 'email profile';
-                
-                const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?
-                    client_id=${clientId}&
-                    redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&
-                    scope=${encodeURIComponent(scope)}&
-                    access_type=offline&
-                    prompt=consent`;
-                
-                window.location.href = googleAuthUrl;
-            }
+        <script src="/Project_SWP391_Group4/js/login.js"></script> 
+        <script src="/Project_SWP391_Group4/js/googleLogin.js"></script>   
 
-            // Hàm xử lý thay đổi form action dựa trên loại tài khoản
-            function getURL() {
-                var accountType = document.getElementById("account").value;
-                var form = document.getElementById("loginForm");
-                
-                if (accountType === "customer") {
-                    form.action = "http://localhost:8080/Project_SWP391_Group4/login/customer";
-                } else if (accountType === "staff") {
-                    form.action = "http://localhost:8080/Project_SWP391_Group4/login/staff";
-                }
-            }
-
-            // Gọi hàm getURL khi trang load để set action mặc định
-            document.addEventListener('DOMContentLoaded', function() {
-                getURL();
-            });
-
-            // Hàm toggle search box (giữ nguyên từ code gốc)
-            function toggleBox(boxId) {
-                var box = document.getElementById(boxId);
-                if (box.style.display === "block") {
-                    box.style.display = "none";
-                } else {
-                    box.style.display = "block";
-                }
-            }
+        <script type="text/javascript">
+      function toggleBox(id) {
+          const el = document.getElementById(id);
+          if (el) {
+              el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+          }
+      }
+      function searchByName(name) {
+          var search = name.value;
+          $.ajax({
+              url: "${pageContext.request.contextPath}/searchProductByAJAX",
+              type: "get",
+              data: {txt: search},
+              success: function (data) {
+                  var row = document.getElementById("search-ajax");
+                  if (row)
+                      row.innerHTML = data;
+              },
+              error: function (xhr) { }
+          });
+      }
         </script>
     </body>
 </html>

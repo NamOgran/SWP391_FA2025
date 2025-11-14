@@ -4,9 +4,9 @@
  */
 package controller;
 
-import DAO.DAOcustomer;
+import DAO.CustomerDAO;
 import com.google.gson.Gson;
-import entity.customer;
+import entity.Customer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -15,23 +15,24 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import payLoad.ResponseData;
-import static url.profileURL.URL_CHANGEPASS;
-import static url.profileURL.URL_PROFILE;
-import static url.profileURL.URL_UPDATE;
+import static url.ProfileURL.URL_CHANGEPASS;
+import static url.ProfileURL.URL_PROFILE;
+import static url.ProfileURL.URL_UPDATE;
 
 /**
  *
- * @author thinh
+ * @author nam
  */
 @WebServlet(name = "profileController", urlPatterns = {URL_PROFILE, URL_UPDATE, URL_CHANGEPASS})
-public class profileController extends HttpServlet {
+public class ProfileController extends HttpServlet {
 
-    DAOcustomer daoCustomer = new DAOcustomer();
+    CustomerDAO daoCustomer = new CustomerDAO();
     private Gson gson = new Gson();
 
     /**
@@ -64,7 +65,7 @@ public class profileController extends HttpServlet {
         }
     }
 
-     public static String getMd5(String input) {
+    public static String getMd5(String input) {
         try {
 
             // Static getInstance method is called with hashing MD5
@@ -88,7 +89,7 @@ public class profileController extends HttpServlet {
             throw new RuntimeException(e);
         }
     }
-    
+
     private void changePass(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -114,19 +115,57 @@ public class profileController extends HttpServlet {
 
     }
 
+  
     private void updateProfile(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        // Lấy dữ liệu từ form
         String fullName = request.getParameter("fullName");
         String address = request.getParameter("address");
         String phoneNumber = request.getParameter("phoneNumber");
         String email = request.getParameter("email");
 
+        // Thực hiện update vào DB
         boolean isSuccess = daoCustomer.updateUserProfile(email, address, phoneNumber, fullName);
+
         if (isSuccess) {
-            response.sendRedirect("Project_SWP391_Group4/profile");
+            //  Update thành công 
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Customer updatedCustomer = daoCustomer.getCustomerByEmailOrUsername(email);
+                if (updatedCustomer != null) {
+                    session.setAttribute("acc", updatedCustomer);
+                }
+            }
 
+            //Chuyển hướng về profile
+            response.sendRedirect(request.getContextPath() + "/profile");
+
+        } else {
+      
+
+            // Đặt một thông báo lỗi vào request
+            request.setAttribute("errorMessage", "Cập nhật thất bại! Đã có lỗi xảy ra, vui lòng thử lại.");
+
+            //Lấy lại thông tin (CŨ) từ session để hiển thị lại form         
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Customer c = (Customer) session.getAttribute("acc");
+                if (c != null) {
+                    // Đặt lại các thuộc tính mà profile.jsp cần để hiển thị
+                    request.setAttribute("fullName", c.getFullName());
+                    request.setAttribute("email", c.getEmail());
+                    request.setAttribute("address", c.getAddress());
+                    request.setAttribute("phoneNumber", c.getPhoneNumber());
+                }
+            }
+
+            // Chuyển tiếp (FORWARD) trở lại trang profile.jsp để hiển thị lỗi
+            // (Forward sẽ giữ nguyên các attribute bạn vừa set)
+            request.getRequestDispatcher("profile.jsp").forward(request, response);
+
+         
         }
-
     }
 
     private void deleteCookie(HttpServletRequest request, HttpServletResponse response)
@@ -139,37 +178,43 @@ public class profileController extends HttpServlet {
         }
     }
 
-    private void viewProfile(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        Cookie[] cookies = request.getCookies();
-        String input = "";
-        for (Cookie cooky : cookies) {
-            if (cooky.getName().equals("input")) {
-                input = cooky.getValue();
-                break;
-            }
-        }
-        
+   
 
-        
-        if (!input.equals("")) {
-            customer c = daoCustomer.getCustomerByEmailOrUsername(input);
-            request.setAttribute("fullName", c.getFullName());
-            request.setAttribute("email", c.getEmail());
-            request.setAttribute("address", c.getAddress());
-            request.setAttribute("phoneNumber", c.getPhoneNumber());
-            request.getRequestDispatcher("profile.jsp").forward(request, response);
-        } else {
-            request.getRequestDispatcher("login.jsp").forward(request, response);
-        }
-//        ResponseData data = new ResponseData();
-//        data.setIsSuccess(true);
-//        data.setDescription("");
-//        data.setData(email);
-//        String json = gson.toJson(data);
-//        PrintWriter pw = response.getWriter();
-//        pw.print(json);
-//        pw.flush();
+private void viewProfile(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+
+    // Lấy session hiện tại (không tạo mới nếu chưa có)
+    HttpSession session = request.getSession(false);
+    Customer loggedInCustomer = null;
+
+    //  Ưu tiên kiểm tra xem có đối tượng "acc" trong session không
+    if (session != null) {
+        loggedInCustomer = (Customer) session.getAttribute("acc"); // Lấy Customer từ session
+        System.out.println("ProfileController: Found user in session: " + (loggedInCustomer != null)); // Log để debug
+    } else {
+        System.out.println("ProfileController: Session not found."); // Log để debug
     }
+
+    //  Nếu tìm thấy người dùng trong session
+    if (loggedInCustomer != null) {
+        // Lấy thông tin cần thiết từ đối tượng Customer trong session
+        request.setAttribute("fullName", loggedInCustomer.getFullName());
+        request.setAttribute("email", loggedInCustomer.getEmail());
+        request.setAttribute("address", loggedInCustomer.getAddress());
+        request.setAttribute("phoneNumber", loggedInCustomer.getPhoneNumber());
+
+        // Đặt cả đối tượng 'acc' vào request scope
+        // để trang profile.jsp có thể dùng <c:if test="${empty acc.google_id}"> kiểm tra
+        request.setAttribute("acc", loggedInCustomer);
+
+        // Chuyển tiếp (forward) đến trang profile.jsp
+        request.getRequestDispatcher("profile.jsp").forward(request, response);
+
+    } else {
+        //  Nếu không có người dùng trong session -> Chuyển hướng về trang đăng nhập
+        System.out.println("ProfileController: User not in session. Redirecting to login."); // Log để debug
+        response.sendRedirect(request.getContextPath() + "/login.jsp");
+    }
+}
 
 }

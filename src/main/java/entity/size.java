@@ -6,14 +6,14 @@ package entity;
 
 /**
  *
- * @author Administrator
+ * 
  */
-public class size {
+public class Size {
     String size_name;
     int product_id;
     int quantity;
 
-    public size(String size_name, int product_id, int quantity) {
+    public Size(String size_name, int product_id, int quantity) {
         this.size_name = size_name;
         this.product_id = product_id;
         this.quantity = quantity;

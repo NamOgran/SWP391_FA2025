@@ -15,10 +15,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  *
- * @author thinh
+ *
  */
 @WebServlet(name = "cookieHandle", urlPatterns = {"/cookieHandle"})
-public class cookieHandle extends HttpServlet {
+public class CookieHandle extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>

@@ -1,8 +1,4 @@
-<%-- 
-    Document   : product.jsp
-    Created on : Feb 27, 2024, 6:21:56 PM
-    Author     : LENOVO
---%>
+
 
 <%@page import="java.text.NumberFormat"%>
 <%@page import="java.text.DecimalFormat"%>
@@ -27,7 +23,7 @@
         <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'> <!-- font family -->
         <link rel="icon" href="/Project_SWP391_Group4/images/LG1.png" type="image/x-icon">
 
-        <title>DOTAI</title>
+        <title>GIO</title>
         <style>
             * {
                 margin: 0;
@@ -688,7 +684,7 @@
         <header class="header">
             <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND </strong></div>
             <div class="headerContent">
-                <div class="logo"><a href="/headerDemo.html">DOTAI</a></div>
+                <div class="logo"><a href="/headerDemo.html">GIO</a></div>
                 <nav>
                     <ul class="headerList">
                         <li class="headerListItem"><a href="/headerDemo.html">Home page ${id}</a></li>
@@ -722,9 +718,9 @@
                                 <li><a href="/Project_SWP391_Group4/aboutUs.jsp">About Us</a></li>
 
                                 <li><a href="/Project_SWP391_Group4/contact.jsp">Contact</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderView">View order</a></li>
+                               
                                 <li><a href="/Project_SWP391_Group4/policy.jsp">Exchange policy</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderHistoryView">Order's history</a></li>
+                            
                         </li>
                     </ul>
                 </nav>
@@ -781,7 +777,7 @@
                                             <img src="images/img1.jpg" alt="">
                                         </div>
                                         <div class="col-md-8 miniCartDetail">
-                                            <p>DOTAI - Áo thun wash Cafe Clementine 8122
+                                            <p>GIO - Áo thun wash Cafe Clementine 8122
                                                 <span>Color / size</span>
                                             </p>
                                             <div class="miniCart-quan">
@@ -824,7 +820,7 @@
     <main class="main">
         <div class="mainHeading">
             <h2 class="headingContent">
-                <a href="">Dotai</a>
+                <a href="">GIO</a>
             </h2>
             <p>New products</p>
         </div>
@@ -867,7 +863,7 @@
                             <img src="images/img1.jpg" alt="img">
                         </div>
                         <div class="productDetail">
-                            <h3>DOTAI - Áo thun wash Cafe Clementine 8122</h3>
+                            <h3>GIO - Áo thun wash Cafe Clementine 8122</h3>
                             <p>
                                 <span class="price">195,000 VND</span>
                                 <span class="price-sale"></span>
@@ -891,7 +887,7 @@
                             <img src="images/img2.jpg" alt="img">
                         </div>
                         <div class="productDetail">
-                            <h3>DOTAI - Áo thun viền cổ WILDHEART 8121</h3>
+                            <h3>GIO - Áo thun viền cổ WILDHEART 8121</h3>
                             <p>
                                 <span class="price">190,000 VND</span>
                                 <span class="price-sale"></span>
@@ -909,7 +905,7 @@
                             <img src="images/img3.jpg" alt="img">
                         </div>
                         <div class="productDetail">
-                            <h3>DOTAI - Quần dài jeans wash 8116</h3>
+                            <h3>GIO - Quần dài jeans wash 8116</h3>
                             <p>
                                 <span class="price">395,000 VND</span>
                                 <span class="price-sale"></span>
@@ -927,7 +923,7 @@
                             <img src="images/img4.jpg" alt="img">
                         </div>
                         <div class="productDetail">
-                            <h3>DOTAI - Áo thun tay ngắn Confitería 8115</h3>
+                            <h3>GIO - Áo thun tay ngắn Confitería 8115</h3>
                             <p>
                                 <span class="price">195,000 VND</span>
                                 <span class="price-sale"></span>
@@ -948,7 +944,7 @@
     <footer>
         <div class="content-footer">
             <h3 id="highlight">Follow us on Instagram</h3>
-            <p>@dotai.vn & @fired.vn</p>
+            <p>@gio.vn & @fired.vn</p>
         </div>
 
         <div class="row" id="img-footer">
@@ -969,7 +965,7 @@
         <div class="items-footer">
             <div class="row">
                 <div class="col-sm-3">
-                    <h4 id="highlight">About Dotai</h4>
+                    <h4 id="highlight">About Gio</h4>
                     <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
                     <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..."
                          class="bct">
@@ -978,7 +974,7 @@
                     <h4 id="highlight">Contact</h4>
                     <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
                     <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                    <p><b>Email:</b> info@dotai.vn</p>
+                    <p><b>Email:</b> info@gio.vn</p>
                 </div>
                 <div class="col-sm-3">
                     <h4 id="highlight">Customer support</h4>
@@ -993,7 +989,7 @@
                         <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
                         <div class="col-9">
                             <h4 id="highlight">0123.456.789</h4>
-                            <a href="">info@dotai.vn</a>
+                            <a href="">info@gio.vn</a>
                         </div>
                     </div>
                     <h5 id="highlight">Follow Us</h5>

@@ -6,16 +6,16 @@ package entity;
 
 /**
  *
- * @author thinh
+ *
  */
-public class category {
+public class Category {
     private int category_id;
     private String type, gender;
 
-    public category() {
+    public Category() {
     }
 
-    public category(int category_id, String type, String gender) {
+    public Category(int category_id, String type, String gender) {
         this.category_id = category_id;
         this.type = type;
         this.gender = gender;

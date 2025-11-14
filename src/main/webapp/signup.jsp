@@ -1,8 +1,4 @@
-<%-- 
-    Document   : signup
-    Created on : Feb 27, 2024, 9:22:36 PM
-    Author     : thinh
---%>
+
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -648,7 +644,7 @@
         <header class="header">
             <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND</strong></div>
             <div class="headerContent">
-                <div class="logo"><a href="/headerDemo.html">DOTAI</a></div>
+                <div class="logo"><a href="/headerDemo.html">GIO</a></div>
                 <nav>
                     <ul class="headerList">
                         <li class="headerListItem"><a href="/headerDemo.html">Home page</a></li>
@@ -699,6 +695,8 @@
                         <i class="bi bi-person icon" onclick="toggleBox('box2')"></i>
                         <!-- khi chưa login thì khi nhấp vào sẽ chuyển tới trang login /ps: tui khum bít làm :< -->
 
+                        <a href="http://localhost:8080/Project_SWP391_Group4/profile"><i class="bi bi-person icon"></i></a>
+                        <!-- khi chưa login thì khi nhấp vào sẽ chuyển tới trang login <
                         <!-- khi đã login thì khi nhấp vào icon -> box này hiện ra -->
                         <div class="infoBox box" id="box2">
                             <div class="infoBox-content">
@@ -768,7 +766,8 @@
         <!-- end header -->
 
         <div id="wrapper">
-            <form action="" method="" id="signUp-form">
+            <form action="${pageContext.request.contextPath}/login/signup" method="post" id="signUp-form">
+
                 <div class="bao">
                     <h2>Register An Account</h2>
                     <hr>
@@ -796,84 +795,82 @@
                     <div class="form-group">
                         <label for="phone"></label>
                         <input type="tel" id="phoneNumber"  name="phoneNumber" placeholder="Phone number" pattern="[0]{1}[0-9]{9}" required true>
+                        <div class="policyText">
+                            <h4>This site is protected by reCAPTCHA and the Google <a href="#" class="highlight">Privacy Policy</a> and <a href="#" class="highlight">Terms of Service</a> apply.</h4>
+                        </div>
+                        <div class="g-recaptcha" data-sitekey="6LdZuIkpAAAAAJkyWF_aBPQcctXb-PqjyNorBG28"></div><br>
+                        <div id="error">${message}</div>
                     </div>
-
-                    <div class = "foot">
-                        <h4>This site is protected by reCAPTCHA and the Google <a href="" class="highlight">Privacy
-                                Policy</a> and <a href="" class="highlight">Terms of Service</a> apply.</h4>
-                    </div>
-                    <div id="message"></div>
-                    <div>
-                        <button class="btn-register">Register</button>
-                    </div>
+                    <button class="btn-register">Register</button>
                 </div>
-                <a href="login.jsp" class="back-button">
-                    <span class="back-arrow">&larr;</span>Quay lại trang chủ
-                </a>
-            </form>
         </div>
+        <a href="login.jsp" class="back-button">
+            <span class="back-arrow">&larr;</span>Quay lại trang chủ
+        </a>
+    </form>
+</div>
 
-        <!-- footer -->
-        <footer>
-            <div class="content-footer">
-                <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@dotai.vn & @fired.vn</p>
+<!-- footer -->
+<footer>
+    <div class="content-footer">
+        <h3 id="highlight">Follow us on Instagram</h3>
+        <p>@dotai.vn & @fired.vn</p>
+    </div>
+
+    <div class="row" id="img-footer">
+        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_1_img.jpg?v=55" alt="">
+        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_2_img.jpg?v=55" alt="">
+        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_3_img.jpg?v=55" alt="">
+        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_4_img.jpg?v=55" alt="">
+        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_5_img.jpg?v=55" alt="">
+        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_6_img.jpg?v=55" alt="">
+    </div>
+
+    <div class="items-footer">
+        <div class="row">
+            <div class="col-sm-3">
+                <h4 id="highlight">About Gio</h4>
+                <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
+                <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..." class="bct">
             </div>
-
-            <div class="row" id="img-footer">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_1_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_2_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_3_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_4_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_5_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_6_img.jpg?v=55" alt="">
+            <div class="col-sm-3">
+                <h4 id="highlight">Contact</h4>
+                <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
+                <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
+                <p><b>Email:</b> info@gio.vn</p>
             </div>
-
-            <div class="items-footer">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <h4 id="highlight">About Dotai</h4>
-                        <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
-                        <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..." class="bct">
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Contact</h4>
-                        <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
-                        <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                        <p><b>Email:</b> info@dotai.vn</p>
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Customer support</h4>
-                        <ul class="CS">
-                            <li><a href="">Search</a></li>
-                            <li><a href="">Introduce</a></li>
-                        </ul>
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Customer care</h4>
-                        <div class="row phone">
-                            <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
-                            <div class="col-9"> 
-                                <h4 id="highlight">0123.456.789</h4>
-                                <a href="">info@dotai.vn</a>
-                            </div>
-                        </div>
-                        <h5 id="highlight">Follow Us</h5>
-                        <div class="contact-item">
-                            <a href="" class="contact-link"><i class="bi bi-facebook contact-icon"></i></a>
-                            <a href="" class="contact-link"><i class="bi bi-instagram contact-icon"></i></a>
-                        </div>
+            <div class="col-sm-3">
+                <h4 id="highlight">Customer support</h4>
+                <ul class="CS">
+                    <li><a href="">Search</a></li>
+                    <li><a href="">Introduce</a></li>
+                </ul>
+            </div>
+            <div class="col-sm-3">
+                <h4 id="highlight">Customer care</h4>
+                <div class="row phone">
+                    <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
+                    <div class="col-9"> 
+                        <h4 id="highlight">0123.456.789</h4>
+                        <a href="">info@gio.vn</a>
                     </div>
                 </div>
+                <h5 id="highlight">Follow Us</h5>
+                <div class="contact-item">
+                    <a href="" class="contact-link"><i class="bi bi-facebook contact-icon"></i></a>
+                    <a href="" class="contact-link"><i class="bi bi-instagram contact-icon"></i></a>
+                </div>
             </div>
+        </div>
+    </div>
 
 
-        </footer>
-        <!-- end footer -->
+</footer>
+<!-- end footer -->
 
 
-        <script src="js/jquery-3.7.0.min.js"></script>
-        <script src="js/jquery.validate.min.js"></script>
-        <script src="js/signUp.js"></script>
-    </body>
+<script src="js/jquery-3.7.0.min.js"></script>
+<script src="js/jquery.validate.min.js"></script>
+<script src="js/signUp.js"></script>
+</body>
 </html>

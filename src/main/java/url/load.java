@@ -6,9 +6,9 @@ package url;
 
 /**
  *
- * @author Administrator
+ * 
  */
-public class load {
+public class Load {
     public static final String LOAD_CART = "/loadCart";
     public static final String LOAD_PAYMENT = "/loadPayment";
 }

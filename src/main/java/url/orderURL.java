@@ -6,9 +6,9 @@ package url;
 
 /**
  *
- * @author Administrator
+ *
  */
-public class orderURL {
+public class OrderURL {
 
     public static final String INSERT_ORDERS = "/insertOrders";
     public static final String INSERT_ORDERS_DETAILS = "/insertOrdersDetails";

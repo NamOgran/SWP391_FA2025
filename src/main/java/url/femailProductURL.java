@@ -6,9 +6,9 @@ package url;
 
 /**
  *
- * @author thinh
+ * 
  */
-public class femailProductURL {
+public class FemailProductURL {
 
     public static final String URL_FEMALE_PRODUCT = "/productList/female";
     public static final String URL_FEMALE_TSHIRT = "/productList/female/t_shirt";

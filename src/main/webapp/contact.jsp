@@ -1,8 +1,3 @@
-<%-- 
-    Document   : contact
-    Created on : Mar 6, 2024, 8:32:59 PM
-    Author     : thinh
---%>
 
 
 <%@page import="java.text.NumberFormat"%>
@@ -28,7 +23,7 @@
         <link rel="icon" href="/Project_SWP391_Group4/images/LG1.png" type="image/x-icon">
 
 
-        <title>DOTAI</title>
+        <title>GIO</title>
         <style>
             * {
                 margin: 0;
@@ -652,7 +647,7 @@
         <header class="header">
             <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND </strong></div>
             <div class="headerContent">
-                <div class="logo"><a href="/Project_SWP391_Group4/productList">DOTAI</a></div>
+                <div class="logo"><a href="/Project_SWP391_Group4/productList">GIO</a></div>
                 <nav>
                     <ul class="headerList">
                         <li class="headerListItem"><a href="/Project_SWP_Group2/productList">Home page</a></li>
@@ -683,9 +678,9 @@
                                 <li><a href="/Project_SWP391_Group4/aboutUs.jsp">About Us</a></li>
 
                                 <li><a href="/Project_SWP391_Group4/contact.jsp">Contact</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderView">View order</a></li>
+                               
                                 <li><a href="/Project_SWP391_Group4/policy.jsp">Exchange policy</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderHistoryView">Order's history</a></li>
+                                
                         </li>
                     </ul>
                 </nav>
@@ -805,7 +800,7 @@
         <footer>
             <div class="content-footer">
                 <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@dotai.vn & @fired.vn</p>
+                <p>@gio.vn & @fired.vn</p>
             </div>
 
             <div class="row" id="img-footer">
@@ -826,7 +821,7 @@
             <div class="items-footer">
                 <div class="row">
                     <div class="col-sm-3">
-                        <h4 id="highlight">About Dotai</h4>
+                        <h4 id="highlight">About GIO</h4>
                         <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
                         <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..."
                              class="bct">
@@ -835,7 +830,7 @@
                         <h4 id="highlight">Contact</h4>
                         <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
                         <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                        <p><b>Email:</b> info@dotai.vn</p>
+                        <p><b>Email:</b> info@gio.vn</p>
                     </div>
                     <div class="col-sm-3">
                         <h4 id="highlight">Customer support</h4>
@@ -850,7 +845,7 @@
                             <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
                             <div class="col-9">
                                 <h4 id="highlight">0123.456.789</h4>
-                                <a href="">info@dotai.vn</a>
+                                <a href="">info@gio.vn</a>
                             </div>
                         </div>
                         <h5 id="highlight">Follow Us</h5>

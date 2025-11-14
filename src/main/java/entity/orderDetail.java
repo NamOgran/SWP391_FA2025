@@ -4,21 +4,41 @@
  */
 package entity;
 
-/**
- *
- * @author Administrator
- */
-public class orderDetail {
-    int quantity;
-    String size_name;
-    int productID;
-    int orderID;
+public class OrderDetail {
+    private int orderDetailID;
+    private int quantity;
+    private String size_name;
+    private int productID;
+    private int orderID;
 
-    public orderDetail(int quantity, String size_name, int productID, int orderID) {
+    public OrderDetail() {
+        // Constructor mặc định
+    }
+    
+    // Constructor DÙNG KHI ĐỌC TỪ DB (có orderDetailID)
+    public OrderDetail(int orderDetailID, int quantity, String size_name, int productID, int orderID) {
+        this.orderDetailID = orderDetailID;
         this.quantity = quantity;
         this.size_name = size_name;
         this.productID = productID;
         this.orderID = orderID;
+    }
+
+    // Constructor DÙNG KHI TẠO MỚI (KHÔNG CÓ orderDetailID, để DB tự tăng)
+    public OrderDetail(int quantity, String size_name, int productID, int orderID) {
+        this.quantity = quantity;
+        this.size_name = size_name;
+        this.productID = productID;
+        this.orderID = orderID;
+    }
+
+    // Getter và Setter cho orderDetailID
+    public int getOrderDetailID() {
+        return orderDetailID;
+    }
+
+    public void setOrderDetailID(int orderDetailID) {
+        this.orderDetailID = orderDetailID;
     }
 
     public int getQuantity() {
@@ -55,7 +75,6 @@ public class orderDetail {
 
     @Override
     public String toString() {
-        return "orderDetail{" + "quantity=" + quantity + ", size_name=" + size_name + ", productID=" + productID + ", orderID=" + orderID + '}';
+        return "orderDetail{" + "orderDetailID=" + orderDetailID + ", quantity=" + quantity + ", size_name=" + size_name + ", productID=" + productID + ", orderID=" + orderID + '}';
     }
-    
 }

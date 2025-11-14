@@ -4,47 +4,35 @@
  */
 package controller;
 
-import DAO.DAOcart;
-import DAO.DAOcustomer;
-import DAO.DAOproduct;
-import entity.customer;
-import entity.product;
+import DAO.CartDAO;
+import DAO.CustomerDAO;
+import DAO.ProductDAO;
+import entity.Customer;
+import entity.Product;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie; // Vẫn giữ lại nếu bạn dùng Cookie để ghi nhớ đăng nhập
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession; // <-- THÊM DÒNG NÀY
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static url.cartURL.URL_BUYNOW;
-import static url.load.LOAD_CART;
-import static url.load.LOAD_PAYMENT;
+import static url.CartURL.URL_BUYNOW;
+import static url.Load.LOAD_CART;
+import static url.Load.LOAD_PAYMENT;
 
-/**
- *
- * @author Administrator
- */
 @WebServlet(name = "load2", urlPatterns = {LOAD_CART, LOAD_PAYMENT, URL_BUYNOW})
-public class load extends HttpServlet {
+public class Load extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try ( PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
@@ -57,121 +45,152 @@ public class load extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String size = request.getParameter("size");
         String urlPath = request.getServletPath();
-        String username = "";
-        Cookie arr[] = request.getCookies();
-        for (Cookie o : arr) {
-            if (o.getName().equals("input")) {
-                username = o.getValue();
+        
+        // Lấy thông tin khách hàng từ SESSION (ưu tiên)
+        HttpSession session = request.getSession();
+        Customer loggedInCustomer = (Customer) session.getAttribute("acc");
+        
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        if (loggedInCustomer == null && !urlPath.equals(URL_BUYNOW)) { 
+            // Nếu chưa đăng nhập và không phải URL_BUYNOW (URL_BUYNOW sẽ được xử lý khác)
+            // Redirect đến trang login hoặc hiển thị thông báo
+            response.sendRedirect(request.getContextPath() + "/login.jsp"); // Hoặc trang login của bạn
+            return;
+        }
+
+        // Khai báo biến username và customer_id nếu cần
+        String usernameForCart = ""; 
+        int customerIdForCart = -1; // -1 hoặc một giá trị không hợp lệ
+        String customerAddress = "";
+
+        if (loggedInCustomer != null) {
+            usernameForCart = loggedInCustomer.getUsername(); // Hoặc email, tùy bạn dùng gì cho giỏ hàng
+            customerIdForCart = loggedInCustomer.getCustomer_id();
+            customerAddress = loggedInCustomer.getAddress();
+        } else {
+            // Trường hợp URL_BUYNOW có thể truy cập mà không cần đăng nhập
+            // hoặc bạn cần xử lý trường hợp không có session (ví dụ: dùng cookie để tự động đăng nhập)
+            // Trong trường hợp này, bạn có thể cân nhắc gửi họ đến trang đăng nhập nếu BuyNow yêu cầu login.
+            // Hoặc nếu bạn muốn BuyNow hoạt động cho khách vãng lai, cần thêm logic.
+            if(urlPath.equals(URL_BUYNOW)){
+                 // Cho phép BuyNow cho khách vãng lai nhưng sẽ không có thông tin địa chỉ sẵn
+                 // hoặc redirect để yêu cầu login
+                 // response.sendRedirect(request.getContextPath() + "/login.jsp");
+                 // return;
+            } else {
+                 response.sendRedirect(request.getContextPath() + "/login.jsp");
+                 return;
             }
         }
-        int quanP = 0;
-        DAOcart cart = new DAOcart();
-        DAOproduct productDao = new DAOproduct();
-        List<product> productList = productDao.getAll();
-        List<entity.cart> list3 = cart.getAll(username);
+        
+        // CartDAO của bạn có vẻ đang dùng username (String) cho getAll
+        // CartDAO Cart = new CartDAO();
+        // List<entity.Cart> list3 = Cart.getAll(username);
+        // => Cần cập nhật CartDAO để dùng customer_id (int) cho các thao tác giỏ hàng
+        // => HOẶC đảm bảo rằng usernameForCart là duy nhất và chính xác.
+        
+        CartDAO cart = new CartDAO();
+        // THAY ĐỔI: Giả sử CartDAO.getAll() nhận customer_id (int)
+        // Nếu CartDAO.getAll() vẫn dùng username (String), thì hãy đảm bảo usernameForCart là duy nhất
+        // và phù hợp với cách bạn lưu giỏ hàng.
+        List<entity.Cart> cartList = null;
+        if(customerIdForCart != -1){ // Chỉ lấy giỏ hàng nếu có customerId hợp lệ
+            cartList = cart.getAll(customerIdForCart); // Cần cập nhật CartDAO.getAll()
+        } else {
+            cartList = new ArrayList<>(); // Giỏ hàng rỗng nếu không có khách hàng đăng nhập
+        }
+        
+
+        ProductDAO productDao = new ProductDAO();
+        List<Product> productList = productDao.getAll();
+        
         Map<Integer, String> picUrlMap = new HashMap<>();
-        for (product product : productList) {
+        for (Product product : productList) {
             picUrlMap.put(product.getId(), product.getPicURL());
         }
         Map<Integer, String> nameProduct = new HashMap<>();
-        for (product product : productList) {
+        for (Product product : productList) {
             nameProduct.put(product.getId(), product.getName());
         }
+        
         int sum = 0;
-        for (int i = 0; i < list3.size(); i++) {
-            sum = sum + list3.get(i).getPrice();
-            quanP++;
+        int quanP = 0; // Số lượng sản phẩm khác nhau trong giỏ hàng
+        if(cartList != null){
+            for (entity.Cart cItem : cartList) {
+                sum += cItem.getPrice() * cItem.getQuantity(); // Tổng tiền cần tính đúng từ giá và số lượng
+                quanP++; // Mỗi item trong giỏ là một sản phẩm khác nhau
+            }
         }
-        DAOcustomer daoCustomer = new DAOcustomer();
-        customer c = daoCustomer.getCustomerByEmailOrUsername(username);
-        String address = null;
-        if(c != null){
-            address = c.getAddress();
-        }
-        request.setAttribute("address", address);
-        request.setAttribute("username", username);
-        request.setAttribute("size", size);
+        
+        // Không cần CustomerDAO.getCustomerByEmailOrUsername(username) nữa nếu dùng session
+        // Customer c = loggedInCustomer; // Đã có từ session
+        
+        request.setAttribute("address", customerAddress);
+        request.setAttribute("username", usernameForCart); // Có thể cần cho mục đích hiển thị
+        request.setAttribute("size", request.getParameter("size")); // Lấy size nếu có (từ BuyNow)
         request.setAttribute("nameProduct", nameProduct);
         request.setAttribute("quanP", quanP);
         request.setAttribute("picUrlMap", picUrlMap);
-        
-        
-        
-        
-        
         request.setAttribute("sum", sum);
-        request.setAttribute("cartList", list3);
-        System.out.println(size + "load");
+        request.setAttribute("cartList", cartList);
+        
+        System.out.println(request.getParameter("size") + "load"); // Để debug
+
         switch (urlPath) {
             case LOAD_CART:
-                response.getWriter().write(String.valueOf(sum));
-                request.getRequestDispatcher("cart.jsp").forward(request, response);                
+                response.getWriter().write(String.valueOf(sum)); // Có lẽ bạn muốn AJAX trả về tổng tiền
+                request.getRequestDispatcher("cart.jsp").forward(request, response);              
                 break;
             case LOAD_PAYMENT:
-                if(sum != 0){
+                if (sum != 0) {
                     request.getRequestDispatcher("payment.jsp").forward(request, response);
-                }else{                  
-                    request.getRequestDispatcher("cart.jsp").forward(request, response);
+                } else {             
+                    // Nếu giỏ hàng trống, quay lại trang giỏ hàng
+                    response.sendRedirect(request.getContextPath() + "/cart.jsp"); // Redirect để tránh lỗi forward khi giỏ trống
                 }
-                
                 break;
             case URL_BUYNOW:
-                if (!username.equals("")) {
+                if (loggedInCustomer != null) { // Chỉ cho phép mua ngay nếu đã đăng nhập
                     String pic = request.getParameter("picURL");
                     String name = request.getParameter("name");
                     float price = Float.parseFloat(request.getParameter("price"));
                     int quantity = Integer.parseInt(request.getParameter("quantity"));
                     int id = Integer.parseInt(request.getParameter("id"));
+                    String size = request.getParameter("size"); // Lấy size từ BuyNow
+                    
                     request.setAttribute("pic", pic);
                     request.setAttribute("name", name);
                     request.setAttribute("price", price);
                     request.setAttribute("quantity", quantity);
                     request.setAttribute("id", id);
-                    System.out.println(name + " " + price + " " + id);
+                    request.setAttribute("size", size); // Pass size to buynow.jsp
+                    
+                    System.out.println(name + " " + price + " " + id + " " + size);
                     request.getRequestDispatcher("buynow.jsp").forward(request, response);
                 } else {
-                    response.sendRedirect("http://localhost:8080/Project_SWP391_Group4/profile");
+                    // Nếu chưa đăng nhập, chuyển hướng đến trang login
+                    response.sendRedirect(request.getContextPath() + "/login.jsp"); 
                 }
-
+                break;
+            default:
+                // Xử lý các trường hợp URL không xác định
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "URL not recognized");
+                break;
         }
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
         return "Short description";
-    }// </editor-fold>
-
+    }
 }
