@@ -17,7 +17,7 @@ public class DBConnect {
             String port = "1433";
             String database = "gio_swp391";
             String username = "sa"; // hoặc user admin Azure của bạn
-            String password = "123"; // thay bằng mật khẩu thật
+            String password = "Hm@123456"; // thay bằng mật khẩu thật
 
             // 🔹 Cấu hình chuỗi kết nối JDBC
             String url = "jdbc:sqlserver://" + host + ":" + port

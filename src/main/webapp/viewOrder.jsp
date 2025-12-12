@@ -232,8 +232,8 @@
         }
         .btn-detail:hover { background: #f5f5f5; color: var(--primary-color); border-color: var(--primary-color); }
 
-        .btn-received {
-            background-color: var(--primary-color);
+                .btn-cancel-order {
+            background-color: #dc3545;   /* đỏ */
             color: white;
             border: none;
             border-radius: 6px;
@@ -242,7 +242,12 @@
             transition: all 0.2s;
             font-weight: 500;
         }
-        .btn-received:hover { background-color: var(--primary-hover); color: white; transform: translateY(-1px); }
+        .btn-cancel-order:hover {
+            background-color: #c82333;
+            color: white;
+            transform: translateY(-1px);
+        }
+
 
         /* --- Product Dropdown Details (Sửa đổ bóng lỏm sâu) --- */
         .order-details-dropdown {
@@ -338,88 +343,149 @@
 
     <div id="order-content-area" style="display: none;">
 
-        <%-- 1. ĐẾM SỐ LƯỢNG --%>
-        <c:set var="countPending" value="0" />
-        <c:set var="countDelivering" value="0" />
-        <c:forEach items="${requestScope.ordersUserList}" var="o">
-            <c:if test="${o.status eq 'Pending'}"><c:set var="countPending" value="${countPending + 1}" /></c:if>
-            <c:if test="${o.status eq 'Delivering'}"><c:set var="countDelivering" value="${countDelivering + 1}" /></c:if>
-        </c:forEach>
+     <%-- 1. ĐẾM SỐ LƯỢNG --%>
+    <c:set var="countPending" value="0" />
+    <c:set var="countDelivering" value="0" />
+    <c:forEach items="${requestScope.ordersUserList}" var="o">
+        <c:if test="${o.status eq 'Pending' or o.status eq 'Confirming'}">
+            <c:set var="countPending" value="${countPending + 1}" />
+        </c:if>
+        <c:if test="${o.status eq 'Delivering'}">
+            <c:set var="countDelivering" value="${countDelivering + 1}" />
+        </c:if>
+    </c:forEach>
 
-        <c:choose>
-            <%-- 2. KHÔNG CÓ ĐƠN NÀO --%>
-            <c:when test="${countPending == 0 && countDelivering == 0}">
-                <div class="empty-state">
-                    <i class="bi bi-box-seam empty-icon"></i>
-                    <p class="empty-text">You have no pending or delivering orders.</p>
-                    <a href="${pageContext.request.contextPath}" class="btn btn-outline-secondary mt-2">Go Shopping</a>
+    <c:choose>
+        <%-- 2. KHÔNG CÓ ĐƠN NÀO --%>
+        <c:when test="${countPending == 0 and countDelivering == 0}">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-box-seam"></i>
                 </div>
-            </c:when>
+                <div class="empty-text">
+                    You have no active orders.
+                </div>
+            </div>
+        </c:when>
 
-            <c:otherwise>
-                <%-- 3. LOOP PENDING ORDERS --%>
+        <c:otherwise>
+                <%-- 3. LOOP PENDING / CONFIRMING ORDERS --%>
                 <c:if test="${countPending > 0}">
-                    <h5 class="text-warning fw-bold mb-3 mt-1"><i class="bi bi-hourglass-split"></i> Pending Orders</h5>
+                    <h5 class="text-warning fw-bold mb-3 mt-1">
+                        <i class="bi bi-hourglass-split"></i> Pending Orders
+                    </h5>
+
                     <c:forEach items="${requestScope.ordersUserList}" var="o">
-                        <c:if test="${o.status eq 'Pending'}">
+                        <c:if test="${o.status eq 'Pending' or o.status eq 'Confirming'}">
                             <%-- START CARD --%>
                             <div class="order-card fade-in">
                                 <div class="order-header">
                                     <div>
                                         <span class="order-id">Order #${o.orderID}</span>
-                                        <div class="order-date"><i class="bi bi-calendar3"></i> ${o.date}</div>
+                                        <div class="order-date">
+                                            <i class="bi bi-calendar3"></i> ${o.date}
+                                        </div>
                                     </div>
-                                    <span class="status-badge status-${o.status}">${o.status}</span>
+                                    <span class="status-badge status-${o.status}">
+                                        ${o.status}
+                                    </span>
                                 </div>
+
                                 <div class="order-body">
                                     <div class="row">
                                         <div class="col-md-7">
                                             <div class="info-row">
                                                 <span class="info-label">Address:</span>
-                                                <span class="info-value text-truncate" style="max-width: 80%;" title="${o.address}">${o.address}</span>
+                                                <span class="info-value text-truncate"
+                                                      style="max-width: 80%;"
+                                                      title="${o.address}">
+                                                    ${o.address}
+                                                </span>
                                             </div>
                                             <div class="info-row">
                                                 <span class="info-label">Items:</span>
-                                                <span class="info-value">${totalQuantityMap[o.orderID]} product(s)</span>
+                                                <span class="info-value">
+                                                    ${totalQuantityMap[o.orderID]} product(s)
+                                                </span>
                                             </div>
                                         </div>
+
                                         <div class="col-md-5 text-md-end text-start mt-2 mt-md-0">
-                                            <span class="info-label d-block w-100 text-md-end text-start mb-1">Total Amount</span>
-                                            <c:set var="formattedTotal"><fmt:formatNumber value="${o.total}" type="number"/></c:set>
+                                            <span class="info-label d-block w-100 text-md-end text-start mb-1">
+                                                Total Amount
+                                            </span>
+                                            <c:set var="formattedTotal">
+                                                <fmt:formatNumber value="${o.total}" type="number" />
+                                            </c:set>
                                             <span class="total-price">${formattedTotal} VND</span>
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="order-actions">
-                                    <button class="btn-detail" id="btn-${o.orderID}" onclick="toggleDetails(${o.orderID})">
+                                    <c:choose>
+                                        <%-- Chỉ đơn PENDING mới cho Cancel --%>
+                                        <c:when test="${o.status eq 'Pending'}">
+                                            <button class="btn-cancel-order"
+                                                    onclick="cancelOrder(${o.orderID})">
+                                                <i class="bi bi-x-circle"></i> Cancel
+                                            </button>
+                                        </c:when>
+
+                                        <%-- Đơn đang chờ staff xác nhận huỷ --%>
+                                        <c:otherwise>
+                                            <span class="text-muted small">
+                                                Waiting for staff to confirm cancellation
+                                            </span>
+                                        </c:otherwise>
+                                    </c:choose>
+
+                                    <button class="btn-detail"
+                                            id="btn-${o.orderID}"
+                                            onclick="toggleDetails(${o.orderID})">
                                         Detail <i class="bi bi-chevron-down"></i>
                                     </button>
                                 </div>
+
                                 <div class="order-details-dropdown" id="dd-${o.orderID}">
                                     <c:forEach items="${orderDetailList}" var="d">
                                         <c:if test="${d.orderID eq o.orderID}">
-                                            <c:set var="pId" value="${d.productID}"/>
-                                            <c:set var="pPrice" value="${priceP[pId]}"/>
-                                            <c:set var="pVoucherId" value="${voucherID[pId]}"/>
-                                            <c:set var="pVoucherPct" value="${voucherMap[pVoucherId] != null ? voucherMap[pVoucherId] : 0}"/>
-                                            <c:set var="unitDisc" value="${pPrice - (pPrice * pVoucherPct)/100}"/>
-                                            <c:set var="lineDisc" value="${unitDisc * d.quantity}"/>
-                                            <c:set var="lineOrig" value="${pPrice * d.quantity}"/>
+                                            <c:set var="pId" value="${d.productID}" />
+                                            <c:set var="pPrice" value="${priceP[pId]}" />
+                                            <c:set var="pVoucherId" value="${voucherID[pId]}" />
+                                            <c:set var="pVoucherPct"
+                                                   value="${voucherMap[pVoucherId] != null ? voucherMap[pVoucherId] : 0}" />
+                                            <c:set var="unitDisc"
+                                                   value="${pPrice - (pPrice * pVoucherPct) / 100}" />
+                                            <c:set var="lineDisc" value="${unitDisc * d.quantity}" />
+                                            <c:set var="lineOrig" value="${pPrice * d.quantity}" />
+
                                             <div class="product-item">
                                                 <div class="row align-items-center">
                                                     <div class="col-auto">
-                                                        <img src="${picUrlMap[d.productID]}" class="product-img" alt="Product">
+                                                        <img src="${picUrlMap[d.productID]}"
+                                                             class="product-img" alt="Product">
                                                     </div>
                                                     <div class="col">
-                                                        <div class="product-name">${nameProduct[d.productID]}</div>
-                                                        <div class="product-meta">Size: <strong>${d.size_name}</strong></div>
-                                                        <div class="product-meta">Quantity: <strong>${d.quantity}</strong></div>
+                                                        <div class="product-name">
+                                                            ${nameProduct[d.productID]}
+                                                        </div>
+                                                        <div class="product-meta">
+                                                            Size: <strong>${d.size_name}</strong>
+                                                        </div>
+                                                        <div class="product-meta">
+                                                            Quantity: <strong>${d.quantity}</strong>
+                                                        </div>
                                                     </div>
                                                     <div class="col-auto price-group">
                                                         <c:if test="${lineOrig > lineDisc}">
-                                                            <span class="price-old"><fmt:formatNumber value="${lineOrig}" type="number"/> VND</span>
+                                                            <span class="price-old">
+                                                                <fmt:formatNumber value="${lineOrig}" type="number" /> VND
+                                                            </span>
                                                         </c:if>
-                                                        <span class="price-new"><fmt:formatNumber value="${lineDisc}" type="number"/> VND</span>
+                                                        <span class="price-new">
+                                                            <fmt:formatNumber value="${lineDisc}" type="number" /> VND
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -434,7 +500,10 @@
                 </c:if>
 
                 <%-- SPACING --%>
-                <c:if test="${countPending > 0 && countDelivering > 0}"><div class="mb-5 border-top pt-2"></div></c:if>
+                <c:if test="${countPending > 0 && countDelivering > 0}">
+                    <div class="mb-5 border-top pt-2"></div>
+                </c:if>
+
 
                 <%-- 4. LOOP DELIVERING ORDERS --%>
                 <c:if test="${countDelivering > 0}">
@@ -470,13 +539,11 @@
                                     </div>
                                 </div>
                                 <div class="order-actions">
-                                    <button class="btn-received" onclick="markDelivered(${o.orderID})">
-                                        <i class="bi bi-check2-circle"></i> Received
-                                    </button>
-                                    <button class="btn-detail" id="btn-${o.orderID}" onclick="toggleDetails(${o.orderID})">
-                                        Detail <i class="bi bi-chevron-down"></i>
-                                    </button>
-                                </div>
+    <button class="btn-detail" id="btn-${o.orderID}" onclick="toggleDetails(${o.orderID})">
+        Detail <i class="bi bi-chevron-down"></i>
+    </button>
+</div>
+
                                 <div class="order-details-dropdown" id="dd-${o.orderID}">
                                     <c:forEach items="${orderDetailList}" var="d">
                                         <c:if test="${d.orderID eq o.orderID}">
@@ -550,23 +617,14 @@
             }
         }
 
-        // AJAX Mark Delivered
-        function markDelivered(orderId) {
-            if (!confirm('Confirm you have received order #' + orderId + '?')) return;
+        // Cancel Order (Pending -> gửi yêu cầu hủy)
+        function cancelOrder(orderId) {
+            if (!confirm('Do you really want to cancel order #' + orderId + '?')) return;
             
-            $.ajax({
-                url: BASE + '/orderHistoryView',
-                method: 'GET',
-                data: { orderId: orderId, status: 'Delivered' },
-                success: function () { 
-                    // Redirect to Order History after marking as delivered
-                    window.location.href = BASE + '/orderHistoryView'; 
-                },
-                error: function (xhr) { 
-                    alert('Error updating status. Please try again.'); 
-                }
-            });
+            // Gửi request tới servlet xử lý huỷ (ví dụ /cancelOrder)
+            window.location.href = BASE + '/cancelOrder?orderId=' + orderId;
         }
+
     </script>
 </body>
 </html>

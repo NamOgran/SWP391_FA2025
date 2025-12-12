@@ -6,15 +6,16 @@ public class Cart {
     private int customer_id;
     private int product_id;
     private int quantity;
-    private int price; // [FIX] Đổi từ float sang int để khớp DB
+    private int price;      // INT, khớp DB
     private String size_name;
     private int stockQuantity;
 
     public Cart() {
     }
 
-    // Constructor MỚI
-    public Cart(int cart_id, int customer_id, int product_id, int quantity, int price, String size_name, int stockQuantity) {
+    // Constructor đầy đủ (MỚI) - 7 tham số
+    public Cart(int cart_id, int customer_id, int product_id,
+                int quantity, int price, String size_name, int stockQuantity) {
         this.cart_id = cart_id;
         this.customer_id = customer_id;
         this.product_id = product_id;
@@ -24,15 +25,11 @@ public class Cart {
         this.stockQuantity = stockQuantity;
     }
 
-    // Constructor CŨ
-    public Cart(int cart_id, int customer_id, int product_id, int quantity, int price, String size_name) {
-        this.cart_id = cart_id;
-        this.customer_id = customer_id;
-        this.product_id = product_id;
-        this.quantity = quantity;
-        this.price = price;
-        this.size_name = size_name;
-        this.stockQuantity = 0;
+    
+    // GỘP LOGIC: gọi lại constructor trên, tự set stockQuantity = 0
+    public Cart(int cart_id, int customer_id, int product_id,
+                int quantity, int price, String size_name) {
+        this(cart_id, customer_id, product_id, quantity, price, size_name, 0);
     }
 
     // Getters & Setters
@@ -48,7 +45,6 @@ public class Cart {
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
     
-    // [FIX] Getter/Setter cho int
     public int getPrice() { return price; }
     public void setPrice(int price) { this.price = price; }
     
@@ -60,6 +56,14 @@ public class Cart {
 
     @Override
     public String toString() {
-        return "Cart{" + "cart_id=" + cart_id + ", customer_id=" + customer_id + ", product_id=" + product_id + ", quantity=" + quantity + ", price=" + price + ", size_name=" + size_name + ", stock=" + stockQuantity + '}';
+        return "Cart{" +
+               "cart_id=" + cart_id +
+               ", customer_id=" + customer_id +
+               ", product_id=" + product_id +
+               ", quantity=" + quantity +
+               ", price=" + price +
+               ", size_name=" + size_name +
+               ", stock=" + stockQuantity +
+               '}';
     }
 }

@@ -1,7 +1,3 @@
-<%-- 
-    Document    : payment.jsp
-    Updated     : Premium UI/UX - Input Groups & Progress Steps
---%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -25,25 +21,17 @@
 
 <%-- Calculate values --%>
 <c:set var="subtotal" value="${sum}" /> 
-<c:set var="FREE_SHIP_THRESHOLD" value="200000" />
-<c:set var="SHIPPING_FEE"        value="20000" />
 
-<c:choose>
-    <c:when test="${subtotal ge FREE_SHIP_THRESHOLD}">
-        <c:set var="shipping" value="0" />
-    </c:when>
-    <c:otherwise>
-        <c:set var="shipping" value="${SHIPPING_FEE}" />
-    </c:otherwise>
-</c:choose>
 
 <c:set var="voucherPercent" value="0" />
 <c:set var="voucherId"      value="0" />
-<c:set var="discount"     value="0" />
-<c:set var="grandTotal"   value="${subtotal + shipping}" />
+<c:set var="discount"       value="0" />
+
+<%-- Total = Subtotal (chưa trừ voucher) --%>
+<c:set var="grandTotal"     value="${subtotal}" />
+
 
 <fmt:formatNumber var="subtotalFmt" value="${subtotal}" pattern="###,###" />
-<fmt:formatNumber var="shippingFmt" value="${shipping}" pattern="###,###" />
 <fmt:formatNumber var="discountFmt" value="${discount}" pattern="###,###" />
 <fmt:formatNumber var="grandTotalFmt" value="${grandTotal}" pattern="###,###" />
 
@@ -53,7 +41,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Checkout | GIO</title>
-        
+
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <link href='https://fonts.googleapis.com/css?family=Quicksand:400,500,600,700&display=swap' rel='stylesheet'>
@@ -74,85 +62,314 @@
                 --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
             }
 
-            body { font-family: "Quicksand", sans-serif; background-color: var(--bg-body); color: var(--text-main); padding-bottom: 60px; }
-            a { text-decoration: none; color: inherit; }
+            body {
+                font-family: "Quicksand", sans-serif;
+                background-color: var(--bg-body);
+                color: var(--text-main);
+                padding-bottom: 60px;
+            }
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
 
             /* LOADING */
-            #page-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--white); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-            .spinner-custom { color: var(--primary-color); width: 3rem; height: 3rem; }
+            #page-loader {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: var(--white);
+                z-index: 9999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .spinner-custom {
+                color: var(--primary-color);
+                width: 3rem;
+                height: 3rem;
+            }
 
             /* HEADER & NAV */
-            .checkout-nav { background: var(--white); padding: 15px 0; box-shadow: var(--shadow-sm); margin-bottom: 30px; }
-            .nav-content { display: flex; align-items: center; justify-content: space-between; }
-            .brand-logo { font-size: 24px; font-weight: 800; color: var(--primary-color); letter-spacing: 1px; }
-            .back-link { font-weight: 600; color: var(--text-light); display: flex; align-items: center; gap: 5px; transition: 0.3s; }
-            .back-link:hover { color: var(--primary-color); }
+            .checkout-nav {
+                background: var(--white);
+                padding: 15px 0;
+                box-shadow: var(--shadow-sm);
+                margin-bottom: 30px;
+            }
+            .nav-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .brand-logo {
+                font-size: 24px;
+                font-weight: 800;
+                color: var(--primary-color);
+                letter-spacing: 1px;
+            }
+            .back-link {
+                font-weight: 600;
+                color: var(--text-light);
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: 0.3s;
+            }
+            .back-link:hover {
+                color: var(--primary-color);
+            }
 
             /* PROGRESS STEPS */
-            .checkout-steps { display: flex; justify-content: center; margin-bottom: 40px; }
-            .step-item { display: flex; align-items: center; color: #ccc; font-weight: 600; font-size: 0.95rem; }
-            .step-item.active { color: var(--text-main); }
-            .step-item.active .step-count { background-color: var(--primary-color); border-color: var(--primary-color); color: #fff; }
-            .step-count { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 0.9rem; }
-            .step-line { width: 60px; height: 2px; background-color: #e0e0e0; margin: 0 15px; }
+            .checkout-steps {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 40px;
+            }
+            .step-item {
+                display: flex;
+                align-items: center;
+                color: #ccc;
+                font-weight: 600;
+                font-size: 0.95rem;
+            }
+            .step-item.active {
+                color: var(--text-main);
+            }
+            .step-item.active .step-count {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+                color: #fff;
+            }
+            .step-count {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                border: 2px solid #ccc;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 10px;
+                font-size: 0.9rem;
+            }
+            .step-line {
+                width: 60px;
+                height: 2px;
+                background-color: #e0e0e0;
+                margin: 0 15px;
+            }
 
             /* LEFT COLUMN - FORMS */
-            .section-card { background: var(--white); border-radius: var(--border-radius); padding: 25px 30px; margin-bottom: 25px; box-shadow: var(--shadow-sm); }
-            .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
-            .section-title i { color: var(--primary-color); font-size: 1.2rem; }
+            .section-card {
+                background: var(--white);
+                border-radius: var(--border-radius);
+                padding: 25px 30px;
+                margin-bottom: 25px;
+                box-shadow: var(--shadow-sm);
+            }
+            .section-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--text-main);
+            }
+            .section-title i {
+                color: var(--primary-color);
+                font-size: 1.2rem;
+            }
 
             /* INPUT GROUPS */
-            .input-group-text { background: #f8f9fa; border-right: none; color: var(--text-light); border-radius: var(--border-radius) 0 0 var(--border-radius); }
-            .form-control { border-left: none; height: 50px; font-size: 0.95rem; border-radius: 0 var(--border-radius) var(--border-radius) 0; }
-            .form-control:focus { box-shadow: none; border-color: #ced4da; }
-            .input-group:focus-within .input-group-text, .input-group:focus-within .form-control { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(160, 129, 108, 0.15); }
-            .error { color: #dc3545; font-size: 0.85rem; margin-top: 5px; margin-left: 5px; width: 100%; }
+            .input-group-text {
+                background: #f8f9fa;
+                border-right: none;
+                color: var(--text-light);
+                border-radius: var(--border-radius) 0 0 var(--border-radius);
+            }
+            .form-control {
+                border-left: none;
+                height: 50px;
+                font-size: 0.95rem;
+                border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            }
+            .form-control:focus {
+                box-shadow: none;
+                border-color: #ced4da;
+            }
+            .input-group:focus-within .input-group-text, .input-group:focus-within .form-control {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 0.2rem rgba(160, 129, 108, 0.15);
+            }
+            .error {
+                color: #dc3545;
+                font-size: 0.85rem;
+                margin-top: 5px;
+                margin-left: 5px;
+                width: 100%;
+            }
 
             /* PAYMENT METHOD */
             .payment-option {
-                border: 2px solid var(--primary-color); background: #fdf8f5; border-radius: var(--border-radius);
-                padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; position: relative;
+                border: 2px solid var(--primary-color);
+                background: #fdf8f5;
+                border-radius: var(--border-radius);
+                padding: 15px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+                position: relative;
             }
             .payment-option::after {
-                content: '\F26B'; font-family: "bootstrap-icons"; font-size: 1.3rem; color: var(--primary-color);
+                content: '\F26B';
+                font-family: "bootstrap-icons";
+                font-size: 1.3rem;
+                color: var(--primary-color);
             }
-            .payment-info { display: flex; align-items: center; gap: 15px; font-weight: 600; }
-            .payment-icon { height: 30px; width: auto; }
+            .payment-info {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-weight: 600;
+            }
+            .payment-icon {
+                height: 30px;
+                width: auto;
+            }
 
             /* RIGHT COLUMN - SUMMARY */
-            .summary-box { background: var(--white); border-radius: var(--border-radius); padding: 30px; box-shadow: var(--shadow-md); position: sticky; top: 100px; }
-            .summary-header { font-size: 1.25rem; font-weight: 700; border-bottom: 2px dashed #eee; padding-bottom: 15px; margin-bottom: 20px; }
-            
-            .product-item { display: flex; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f8f9fa; }
-            .product-item:last-child { border-bottom: none; }
-            .product-img { width: 60px; height: 75px; border-radius: 8px; object-fit: cover; background: #eee; }
-            .product-info h6 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
-            .product-info p { font-size: 0.85rem; color: var(--text-light); margin: 0; }
-            .product-price { font-size: 0.95rem; font-weight: 700; white-space: nowrap; margin-left: auto; }
+            .summary-box {
+                background: var(--white);
+                border-radius: var(--border-radius);
+                padding: 30px;
+                box-shadow: var(--shadow-md);
+                position: sticky;
+                top: 100px;
+            }
+            .summary-header {
+                font-size: 1.25rem;
+                font-weight: 700;
+                border-bottom: 2px dashed #eee;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+
+            .product-item {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 15px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #f8f9fa;
+            }
+            .product-item:last-child {
+                border-bottom: none;
+            }
+            .product-img {
+                width: 60px;
+                height: 75px;
+                border-radius: 8px;
+                object-fit: cover;
+                background: #eee;
+            }
+            .product-info h6 {
+                font-size: 0.95rem;
+                font-weight: 600;
+                margin-bottom: 4px;
+                line-height: 1.3;
+            }
+            .product-info p {
+                font-size: 0.85rem;
+                color: var(--text-light);
+                margin: 0;
+            }
+            .product-price {
+                font-size: 0.95rem;
+                font-weight: 700;
+                white-space: nowrap;
+                margin-left: auto;
+            }
 
             /* PROMO CODE */
-            .voucher-container { margin-bottom: 20px; }
-            .btn-apply { background: var(--text-main); color: #fff; font-weight: 600; border-radius: 0 var(--border-radius) var(--border-radius) 0; }
-            .btn-apply:hover { background: #000; color: #fff; }
+            .voucher-container {
+                margin-bottom: 20px;
+            }
+            .btn-apply {
+                background: var(--text-main);
+                color: #fff;
+                font-weight: 600;
+                border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            }
+            .btn-apply:hover {
+                background: #000;
+                color: #fff;
+            }
 
             /* TOTALS */
-            .total-row { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-light); font-size: 0.95rem; }
-            .grand-total { margin-top: 15px; padding-top: 15px; border-top: 2px dashed #eee; font-weight: 800; font-size: 1.2rem; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
-            .grand-total .amount { color: #dc3545; font-size: 1.4rem; }
+            .total-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                color: var(--text-light);
+                font-size: 0.95rem;
+            }
+            .grand-total {
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 2px dashed #eee;
+                font-weight: 800;
+                font-size: 1.2rem;
+                color: var(--text-main);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .grand-total .amount {
+                color: #dc3545;
+                font-size: 1.4rem;
+            }
 
             .btn-confirm {
-                width: 100%; padding: 15px; background: var(--primary-color); color: #fff; border: none;
-                border-radius: 50px; font-weight: 700; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;
-                margin-top: 25px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(160, 129, 108, 0.3);
+                width: 100%;
+                padding: 15px;
+                background: var(--primary-color);
+                color: #fff;
+                border: none;
+                border-radius: 50px;
+                font-weight: 700;
+                font-size: 1.1rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-top: 25px;
+                transition: all 0.3s;
+                box-shadow: 0 4px 15px rgba(160, 129, 108, 0.3);
             }
-            .btn-confirm:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(160, 129, 108, 0.4); }
-            .btn-confirm:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+            .btn-confirm:hover:not(:disabled) {
+                background: var(--primary-dark);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(160, 129, 108, 0.4);
+            }
+            .btn-confirm:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
 
             /* RESPONSIVE */
             @media (max-width: 992px) {
-                .checkout-steps { display: none; }
-                .row.g-5 { flex-direction: column-reverse; }
-                .summary-box { position: static; margin-bottom: 30px; }
+                .checkout-steps {
+                    display: none;
+                }
+                .row.g-5 {
+                    flex-direction: column-reverse;
+                }
+                .summary-box {
+                    position: static;
+                    margin-bottom: 30px;
+                }
             }
         </style>
     </head>
@@ -190,7 +407,7 @@
             <div class="row g-5">
                 <div class="col-lg-7">
                     <form action="${pageContext.request.contextPath}/insertOrders" method="post" id="payment-form">
-                        
+
                         <div class="section-card">
                             <div class="section-title">
                                 <i class="bi bi-person-vcard"></i> Contact Information
@@ -241,7 +458,6 @@
 
                         <input type="hidden" name="size"           value="${param.size}">
                         <input type="hidden" id="subtotalInput"    name="total"       value="${subtotal}">
-                        <input type="hidden" id="shippingInput"    name="shipping"    value="${shipping}">
                         <input type="hidden" id="grandTotalInput"  name="grandTotal"  value="${grandTotal}">
                         <input type="hidden" id="voucherCodeInput"   name="voucherCode"   value="${sessionScope.voucherCode}">
                         <input type="hidden" id="voucherIdInput"     name="voucherId"     value="${voucherId}">
@@ -254,7 +470,7 @@
                 <div class="col-lg-5">
                     <div class="summary-box">
                         <div class="summary-header">Order Summary</div>
-                        
+
                         <div style="max-height: 300px; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;">
                             <c:forEach items="${requestScope.cartList}" var="cart">
                                 <div class="product-item">
@@ -287,10 +503,6 @@
                             <span>Subtotal</span>
                             <span id="subtotalText" class="fw-bold text-dark">${subtotalFmt} VND</span>
                         </div>
-                        <div class="total-row">
-                            <span>Shipping</span>
-                            <span id="shippingText">${shippingFmt} VND</span>
-                        </div>
                         <div class="total-row" id="discountRow" style="display:none;">
                             <span class="text-success">Voucher</span>
                             <span id="discountValue" class="text-success fw-bold">-0 VND</span>
@@ -305,9 +517,6 @@
                             CONFIRM ORDER
                         </button>
 
-                        <div class="text-center mt-3">
-                            <small class="text-muted"><i class="bi bi-info-circle"></i> Free shipping for orders over 200.000 VND</small>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -344,156 +553,157 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
-            const FREE_SHIP_THRESHOLD = 200000;
-            const SHIPPING_FEE = 20000;
 
-            let subtotal = ${subtotal};
-            let appliedVoucher = {value: 0, id: 0};
-            let successModal, processingModal;
+                                    let subtotal = ${subtotal};
+                                    let appliedVoucher = {value: 0, id: 0};
+                                    let successModal, processingModal;
 
-            $(window).on('load', function () {
-                setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
-            });
+                                    $(window).on('load', function () {
+                                        setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
+                                    });
 
-            function fmt(n) { return (n || 0).toLocaleString('vi-VN') + ' VND'; }
+                                    function fmt(n) {
+                                        return (n || 0).toLocaleString('vi-VN') + ' VND';
+                                    }
 
-            function recalcTotals() {
-                let shipping = (subtotal === 0) ? 0 : (subtotal >= FREE_SHIP_THRESHOLD ? 0 : SHIPPING_FEE);
-                const discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
-                const grand = Math.max(0, subtotal + shipping - discount);
+                                    function recalcTotals() {
+                                        // Không còn ship: shipping luôn = 0
+                                        const discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
+                                        const grand = Math.max(0, subtotal - discount);
 
-                $('#subtotalText').text(fmt(subtotal));
-                $('#shippingText').text(fmt(shipping));
-                $('#grandTotalText').text(fmt(grand));
+                                        $('#subtotalText').text(fmt(subtotal));
+                                        $('#grandTotalText').text(fmt(grand));
 
-                // Inputs
-                $('#discountInput').val(discount);
-                $('#grandTotalInput').val(grand);
-                $('#subtotalInput').val(subtotal);
-                $('#shippingInput').val(shipping);
-                $('#voucherIdInput').val(appliedVoucher.id || '');
-                $('#voucherValueInput').val(appliedVoucher.value || 0);
-                $('#voucherCodeInput').val(appliedVoucher.id || '');
-                $('#voucherTypeInput').val((appliedVoucher.value > 0) ? 'percent' : '');
+                                        // Inputs
+                                        $('#discountInput').val(discount);
+                                        $('#grandTotalInput').val(grand);
+                                        $('#subtotalInput').val(subtotal);
 
-                updateVoucherUI(discount);
-            }
+                                        $('#voucherIdInput').val(appliedVoucher.id || '');
+                                        $('#voucherValueInput').val(appliedVoucher.value || 0);
+                                        $('#voucherCodeInput').val(appliedVoucher.id || '');
+                                        $('#voucherTypeInput').val((appliedVoucher.value > 0) ? 'percent' : '');
 
-            function updateVoucherUI(discount) {
-                if (appliedVoucher.value > 0) {
-                    $('#voucherError').hide().text(''); // SỬA 2: Đảm bảo xóa text lỗi
-                    $('#discountRow').css('display', 'flex');
-                    $('#discountValue').text('-' + fmt(discount));
-                    $('#voucherHint').css('display', 'flex');
-                    $('#badgeVoucher').text('Saved ' + appliedVoucher.value + '%');
-                    
-                    // SỬA 3: Giữ lại text trong input bằng cách comment dòng xóa
-                    // $('#voucherInput').val(''); 
-                } else {
-                    $('#discountRow').hide();
-                    $('#discountValue').text('-0 VND');
-                    $('#voucherHint').hide();
-                }
-            }
+                                        updateVoucherUI(discount);
+                                    }
 
-            function applyVoucher() {
-                const code = ($('#voucherInput').val() || '').trim();
-                const err = $('#voucherError');
-                err.hide().text(''); // SỬA 4: Xóa sạch lỗi cũ ngay khi nhấn nút
 
-                if (!code) {
-                    err.text('Please enter a voucher code.').show();
-                    return;
-                }
+                                    function updateVoucherUI(discount) {
+                                        if (appliedVoucher.value > 0) {
+                                            $('#voucherError').hide().text(''); // SỬA 2: Đảm bảo xóa text lỗi
+                                            $('#discountRow').css('display', 'flex');
+                                            $('#discountValue').text('-' + fmt(discount));
+                                            $('#voucherHint').css('display', 'flex');
+                                            $('#badgeVoucher').text('Saved ' + appliedVoucher.value + '%');
 
-                $.ajax({
-                    url: BASE + '/applyVoucher',
-                    method: 'POST',
-                    dataType: 'json',
-                    data: {code: code},
-                    success: function (res) {
-                        if (res && res.ok && res.type === 'percent') {
-                            appliedVoucher = {value: parseInt(res.value || 0, 10), id: parseInt(res.voucherId || 0, 10)};
-                            recalcTotals();
-                        } else {
-                            removeVoucher();
-                            err.text((res && res.message) ? res.message : 'Invalid voucher code.').show();
-                        }
-                    },
-                    error: function () {
-                        removeVoucher();
-                        err.text('Cannot apply voucher right now.').show();
-                    }
-                });
-            }
+                                            // SỬA 3: Giữ lại text trong input bằng cách comment dòng xóa
+                                            // $('#voucherInput').val(''); 
+                                        } else {
+                                            $('#discountRow').hide();
+                                            $('#discountValue').text('-0 VND');
+                                            $('#voucherHint').hide();
+                                        }
+                                    }
 
-            function removeVoucher() {
-                appliedVoucher = {value: 0, id: 0};
-                $('#voucherError').hide().text(''); // SỬA 5: Xóa lỗi khi remove
-                recalcTotals();
-            }
+                                    function applyVoucher() {
+                                        const code = ($('#voucherInput').val() || '').trim();
+                                        const err = $('#voucherError');
+                                        err.hide().text(''); // SỬA 4: Xóa sạch lỗi cũ ngay khi nhấn nút
 
-            $(document).ready(function () {
-                successModal = new bootstrap.Modal(document.getElementById('successModal'), {keyboard: false, backdrop: 'static'});
-                processingModal = new bootstrap.Modal(document.getElementById('processingModal'), {keyboard: false, backdrop: 'static'});
+                                        if (!code) {
+                                            err.text('Please enter a voucher code.').show();
+                                            return;
+                                        }
 
-                $('#modalOkButton').on('click', function () {
-                    window.location.href = '${pageContext.request.contextPath}/orderView';
-                });
+                                        $.ajax({
+                                            url: BASE + '/applyVoucher',
+                                            method: 'POST',
+                                            dataType: 'json',
+                                            data: {code: code},
+                                            success: function (res) {
+                                                if (res && res.ok && res.type === 'percent') {
+                                                    appliedVoucher = {value: parseInt(res.value || 0, 10), id: parseInt(res.voucherId || 0, 10)};
+                                                    recalcTotals();
+                                                } else {
+                                                    removeVoucher();
+                                                    err.text((res && res.message) ? res.message : 'Invalid voucher code.').show();
+                                                }
+                                            },
+                                            error: function () {
+                                                removeVoucher();
+                                                err.text('Cannot apply voucher right now.').show();
+                                            }
+                                        });
+                                    }
 
-                $.validator.addMethod("customPhone", function (value, element) {
-                    return this.optional(element) || /^(0\d{9,10})$|^(\+84\d{9,10})$/.test(value);
-                }, "Invalid phone number");
+                                    function removeVoucher() {
+                                        appliedVoucher = {value: 0, id: 0};
+                                        $('#voucherError').hide().text(''); // SỬA 5: Xóa lỗi khi remove
+                                        recalcTotals();
+                                    }
 
-                $("#payment-form").validate({
-                    rules: {
-                        fullName: {required: true},
-                        email: {required: true, email: true},
-                        phoneNumber: {required: true, customPhone: true},
-                        address: { required: true }
-                    },
-                    messages: {
-                        fullName: "Please enter your name",
-                        email: "Valid email required",
-                        phoneNumber: "Valid phone required",
-                        address: "Address is required"
-                    },
-                    errorElement: "div",
-                    errorPlacement: function (error, element) {
-                        error.addClass("error");
-                        element.closest('.input-group').after(error);
-                    },
-                    submitHandler: function (form) {
-                        $('#btnComplete').prop('disabled', true);
-                        processingModal.show();
+                                    $(document).ready(function () {
+                                        successModal = new bootstrap.Modal(document.getElementById('successModal'), {keyboard: false, backdrop: 'static'});
+                                        processingModal = new bootstrap.Modal(document.getElementById('processingModal'), {keyboard: false, backdrop: 'static'});
 
-                        setTimeout(function () {
-                            const fd = new URLSearchParams(new FormData(form));
-                            let phone = fd.get('phoneNumber');
-                            if (phone.startsWith('+84')) fd.set('phoneNumber', '0' + phone.substring(3));
+                                        $('#modalOkButton').on('click', function () {
+                                            window.location.href = '${pageContext.request.contextPath}/orderView';
+                                        });
 
-                            $.ajax({
-                                url: form.action,
-                                type: 'POST',
-                                data: fd.toString(),
-                                headers: {'X-Requested-With': 'XMLHttpRequest'},
-                                success: function () {
-                                    processingModal.hide();
-                                    successModal.show();
-                                },
-                                error: function (jqXHR) {
-                                    processingModal.hide();
-                                    const msg = jqXHR?.responseJSON?.message || 'Order failed. Try again.';
-                                    alert(msg);
-                                    $('#btnComplete').prop('disabled', false);
-                                }
-                            });
-                        }, 800);
-                        return false;
-                    }
-                });
-                recalcTotals();
-            });
+                                        $.validator.addMethod("customPhone", function (value, element) {
+                                            return this.optional(element) || /^(0\d{9,10})$|^(\+84\d{9,10})$/.test(value);
+                                        }, "Invalid phone number");
+
+                                        $("#payment-form").validate({
+                                            rules: {
+                                                fullName: {required: true},
+                                                email: {required: true, email: true},
+                                                phoneNumber: {required: true, customPhone: true},
+                                                address: {required: true}
+                                            },
+                                            messages: {
+                                                fullName: "Please enter your name",
+                                                email: "Valid email required",
+                                                phoneNumber: "Valid phone required",
+                                                address: "Address is required"
+                                            },
+                                            errorElement: "div",
+                                            errorPlacement: function (error, element) {
+                                                error.addClass("error");
+                                                element.closest('.input-group').after(error);
+                                            },
+                                            submitHandler: function (form) {
+                                                $('#btnComplete').prop('disabled', true);
+                                                processingModal.show();
+
+                                                setTimeout(function () {
+                                                    const fd = new URLSearchParams(new FormData(form));
+                                                    let phone = fd.get('phoneNumber');
+                                                    if (phone.startsWith('+84'))
+                                                        fd.set('phoneNumber', '0' + phone.substring(3));
+
+                                                    $.ajax({
+                                                        url: form.action,
+                                                        type: 'POST',
+                                                        data: fd.toString(),
+                                                        headers: {'X-Requested-With': 'XMLHttpRequest'},
+                                                        success: function () {
+                                                            processingModal.hide();
+                                                            successModal.show();
+                                                        },
+                                                        error: function (jqXHR) {
+                                                            processingModal.hide();
+                                                            const msg = jqXHR?.responseJSON?.message || 'Order failed. Try again.';
+                                                            alert(msg);
+                                                            $('#btnComplete').prop('disabled', false);
+                                                        }
+                                                    });
+                                                }, 800);
+                                                return false;
+                                            }
+                                        });
+                                        recalcTotals();
+                                    });
         </script>
     </body>
 </html>

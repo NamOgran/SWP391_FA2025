@@ -16,4 +16,5 @@ public class CartURL {
     public static final String URL_CART_DELETE = "/cartDelete";
     public static final String URL_PAYMENT = "/payment";
     public static final String URL_BUYNOW = "/productBuy";
+    public static final String URL_CART_CHANGE_SIZE = "/cartChangeSize";
 }

@@ -317,7 +317,8 @@
                                 <label class="selector-label">Quantity: <span id="stock-display" class="stock-status"></span></label>
                                 <div class="quantity-control" id="qtyControl">
                                     <button id="decrementButton" type="button" class="quantity-btn"><i class="bi bi-dash"></i></button>
-                                    <input type="number" id="quantityInput" name="quantity" value="1" min="1" class="quantity-input">
+<input type="number" id="quantityInput" name="quantity" value="1" min="1" 
+       class="quantity-input" readonly>
                                     <button id="incrementButton" type="button" class="quantity-btn"><i class="bi bi-plus"></i></button>
                                 </div>
                             </div>
@@ -561,7 +562,6 @@
 
                 incBtn.addEventListener('click', () => setQty((parseInt(qtyInput.value) || 1) + 1));
                 decBtn.addEventListener('click', () => setQty((parseInt(qtyInput.value) || 1) - 1));
-                qtyInput.addEventListener('change', function() { setQty(this.value); });
 
                 function checkStock() {
                     const sizeRadio = document.querySelector("input[name='size']:checked");
@@ -607,6 +607,7 @@ addToCartBtn.addEventListener('click', function (e) {
             // Kiểm tra nội dung trả về từ Controller
             if (text.trim() === "OK") {
                  showPopup("Added to cart successfully!", "success"); // Hiện popup xanh
+                 setQty(1);
             } else if (text.includes("Login")) {
                  window.location.href = loginUrl; 
             } else {

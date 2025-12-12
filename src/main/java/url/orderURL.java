@@ -16,5 +16,6 @@ public class OrderURL {
     public static final String URL_UPDATE_STATUS = "/orderUpdateStatus";
     public static final String URL_VIEW_ORDERS = "/orderView";
     public static final String URL_HISTORY_ORDERS = "/orderHistoryView";
+    public static final String URL_CANCEL_ORDER = "/cancelOrder";
 
 }

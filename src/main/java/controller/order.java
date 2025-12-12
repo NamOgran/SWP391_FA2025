@@ -5,7 +5,7 @@ import DAO.OrderDAO;
 import DAO.ProductDAO;
 import DAO.VoucherDAO;
 import DAO.Size_detailDAO;
-import DAO.FeedBackDAO; // [QUAN TRỌNG] Import FeedBackDAO
+import DAO.FeedBackDAO;
 
 import entity.OrderDetail;
 import entity.Orders;
@@ -28,18 +28,22 @@ import java.util.Map;
 
 import static url.OrderURL.INSERT_ORDERS;
 import static url.OrderURL.INSERT_ORDERS_DETAILS;
+import static url.OrderURL.URL_CANCEL_ORDER;
 import static url.OrderURL.URL_HISTORY_ORDERS;
 import static url.OrderURL.URL_ORDER_LIST;
 import static url.OrderURL.URL_UPDATE_STATUS;
 import static url.OrderURL.URL_VIEW_ORDERS;
 
 @WebServlet(name = "order", urlPatterns = {
-    INSERT_ORDERS, INSERT_ORDERS_DETAILS, URL_ORDER_LIST, URL_UPDATE_STATUS, URL_VIEW_ORDERS, URL_HISTORY_ORDERS
+    INSERT_ORDERS,
+    INSERT_ORDERS_DETAILS,
+    URL_ORDER_LIST,
+    URL_UPDATE_STATUS,
+    URL_VIEW_ORDERS,
+    URL_HISTORY_ORDERS,
+    URL_CANCEL_ORDER
 })
 public class Order extends HttpServlet {
-
-    private static final int SHIPPING_FEE = 20000;
-    private static final int FREE_SHIP_THRESHOLD = 200000;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -152,12 +156,12 @@ public class Order extends HttpServlet {
                         return;
                     }
 
-                    // ===== Create Order =====
+// ===== Create Order =====
                     float unitPriceF = calcUnitPriceWithVoucherSafe(daoProduct, daoVoucher, productId);
                     int unitPrice = Math.max(0, Math.round(unitPriceF));
                     int subtotal = unitPrice * quantity;
-                    int shipping = (subtotal > 0 && subtotal < FREE_SHIP_THRESHOLD) ? SHIPPING_FEE : 0;
 
+// Voucher
                     int voucherIdFromReq = parseIntSafe(request.getParameter("voucherId"), 0);
                     int voucherPctFromReq = parseIntSafe(request.getParameter("voucherPct"), 0);
                     int voucherPercent = (voucherIdFromReq > 0)
@@ -165,20 +169,18 @@ public class Order extends HttpServlet {
                             : Math.max(0, voucherPctFromReq);
 
                     int discount = Math.round(subtotal * (voucherPercent / 100.0f));
-                    int grand = Math.max(0, subtotal + shipping - discount);
+                    int grand = Math.max(0, subtotal - discount);
+
                     String addr = (newaddress != null && !newaddress.trim().isEmpty()) ? newaddress : address;
 
                     int orderID = daoOrder.insertOrder(addr, currentDate, status, phoneNumber, customer_id, staffId, grand);
+
                     if (orderID <= 0) {
                         response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cannot create order");
                         return;
                     }
 
                     daoOrder.insertOrderDetail(quantity, size, productId, orderID);
-
-                    // Update Size_detail
-                    int newQty = s.getQuantity() - quantity;
-                    daoSize.updateQuanSize(newQty, productId, size);
 
                     if (session != null) {
                         session.setAttribute("popupMessage", "Order placed successfully! Thank you for shopping at GIO Shop!");
@@ -216,19 +218,21 @@ public class Order extends HttpServlet {
                     return;
                 }
 
-                // Tính tiền giỏ
+// Tính tiền giỏ
                 int subtotal = daoCart.getCartTotal(customer_id);
                 int voucherPercent = 0;
                 Object sessVoucher = (session != null) ? session.getAttribute("voucherPercent") : null;
                 if (sessVoucher instanceof Integer) {
                     voucherPercent = (Integer) sessVoucher;
                 }
+
                 int discount = Math.round(subtotal * (voucherPercent / 100.0f));
-                int shipping = (subtotal > 0 && subtotal < FREE_SHIP_THRESHOLD) ? SHIPPING_FEE : 0;
-                int finalTotal = Math.max(0, subtotal + shipping - discount);
+                int finalTotal = Math.max(0, subtotal - discount);
+
                 String addr = (newaddress != null && !newaddress.trim().isEmpty()) ? newaddress : address;
 
                 int orderID = daoOrder.insertOrder(addr, currentDate, status, phoneNumber, customer_id, staffId, finalTotal);
+
                 if (orderID <= 0) {
                     response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cannot create order");
                     return;
@@ -237,12 +241,7 @@ public class Order extends HttpServlet {
                 // Lưu chi tiết + trừ kho size + xoá giỏ
                 for (entity.Cart c : cartList) {
                     daoOrder.insertOrderDetail(c.getQuantity(), c.getSize_name(), c.getProductID(), orderID);
-                    
-                    Size_detail cur = daoSize.getSizeByProductIdAndName(c.getProductID(), c.getSize_name());
-                    if (cur != null) {
-                        int newQty = cur.getQuantity() - c.getQuantity();
-                        daoSize.updateQuanSize(newQty, c.getProductID(), c.getSize_name());
-                    }
+
                     daoCart.deleteCartBySize(c.getProductID(), customer_id, c.getSize_name());
                 }
 
@@ -410,7 +409,7 @@ public class Order extends HttpServlet {
             case URL_HISTORY_ORDERS: {
                 String orderIdStr = request.getParameter("orderId");
                 String newStatus2 = request.getParameter("status");
-                
+
                 if (newStatus2 != null && !newStatus2.trim().isEmpty()) {
                     int orderId3 = parseIntSafe(orderIdStr, 0);
                     daoOrder.updateStatus(newStatus2, orderId3);
@@ -429,7 +428,7 @@ public class Order extends HttpServlet {
                                 if (d.getOrderID() == o.getOrderID()) {
                                     // Kiểm tra trong DB xem user này đã review sản phẩm này trong đơn này chưa
                                     boolean isReviewed = daoFeedback.hasAlreadyReviewed(customer_id, d.getProductID(), o.getOrderID());
-                                    
+
                                     // Tạo key duy nhất
                                     String key = o.getOrderID() + "_" + d.getProductID();
                                     reviewedMap.put(key, isReviewed);
@@ -451,6 +450,26 @@ public class Order extends HttpServlet {
                     request.setAttribute("ordersUserList", ordersUserList);
                     request.getRequestDispatcher("ordersHistory.jsp").forward(request, response);
                 }
+                break;
+            }
+            case URL_CANCEL_ORDER: {
+                // Chắc chắn đã check acc ở đầu doGet rồi
+                int orderId = parseIntSafe(request.getParameter("orderId"), 0);
+
+                boolean ok = daoOrder.requestCancel(orderId, customer_id);
+
+                if (ok) {
+                    if (session != null) {
+                        session.setAttribute("popupMessage", "Your cancel request has been sent to staff.");
+                    }
+                } else {
+                    if (session != null) {
+                        session.setAttribute("popupMessage", "Cannot cancel this order. It may not be in Pending status.");
+                    }
+                }
+
+                // Sau khi yêu cầu huỷ xong, quay lại trang viewOrder (nơi hiển thị Pending/Delivering)
+                response.sendRedirect(request.getContextPath() + URL_VIEW_ORDERS);
                 break;
             }
 

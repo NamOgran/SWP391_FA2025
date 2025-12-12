@@ -117,7 +117,7 @@ public class CartDAO extends DBConnect.DBConnect {
     }
 
     public Cart getCartById(int customer_id) {
-        String sql = "SELECT * FROM cart WHERE customer_id = ? LIMIT 1";
+        String sql = "SELECT TOP 1 * FROM cart WHERE customer_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, customer_id);
             try (ResultSet rs = st.executeQuery()) {
@@ -171,7 +171,7 @@ public class CartDAO extends DBConnect.DBConnect {
 
     // [FIX] Trả về Integer thay vì Float
     public Integer getUnitPriceInCart(int customerId, int productId, String sizeName) {
-        String sql = "SELECT price FROM cart WHERE customer_id=? AND product_id=? AND size_name=? LIMIT 1";
+        String sql = "SELECT TOP 1 price FROM cart WHERE customer_id=? AND product_id=? AND size_name=?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, customerId);
             st.setInt(2, productId);
