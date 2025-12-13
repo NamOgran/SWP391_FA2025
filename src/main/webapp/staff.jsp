@@ -184,8 +184,14 @@
             }
 
             @keyframes fadeInDrop {
-                from { opacity: 0; transform: translateY(10px); }
-                to   { opacity: 1; transform: translateY(0); }
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to   {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
 
             /* ===== MAIN WRAPPER ===== */
@@ -261,9 +267,9 @@
                 padding: 30px 40px;
                 overflow-y: auto;
                 background: radial-gradient(circle at top left,
-                                            #ffffff 0,
-                                            #f6f7fb 55%,
-                                            #eceef3 100%);
+                    #ffffff 0,
+                    #f6f7fb 55%,
+                    #eceef3 100%);
             }
 
             .main-content > div {
@@ -364,7 +370,7 @@
                 width: 50%;
                 margin: 30px auto;
                 box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px,
-                            rgba(0, 0, 0, 0.22) 0px 15px 12px;
+                    rgba(0, 0, 0, 0.22) 0px 15px 12px;
                 background-color: #fff;
             }
 
@@ -612,42 +618,42 @@
             }
 
             /* ===== ORDER TABLE ===== */
-            
+
             /* Fix lệch khung do cột Action co giãn */
-.order-manage .order-table th.th-action,
-.order-manage .order-table td.action-btn{
-    width: 170px;
-    min-width: 170px;
-    max-width: 170px;
-}
+            .order-manage .order-table th.th-action,
+            .order-manage .order-table td.action-btn{
+                width: 170px;
+                min-width: 170px;
+                max-width: 170px;
+            }
 
-.order-manage .order-table td.action-btn{
-    padding-right: 1rem; /* giữ khoảng thở bên phải */
-}
+            .order-manage .order-table td.action-btn{
+                padding-right: 1rem; /* giữ khoảng thở bên phải */
+            }
 
-/* Action luôn giữ 3 slot cố định: accept | reject | view */
-.order-manage .action-wrap{
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 37px;   /* mỗi slot 37px */
-    justify-content: end;
-    align-items: center;
-    gap: 10px;
-    white-space: nowrap;
-}
+            /* Action luôn giữ 3 slot cố định: accept | reject | view */
+            .order-manage .action-wrap{
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: 37px;   /* mỗi slot 37px */
+                justify-content: end;
+                align-items: center;
+                gap: 10px;
+                white-space: nowrap;
+            }
 
-/* slot rỗng (để giữ chỗ) */
-.order-manage .btn-placeholder{
-    width: 37px;
-    height: 37px;
-    visibility: hidden;        /* vẫn chiếm chỗ nhưng không thấy */
-}
+            /* slot rỗng (để giữ chỗ) */
+            .order-manage .btn-placeholder{
+                width: 37px;
+                height: 37px;
+                visibility: hidden;        /* vẫn chiếm chỗ nhưng không thấy */
+            }
 
-/* tránh outline khi click làm “nhìn lệch” */
-.order-manage .order-table button:focus{
-    outline: none;
-    box-shadow: none;
-}
+            /* tránh outline khi click làm “nhìn lệch” */
+            .order-manage .order-table button:focus{
+                outline: none;
+                box-shadow: none;
+            }
 
 
             .order-main {
@@ -842,7 +848,7 @@
                 color: #856404 !important;
                 border: 1px solid #ffeeba;
             }
-            
+
             .stt-Delivered,
             .stt-Done {
                 background-color: #39d12a !important;
@@ -1391,51 +1397,38 @@
                                         </c:set>
                                         <td><strong>${formattedPrice} VND</strong></td>
 
-<td class="action-btn" id="action-cell-${order.orderID}">
-    <div class="action-wrap">
-        <!-- Pending / Processing -->
-        <c:if test="${order.status eq 'Pending' or order.status eq 'Processing'}">
-            <button class="accept-btn"
-                    onclick="updateOrderStatus(${order.orderID}, 'Delivering')"
-                    title="Approve">
-                <i class="bi bi-check-lg"></i>
-            </button>
-            <button class="reject-btn"
-                    onclick="updateOrderStatus(${order.orderID}, 'Cancelled')"
-                    title="Cancel">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </c:if>
+                                        <td class="action-btn" id="action-cell-${order.orderID}">
+                                            <div class="action-wrap">
+                                                <!-- Pending / Processing -->
+                                                <c:if test="${order.status eq 'Pending' or order.status eq 'Processing'}">
+                                                    <button class="accept-btn"
+                                                            onclick="updateOrderStatus(${order.orderID}, 'Delivering')"
+                                                            title="Approve">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </button>
+                                                    <button class="reject-btn"
+                                                            onclick="updateOrderStatus(${order.orderID}, 'Cancelled')"
+                                                            title="Cancel">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </c:if>
 
-        <!-- Confirming -->
-        <c:if test="${order.status eq 'Confirming'}">
-            <button class="accept-btn"
-                    onclick="updateOrderStatus(${order.orderID}, 'Cancelled')"
-                    title="Approve cancel request">
-                <i class="bi bi-check-lg"></i>
-            </button>
-            <button class="reject-btn"
-                    onclick="updateOrderStatus(${order.orderID}, 'Pending')"
-                    title="Reject cancel request">
-                <i class="bi bi-arrow-counterclockwise"></i>
-            </button>
-        </c:if>
+                                                <!-- Delivering / Shipped -->
+                                                <c:if test="${order.status eq 'Delivering' or order.status eq 'Shipped'}">
+                                                    <button class="accept-btn"
+                                                            onclick="updateOrderStatus(${order.orderID}, 'Delivered')"
+                                                            title="Complete">
+                                                        <i class="bi bi-truck"></i>
+                                                    </button>
+                                                </c:if>
 
-        <!-- Delivering / Shipped -->
-        <c:if test="${order.status eq 'Delivering' or order.status eq 'Shipped'}">
-            <button class="accept-btn"
-                    onclick="updateOrderStatus(${order.orderID}, 'Completed')"
-                    title="Complete">
-                <i class="bi bi-truck"></i>
-            </button>
-        </c:if>
+                                                <button class="view-btn">
+                                                    <i class="bi bi-eye"></i>
+                                                    <i class="bi bi-eye-slash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
 
-        <button class="view-btn">
-            <i class="bi bi-eye"></i>
-            <i class="bi bi-eye-slash"></i>
-        </button>
-    </div>
-</td>
 
                                     </tr>
 
@@ -1787,1248 +1780,1259 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <script>
-            const BASE_URL = "${pageContext.request.contextPath}";
-
-            // ===== CHARTS =====
-            const chartData = {
-                labels: ["quarter 1", "quarter 2", "quarter 3", "quarter 4"],
-                data: [
-                    ${empty quarter1 ? 0 : quarter1},
-                    ${empty quarter2 ? 0 : quarter2},
-                    ${empty quarter3 ? 0 : quarter3},
-                    ${empty quarter4 ? 0 : quarter4}
-                ]
-            };
-
-            const myChart = document.querySelector(".my-chart");
-            if (myChart && typeof Chart !== "undefined") {
-                new Chart(myChart, {
-                    type: "doughnut",
-                    data: {
-                        labels: chartData.labels,
-                        datasets: [{
-                            label: "Quarter revenue (${year})",
-                            data: chartData.data
-                        }]
-                    }
-                });
-            }
-
-            const ctx = document.querySelector(".my-chart-line");
-            if (ctx && typeof Chart !== "undefined") {
-                new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                        labels: ['1','2','3','4','5','6','7','8','9','10','11','12'],
-                        datasets: [{
-                            label: "monthly revenue (${year})",
-                            data: [
-                                ${empty revenue1 ? 0 : revenue1},
-                                ${empty revenue2 ? 0 : revenue2},
-                                ${empty revenue3 ? 0 : revenue3},
-                                ${empty revenue4 ? 0 : revenue4},
-                                ${empty revenue5 ? 0 : revenue5},
-                                ${empty revenue6 ? 0 : revenue6},
-                                ${empty revenue7 ? 0 : revenue7},
-                                ${empty revenue8 ? 0 : revenue8},
-                                ${empty revenue9 ? 0 : revenue9},
-                                ${empty revenue10 ? 0 : revenue10},
-                                ${empty revenue11 ? 0 : revenue11},
-                                ${empty revenue12 ? 0 : revenue12}
-                            ],
-                            borderWidth: 1,
-                            backgroundColor: "rgba(231, 189, 111, 0.799)",
-                            barThickness: 30
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-
-            // ===== PRODUCTS (AJAX + PAGINATION) =====
-            let allProductData = [];
-            let currentProdPage = 1;
-            const prodPerPage = 10;
-
-            function productList() {
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/product",
-                    data: {}
-                }).done(function (data) {
-                    var data1 = JSON.parse(data);
-                    if (data1.isSuccess) {
-                        allProductData = data1.data || [];
-                        currentProdPage = 1;
-                        renderProductPage();
-                    } else {
-                        alert("Load product fail");
-                    }
-                });
-            }
-
-            function search() {
-                var input = document.getElementById("search").value;
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/product/search",
-                    data: { input: input }
-                }).done(function (data) {
-                    var data1 = JSON.parse(data);
-                    if (data1.isSuccess) {
-                        allProductData = data1.data || [];
-                        currentProdPage = 1;
-                        renderProductPage();
-                    } else {
-                        allProductData = [];
-                        renderProductPage();
-                    }
-                });
-            }
-
-            function sort() {
-                var option = document.getElementById("sortID").value;
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/product/sort",
-                    data: { option: option }
-                }).done(function (data) {
-                    var data1 = JSON.parse(data);
-                    if (data1.isSuccess) {
-                        allProductData = data1.data || [];
-                        currentProdPage = 1;
-                        renderProductPage();
-                    } else {
-                        alert("Sort fail");
-                    }
-                });
-            }
-
-            function renderProductPage() {
-                const tbody = document.querySelector(".product-table table tbody");
-                tbody.innerHTML = "";
-                const totalItems = allProductData.length;
-
-                if (totalItems === 0) {
-                    tbody.innerHTML =
-                        '<tr><td colspan="5" class="text-center text-muted p-3">No products found.</td></tr>';
-                    const paginationDiv = document.getElementById("product-pagination");
-                    if (paginationDiv) paginationDiv.innerHTML = "";
-                    return;
-                }
-
-                const startIndex = (currentProdPage - 1) * prodPerPage;
-                const endIndex = startIndex + prodPerPage;
-                const pageData = allProductData.slice(startIndex, endIndex);
-
-                pageData.forEach(function (product) {
-                    var newRow = document.createElement("tr");
-                    var pictureCell = document.createElement("td");
-                    var nameCell = document.createElement("td");
-                    var categoryIdCell = document.createElement("td");
-                    var priceCell = document.createElement("td");
-                    var quantityCell = document.createElement("td");
-
-                    pictureCell.innerHTML =
-                        '<img style="width: 100px; height: 100px; object-fit: cover;" src="' +
-                        product.picURL +
-                        '" alt="Product Picture">';
-                    nameCell.textContent = product.name;
-                    categoryIdCell.textContent = product.categoryID;
-                    priceCell.textContent = product.price.toLocaleString("vi-VN") + " VND";
-                    quantityCell.textContent = product.quantity;
-
-                    newRow.appendChild(pictureCell);
-                    newRow.appendChild(nameCell);
-                    newRow.appendChild(categoryIdCell);
-                    newRow.appendChild(priceCell);
-                    newRow.appendChild(quantityCell);
-                    tbody.appendChild(newRow);
-                });
-
-                renderProductPaginationControls(totalItems);
-            }
-
-            function renderProductPaginationControls(totalItems) {
-                const container = document.getElementById("product-pagination");
-                if (!container) return;
-                const totalPages = Math.ceil(totalItems / prodPerPage);
-
-                if (totalPages <= 1) {
-                    container.innerHTML = "";
-                    return;
-                }
-
-                let html =
-                    '<nav aria-label="Product pagination"><ul class="pagination justify-content-center">';
-
-                const prevDisabled = currentProdPage === 1 ? "disabled" : "";
-                html +=
-                    '<li class="page-item ' +
-                    prevDisabled +
-                    '"><button class="page-link" onclick="changeProductPage(' +
-                    (currentProdPage - 1) +
-                    ')"><i class="bi bi-chevron-left"></i></button></li>';
-
-                for (let i = 1; i <= totalPages; i++) {
-                    if (
-                        i === 1 ||
-                        i === totalPages ||
-                        (i >= currentProdPage - 1 && i <= currentProdPage + 1)
-                    ) {
-                        const activeClass = i === currentProdPage ? "active" : "";
-                        html +=
-                            '<li class="page-item ' +
-                            activeClass +
-                            '"><button class="page-link" onclick="changeProductPage(' +
-                            i +
-                            ')">' +
-                            i +
-                            "</button></li>";
-                    } else if (i === currentProdPage - 2 || i === currentProdPage + 2) {
-                        html +=
-                            '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                    }
-                }
-
-                const nextDisabled = currentProdPage === totalPages ? "disabled" : "";
-                html +=
-                    '<li class="page-item ' +
-                    nextDisabled +
-                    '"><button class="page-link" onclick="changeProductPage(' +
-                    (currentProdPage + 1) +
-                    ')"><i class="bi bi-chevron-right"></i></button></li>';
-
-                html += "</ul></nav>";
-                container.innerHTML = html;
-            }
-
-            function changeProductPage(newPage) {
-                currentProdPage = newPage;
-                renderProductPage();
-            }
-
-            // ===== CUSTOMER LIST (AJAX + PAGINATION) =====
-            let allCustomersData = [];
-            let currentCustPage = 1;
-            const custPerPage = 10;
-
-            function listCustomers() {
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/customer",
-                    dataType: "json"
-                }).done(function (resp) {
-                    if (!resp || !resp.isSuccess) {
-                        return;
-                    }
-                    allCustomersData = resp.data || [];
-                    currentCustPage = 1;
-                    renderCustomerPage();
-                });
-            }
-
-            function searchCustomers(q) {
-                q = (q || "").trim();
-                if (q.length === 0) {
-                    listCustomers();
-                    return;
-                }
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/customer/search",
-                    data: { input: q },
-                    dataType: "json"
-                }).done(function (resp) {
-                    if (!resp || !resp.isSuccess) {
-                        return;
-                    }
-                    allCustomersData = resp.data || [];
-                    currentCustPage = 1;
-                    renderCustomerPage();
-                });
-            }
-
-            function renderCustomerPage() {
-                const totalItems = allCustomersData.length;
-                const totalLabel = document.querySelector("#customer-total");
-                if (totalLabel) totalLabel.textContent = totalItems;
-
-                const startIndex = (currentCustPage - 1) * custPerPage;
-                const endIndex = startIndex + custPerPage;
-                const pageData = allCustomersData.slice(startIndex, endIndex);
-
-                renderCustomerRows(pageData, startIndex);
-                renderCustomerPaginationControls(totalItems);
-            }
-
-            function renderCustomerRows(list, startIndex) {
-                const tbody = document.querySelector("#customer-list");
-                tbody.innerHTML = "";
-
-                if (!list.length) {
-                    tbody.innerHTML =
-                        '<tr><td colspan="7"><div class="empty text-center text-muted p-3">No customers found.</div></td></tr>';
-                    return;
-                }
-
-                let i = startIndex;
-                list.forEach(function (cst) {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML =
-                        "<td>" +
-                        ++i +
-                        "</td>" +
-                        '<td style="font-weight: bold;">' +
-                        (cst.username || "") +
-                        "</td>" +
-                        "<td>" +
-                        (cst.fullName || "") +
-                        "</td>" +
-                        "<td>" +
-                        (cst.email || "") +
-                        "</td>" +
-                        "<td>" +
-                        (cst.phoneNumber || "") +
-                        "</td>" +
-                        "<td>" +
-                        (cst.address || "") +
-                        "</td>" +
-                        '<td class="action-btn">' +
-                        '<button class="view-btn" data-id="' +
-                        cst.customer_id +
-                        '"><i class="bi bi-eye"></i></button>' +
-                        "</td>";
-                    tbody.appendChild(tr);
-
-                    const subBody = document.createElement("tbody");
-                    subBody.classList.add("item");
-                    subBody.setAttribute("data-customer", cst.customer_id);
-                    tbody.appendChild(subBody);
-                });
-
-                tbody.querySelectorAll(".view-btn").forEach(function (btn) {
-                    btn.addEventListener("click", function () {
-                        const id = this.getAttribute("data-id");
-                        toggleCustomerOrders(this, id);
-                    });
-                });
-            }
-
-            function renderCustomerPaginationControls(totalItems) {
-                const container = document.getElementById("customer-pagination");
-                if (!container) return;
-
-                const totalPages = Math.ceil(totalItems / custPerPage);
-                if (totalPages <= 1) {
-                    container.innerHTML = "";
-                    return;
-                }
-
-                let html =
-                    '<nav aria-label="Customer pagination"><ul class="pagination justify-content-center">';
-
-                const prevDisabled = currentCustPage === 1 ? "disabled" : "";
-                html +=
-                    '<li class="page-item ' +
-                    prevDisabled +
-                    '"><button class="page-link" onclick="changeCustomerPage(' +
-                    (currentCustPage - 1) +
-                    ')"><i class="bi bi-chevron-left"></i></button></li>';
-
-                for (let i = 1; i <= totalPages; i++) {
-                    if (
-                        i === 1 ||
-                        i === totalPages ||
-                        (i >= currentCustPage - 1 && i <= currentCustPage + 1)
-                    ) {
-                        const activeClass = i === currentCustPage ? "active" : "";
-                        html +=
-                            '<li class="page-item ' +
-                            activeClass +
-                            '"><button class="page-link" onclick="changeCustomerPage(' +
-                            i +
-                            ')">' +
-                            i +
-                            "</button></li>";
-                    } else if (i === currentCustPage - 2 || i === currentCustPage + 2) {
-                        html +=
-                            '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                    }
-                }
-
-                const nextDisabled = currentCustPage === totalPages ? "disabled" : "";
-                html +=
-                    '<li class="page-item ' +
-                    nextDisabled +
-                    '"><button class="page-link" onclick="changeCustomerPage(' +
-                    (currentCustPage + 1) +
-                    ')"><i class="bi bi-chevron-right"></i></button></li>';
-
-                html += "</ul></nav>";
-                container.innerHTML = html;
-            }
-
-            function changeCustomerPage(newPage) {
-                currentCustPage = newPage;
-                renderCustomerPage();
-            }
-
-            function toggleCustomerOrders(button, customerId) {
-                const tr = button.closest("tr");
-                const next = tr.nextElementSibling;
-                if (!next || !next.classList.contains("item")) return;
-
-                if (next.style.display === "" || next.style.display === "none") {
-                    if (!next.hasChildNodes() || next.innerHTML.trim() === "") {
-                        loadCustomerOrders(customerId, next, function () {
-                            next.style.display = "contents";
-                        });
-                    } else {
-                        next.style.display = "contents";
-                    }
-                } else {
-                    next.style.display = "none";
-                }
-            }
-
-            function loadCustomerOrders(customerId, containerTbody, cb) {
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/customer/detail",
-                    data: { id: customerId },
-                    dataType: "json"
-                }).done(function (resp) {
-                    if (!resp || !resp.isSuccess) {
-                        cb && cb();
-                        return;
-                    }
-
-                    const orders =
-                        resp.data && resp.data.orders ? resp.data.orders : [];
-                    containerTbody.innerHTML = "";
-
-                    orders.sort(function (a, b) {
-                        const idA = parseInt(a.orderID ?? a.order_id ?? 0, 10);
-                        const idB = parseInt(b.orderID ?? b.order_id ?? 0, 10);
-                        return idB - idA;
-                    });
-
-                    if (!orders.length) {
-                        const empty = document.createElement("tr");
-                        empty.style.backgroundColor = "white";
-                        empty.innerHTML =
-                            "<td colspan='7' class='text-muted'>No orders.</td>";
-                        containerTbody.appendChild(empty);
-                        cb && cb();
-                        return;
-                    }
-
-                    orders.forEach(function (o) {
-                        const row = document.createElement("tr");
-                        row.style.backgroundColor = "white";
-                        row.innerHTML =
-                            "<td>" +
-                            (o.orderID ?? o.order_id ?? "") +
-                            "</td>" +
-                            "<td>" +
-                            formatDateForTable(o.date) +
-                            "</td>" +
-                            "<td>" +
-                            (o.address || "") +
-                            "</td>" +
-                            "<td>" +
-                            (o.phone_number || o.phoneNumber || "") +
-                            "</td>" +
-                            '<td><p class="status">' +
-                            (o.status || "") +
-                            "</p></td>" +
-                            "<td>" +
-                            formatCurrencyVND(o.total) +
-                            "</td>" +
-                            "<td></td>";
-                        containerTbody.appendChild(row);
-                    });
-
-                    handleColor();
-                    cb && cb();
-                });
-            }
-
-            // ===== ORDER PAGINATION (CLIENT SIDE) =====
-            let allOrderData = [];
-            let filteredOrderData = [];
-            let currentOrderPage = 1;
-            const orderPerPage = 10;
-
-            function initOrderPagination() {
-                const tbody = document.querySelector(
-                    ".order-manage .order-table tbody"
-                );
-                if (!tbody) return;
-
-                const rows = tbody.querySelectorAll(".order-summary-row");
-                if (rows.length === 0) return;
-
-                allOrderData = [];
-                rows.forEach((row) => {
-                    const detailRow = row.nextElementSibling;
-                    const idCell = row.cells[0];
-                    let orderId = parseInt(idCell.innerText.trim()) || 0;
-                    let nameCell = row.cells[1];
-                    let searchName = nameCell ? nameCell.innerText : "";
-
-                    allOrderData.push({
-                        summaryRow: row,
-                        detailRow: detailRow,
-                        searchText: searchName.toUpperCase().trim(),
-                        id: orderId
-                    });
-                });
-
-                allOrderData.sort((a, b) => b.id - a.id);
-                filteredOrderData = allOrderData;
-                renderOrderPage();
-            }
-
-            function renderOrderPage() {
-                const tbody = document.querySelector(
-                    ".order-manage .order-table tbody"
-                );
-                if (!tbody) return;
-                tbody.innerHTML = "";
-
-                const totalItems = filteredOrderData.length;
-                if (totalItems === 0) {
-                    tbody.innerHTML =
-                        '<tr><td colspan="7"><div class="empty text-center text-muted p-3">No orders found.</div></td></tr>';
-                    const pageDiv = document.getElementById("order-pagination");
-                    if (pageDiv) pageDiv.innerHTML = "";
-                    return;
-                }
-
-                const startIndex = (currentOrderPage - 1) * orderPerPage;
-                const endIndex = startIndex + orderPerPage;
-                const pageItems = filteredOrderData.slice(startIndex, endIndex);
-
-                pageItems.forEach((item) => {
-                    tbody.appendChild(item.summaryRow);
-                    if (item.detailRow) {
-                        tbody.appendChild(item.detailRow);
-                    }
-                });
-
-                renderOrderPaginationControls(totalItems);
-            }
-
-            function searchOrderTable() {
-                const input = document.getElementById("order-search-input");
-                const filter = input.value.toUpperCase().trim();
-
-                if (filter === "") {
-                    filteredOrderData = allOrderData;
-                } else {
-                    filteredOrderData = allOrderData.filter((item) =>
-                        item.searchText.includes(filter)
-                    );
-                }
-                currentOrderPage = 1;
-                renderOrderPage();
-            }
-
-            function renderOrderPaginationControls(totalItems) {
-                const container = document.getElementById("order-pagination");
-                if (!container) return;
-
-                const totalPages = Math.ceil(totalItems / orderPerPage);
-                if (totalPages <= 1) {
-                    container.innerHTML = "";
-                    return;
-                }
-
-                let html =
-                    '<nav aria-label="Order pagination"><ul class="pagination justify-content-center">';
-
-                const prevDisabled = currentOrderPage === 1 ? "disabled" : "";
-                html +=
-                    '<li class="page-item ' +
-                    prevDisabled +
-                    '"><button class="page-link" onclick="changeOrderPage(' +
-                    (currentOrderPage - 1) +
-                    ')"><i class="bi bi-chevron-left"></i></button></li>';
-
-                for (let i = 1; i <= totalPages; i++) {
-                    if (
-                        i === 1 ||
-                        i === totalPages ||
-                        (i >= currentOrderPage - 1 && i <= currentOrderPage + 1)
-                    ) {
-                        const activeClass = i === currentOrderPage ? "active" : "";
-                        html +=
-                            '<li class="page-item ' +
-                            activeClass +
-                            '"><button class="page-link" onclick="changeOrderPage(' +
-                            i +
-                            ')">' +
-                            i +
-                            "</button></li>";
-                    } else if (i === currentOrderPage - 2 || i === currentOrderPage + 2) {
-                        html +=
-                            '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                    }
-                }
-
-                const nextDisabled = currentOrderPage === totalPages ? "disabled" : "";
-                html +=
-                    '<li class="page-item ' +
-                    nextDisabled +
-                    '"><button class="page-link" onclick="changeOrderPage(' +
-                    (currentOrderPage + 1) +
-                    ')"><i class="bi bi-chevron-right"></i></button></li>';
-
-                html += "</ul></nav>";
-                container.innerHTML = html;
-            }
-
-            function changeOrderPage(newPage) {
-                currentOrderPage = newPage;
-                renderOrderPage();
-            }
-
-            // ===== COMMON UTILS =====
-            function getCookie(name) {
-                var cookies = document.cookie.split(";");
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    if (cookie.indexOf(name + "=") === 0) {
-                        return cookie.substring(name.length + 1);
-                    }
-                }
-                return null;
-            }
-
-            function profile() {
-                var input = getCookie("input");
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/profile",
-                    data: { input: input }
-                }).done(function (data) {
-                    var data1 = JSON.parse(data);
-                    var cells = document.querySelectorAll(".profile-info td");
-                    cells.forEach(function (cell) {
-                        cell.remove();
-                    });
-
-                    if (data1.isSuccess) {
-                        var trName = document.getElementById("fullName");
-                        var trEmail = document.getElementById("email");
-                        var trAddress = document.getElementById("address");
-                        var trPhone = document.getElementById("phoneNumber");
-                        var info = data1.data;
-
-                        document
-                            .getElementById("update-pro-btn")
-                            .setAttribute("data-name", info.fullName);
-                        document
-                            .getElementById("update-pro-btn")
-                            .setAttribute("data-phone", info.phoneNumber);
-                        document
-                            .getElementById("update-pro-btn")
-                            .setAttribute("data-email", info.email);
-                        document
-                            .getElementById("update-pro-btn")
-                            .setAttribute("data-address", info.address);
-                        document
-                            .getElementById("update-pro-btn")
-                            .setAttribute("data-id", info.username);
-
-                        var fullName = document.createElement("td");
-                        var phoneNumber = document.createElement("td");
-                        var address = document.createElement("td");
-                        var email = document.createElement("td");
-
-                        fullName.textContent = info.fullName;
-                        phoneNumber.textContent = info.phoneNumber;
-                        address.textContent = info.address;
-                        email.textContent = info.email;
-
-                        trName.appendChild(fullName);
-                        trEmail.appendChild(email);
-                        trAddress.appendChild(address);
-                        trPhone.appendChild(phoneNumber);
-                    }
-                });
-            }
-
-            function updateProfile(pro) {
-                var username = pro.getAttribute("data-id");
-                var email = document.getElementById("update-profile-email").value;
-                var address = document.getElementById("update-profile-address").value;
-                var fullName = document.getElementById("update-profile-name").value;
-                var phone = document.getElementById("update-profile-phone").value;
-
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/profile/update",
-                    data: {
-                        username: username,
-                        fullName: fullName,
-                        fullname: fullName,
-                        phoneNumber: phone,
-                        phone: phone,
-                        email: email,
-                        address: address
-                    }
-                })
-                    .done(function (data) {
-                        try {
-                            var data1 = JSON.parse(data);
-                            if (data1.isSuccess) {
-                                alert("Update successfully");
-                                profile();
-                                document.getElementById("edit-personal").style.display =
-                                    "none";
-                                document.getElementById("personal-box").style.display = "block";
-                            } else {
-                                alert("Update failed from server.");
-                            }
-                        } catch (e) {
-                            console.error("JSON parse error:", e);
-                            alert(
-                                "Server did not return valid JSON, check servlet /staff/profile/update."
-                            );
-                        }
-                    })
-                    .fail(function (xhr, status, error) {
-                        console.error("AJAX error:", status, error);
-                        alert("Request error: " + status);
-                    });
-            }
-
-            function toggleEditPersonal(profile) {
-                var edit = document.getElementById("edit-personal");
-                var personal = document.getElementById("personal-box");
-
-                if (edit.style.display === "none" || edit.style.display === "") {
-                    edit.style.display = "block";
-                    personal.style.display = "none";
-                } else {
-                    edit.style.display = "none";
-                    personal.style.display = "block";
-                }
-
-                var id = profile.getAttribute("data-id");
-                document
-                    .getElementById("edit-profile-btn")
-                    .setAttribute("data-id", id);
-
-                document.getElementById("update-profile-email").value =
-                    profile.getAttribute("data-email") || "";
-                document.getElementById("update-profile-address").value =
-                    profile.getAttribute("data-address") || "";
-                document.getElementById("update-profile-name").value =
-                    profile.getAttribute("data-name") || "";
-                document.getElementById("update-profile-phone").value =
-                    profile.getAttribute("data-phone") || "";
-            }
-
-            function toggleChangePassword() {
-                var edit = document.getElementById("change-password");
-                var personal = document.getElementById("personal-box");
-
-                if (edit.style.display === "none" || edit.style.display === "") {
-                    edit.style.display = "block";
-                    personal.style.display = "none";
-                } else {
-                    edit.style.display = "none";
-                    personal.style.display = "block";
-                }
-            }
-
-            // ===== IMPORT LIST / DETAIL =====
-            function hideButtons1(button) {
-                var id = button.getAttribute("data-id");
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/import/update",
-                    data: { id: id }
-                }).done(function (data) {
-                    var data1 = JSON.parse(data);
-                    if (data1.isSuccess) {
-                        button.classList.add("d-n");
-                        listImport();
-                    } else {
-                        console.error("Error updating status.");
-                    }
-                });
-            }
-
-            function listImport(page) {
-                if (!page) page = 1;
-                $.ajax({
-                    method: "POST",
-                    url: BASE_URL + "/staff/import",
-                    data: { page: page }
-                }).done(function (data) {
-                    var data1 = JSON.parse(data);
-                    if (data1.isSuccess) {
-                        const tbody = document.querySelector("#import-list");
-                        tbody.innerHTML = "";
-                        var importList = data1.data.list;
-                        var importDetailList = data1.data.listDetail;
-                        var currentPage = data1.data.currentPage || 1;
-                        var totalPages = data1.data.totalPages || 1;
-                        var i = (currentPage - 1) * 10;
-
-                        importList.forEach(function (item) {
-                            var newTr = document.createElement("tr");
-                            newTr.classList.add("import-row-main");
-
-                            var numCell = document.createElement("td");
-                            var nameCell = document.createElement("td");
-                            var quantityCell = document.createElement("td");
-                            var dateCell = document.createElement("td");
-                            var statusCell = document.createElement("td");
-                            var priceCell = document.createElement("td");
-                            var btnCell = document.createElement("td");
-
-                            numCell.textContent = ++i;
-                            nameCell.textContent = item.username;
-                            quantityCell.textContent = item.quantity;
-                            dateCell.textContent = item.date;
-                            priceCell.textContent =
-                                item.total.toLocaleString("vi-VN") + " VND";
-
-                            statusCell.classList.add("cell-status");
-                            statusCell.innerHTML =
-                                '<p class="status stt-' +
-                                item.status +
-                                '">' +
-                                item.status +
-                                "</p>";
-
-                            btnCell.classList.add("action-btn");
-                            var actionHtml = "";
-                            actionHtml +=
-                                '<button class="view-btn me-2" onclick="toggleImportDetail(' +
-                                item.id +
-                                ')"><i class="bi bi-eye"></i></button>';
-                            if (item.status === "Pending") {
-                                actionHtml +=
-                                    '<button class="accept-btn ' +
-                                    item.status +
-                                    '" data-id="' +
-                                    item.id +
-                                    '" onclick="hideButtons1(this)" title="Confirm Import">' +
-                                    '<i class="bi bi-check-lg"></i></button>';
-                            } else {
-                                actionHtml +=
-                                    '<span style="color: #398754; font-weight: bold; font-size: 0.9rem; margin-left: 5px;">' +
-                                    '<i class="bi bi-check-circle-fill"></i> Delivered</span>';
-                            }
-                            btnCell.innerHTML = actionHtml;
-
-                            newTr.appendChild(numCell);
-                            newTr.appendChild(nameCell);
-                            newTr.appendChild(quantityCell);
-                            newTr.appendChild(dateCell);
-                            newTr.appendChild(statusCell);
-                            newTr.appendChild(priceCell);
-                            newTr.appendChild(btnCell);
-                            tbody.appendChild(newTr);
-
-                            var detailTr = document.createElement("tr");
-                            detailTr.id = "import-detail-" + item.id;
-                            detailTr.style.display = "none";
-                            detailTr.style.backgroundColor = "#f9f9f9";
-
-                            var detailTd = document.createElement("td");
-                            detailTd.colSpan = 7;
-                            detailTd.style.padding = "10px 20px";
-
-                            var subTable = document.createElement("table");
-                            subTable.classList.add("detail-table");
-                            subTable.style.width = "100%";
-
-                            var subThead = document.createElement("thead");
-                            subThead.innerHTML =
-                                "<tr><th>Product ID</th><th>Product Name</th><th>Quantity</th><th>Size</th><th>Price</th></tr>";
-                            subTable.appendChild(subThead);
-
-                            var subTbody = document.createElement("tbody");
-                            var hasDetail = false;
-
-                            importDetailList.forEach(function (detail) {
-                                if (item.id === detail.importID) {
-                                    hasDetail = true;
-                                    var dId = detail.productID;
-                                    var dName = detail.productName;
-                                    var dQty = detail.quantity;
-                                    var dSize = detail.sizeName;
-                                    var dPrice = detail.price;
-
-                                    var subRow = document.createElement("tr");
-                                    subRow.innerHTML =
-                                        "<td>" +
-                                        dId +
-                                        "</td><td>" +
-                                        (dName ? dName : "Unknown") +
-                                        "</td><td>" +
-                                        dQty +
-                                        "</td><td>" +
-                                        (dSize ? dSize : "-") +
-                                        "</td><td>" +
-                                        (dPrice
-                                            ? dPrice.toLocaleString("vi-VN")
-                                            : 0) +
-                                        " VND</td>";
-                                    subTbody.appendChild(subRow);
-                                }
-                            });
-
-                            if (!hasDetail) {
-                                subTbody.innerHTML =
-                                    "<tr><td colspan='5' style='text-align:center; color:#999;'>No details found for Import ID " +
-                                    item.id +
-                                    "</td></tr>";
-                            }
-
-                            subTable.appendChild(subTbody);
-                            detailTd.appendChild(subTable);
-                            detailTr.appendChild(detailTd);
-                            tbody.appendChild(detailTr);
-                        });
-
-                        renderImportPagination(currentPage, totalPages);
-                    }
-                });
-            }
-
-            function toggleImportDetail(id) {
-                var detailRow = document.getElementById("import-detail-" + id);
-                if (detailRow) {
-                    if (detailRow.style.display === "none") {
-                        $(detailRow).fadeIn(200);
-                    } else {
-                        $(detailRow).fadeOut(200);
-                    }
-                }
-            }
-
-            function searchImportTable() {
-                var input = document.getElementById("import-search-input");
-                var filter = input.value.toUpperCase();
-                var tbody = document.getElementById("import-list");
-                var tr = tbody.getElementsByClassName("import-row-main");
-                for (var i = 0; i < tr.length; i++) {
-                    var tdName = tr[i].getElementsByTagName("td")[1];
-                    var detailRow = tr[i].nextElementSibling;
-                    if (tdName) {
-                        var txtValue = tdName.textContent || tdName.innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            tr[i].style.display = "";
-                        } else {
-                            tr[i].style.display = "none";
-                            if (detailRow) detailRow.style.display = "none";
-                        }
-                    }
-                }
-            }
-
-            function renderImportPagination(currentPage, totalPages) {
-                var paginationContainer = document.getElementById(
-                    "import-pagination-controls"
-                );
-                if (totalPages <= 1) {
-                    paginationContainer.innerHTML = "";
-                    return;
-                }
-
-                var html =
-                    '<nav aria-label="Import pagination"><ul class="pagination justify-content-center">';
-                var prevDisabled = currentPage === 1 ? "disabled" : "";
-                html +=
-                    '<li class="page-item ' +
-                    prevDisabled +
-                    '"><button class="page-link" onclick="listImport(' +
-                    (currentPage - 1) +
-                    ')">Previous</button></li>';
-
-                for (var i = 1; i <= totalPages; i++) {
-                    var activeClass = i === currentPage ? "active" : "";
-                    html +=
-                        '<li class="page-item ' +
-                        activeClass +
-                        '"><button class="page-link" onclick="listImport(' +
-                        i +
-                        ')">' +
-                        i +
-                        "</button></li>";
-                }
-
-                var nextDisabled = currentPage === totalPages ? "disabled" : "";
-                html +=
-                    '<li class="page-item ' +
-                    nextDisabled +
-                    '"><button class="page-link" onclick="listImport(' +
-                    (currentPage + 1) +
-                    ')">Next</button></li>';
-
-                html += "</ul></nav>";
-                paginationContainer.innerHTML = html;
-            }
-
-function parseUpdateResponse(resp) {
-    if (resp == null) return { ok: false, raw: resp };
-
-    // Nếu server trả JSON đúng header => jQuery auto parse thành object
-    if (typeof resp === "object") {
-        const ok =
-            resp.isSuccess === true ||
-            resp.success === true ||
-            String(resp.result || resp.status || resp.message || "").toLowerCase() === "success";
-        return { ok, raw: resp };
-    }
-
-    const text = String(resp).trim();
-    if (!text) return { ok: false, raw: text };
-
-    // Nếu là JSON string
-    try {
-        const obj = JSON.parse(text);
-        const ok =
-            obj.isSuccess === true ||
-            obj.success === true ||
-            String(obj.result || obj.status || obj.message || "").toLowerCase() === "success";
-        return { ok, raw: obj };
-    } catch (e) {
-        const ok = ["success", "ok", "true", "1"].includes(text.toLowerCase());
-        return { ok, raw: text };
-    }
-}
-
-function buildOrderActionButtons(orderId, status, viewHTML) {
-    const placeholder = '<span class="btn-placeholder"></span>';
-
-    const defaultView =
-        '<button type="button" class="view-btn">' +
-            '<i class="bi bi-eye"></i>' +
-            '<i class="bi bi-eye-slash"></i>' +
-        '</button>';
-
-    let accept = placeholder;
-    let reject = placeholder;
-
-    if (status === "Pending" || status === "Processing") {
-        accept =
-            '<button type="button" class="accept-btn" onclick="updateOrderStatus(' + orderId + ", 'Delivering')" + '" title="Approve">' +
-                '<i class="bi bi-check-lg"></i>' +
-            '</button>';
-        reject =
-            '<button type="button" class="reject-btn" onclick="updateOrderStatus(' + orderId + ", 'Cancelled')" + '" title="Cancel">' +
-                '<i class="bi bi-x-lg"></i>' +
-            '</button>';
-    } else if (status === "Confirming") {
-        accept =
-            '<button type="button" class="accept-btn" onclick="updateOrderStatus(' + orderId + ", 'Cancelled')" + '" title="Approve cancel request">' +
-                '<i class="bi bi-check-lg"></i>' +
-            '</button>';
-        reject =
-            '<button type="button" class="reject-btn" onclick="updateOrderStatus(' + orderId + ", 'Pending')" + '" title="Reject cancel request">' +
-                '<i class="bi bi-arrow-counterclockwise"></i>' +
-            '</button>';
-    } else if (status === "Delivering" || status === "Shipped") {
-        accept =
-            '<button type="button" class="accept-btn" onclick="updateOrderStatus(' + orderId + ", 'Delivered')" + '" title="Complete">' +
-                '<i class="bi bi-truck"></i>' +
-            '</button>';
-        // reject giữ placeholder
-    }
-
-    const v = viewHTML || defaultView;
-
-    return '<div class="action-wrap">' + accept + reject + v + '</div>';
-}
-
-
-function updateOrderStatus(orderId, status) {
-    const actionCell = document.querySelector("#action-cell-" + orderId);
-    if (actionCell) actionCell.querySelectorAll("button").forEach(b => b.disabled = true);
-
-    $.ajax({
-        url: BASE_URL + "/staff/order/update",
-        method: "POST",
-        data: {
-            // gửi dư key để “ăn” được nhiều servlet khác nhau (an toàn)
-            orderId: orderId,
-            orderID: orderId,
-            id: orderId,
-            status: status,
-            newStatus: status
-        }
-    })
-    .done(function (resp) {
-        const r = parseUpdateResponse(resp);
-
-        if (!r.ok) {
-            console.warn("Update failed. Response:", resp);
-            alert("Update failed from server.");
-            return;
-        }
-
-        // update status text
-        const statusEl = document.querySelector("#id" + orderId);
-        if (statusEl) {
-            statusEl.textContent = status;
-            statusEl.className = "status stt-" + status; // reset class đúng trạng thái
-        }
-
-        // rebuild buttons theo status mới
-        if (actionCell) {
-    const viewBtn = actionCell.querySelector(".view-btn");
-    const viewHTML = viewBtn ? viewBtn.outerHTML : null;
-    actionCell.innerHTML = buildOrderActionButtons(orderId, status, viewHTML);
-}
-
-    })
-    .fail(function (xhr, stt, err) {
-        console.error("AJAX error:", stt, err, xhr.responseText);
-        alert("Error sending update request.");
-    })
-    .always(function () {
-        const cell = document.querySelector("#action-cell-" + orderId);
-        if (cell) cell.querySelectorAll("button").forEach(b => b.disabled = false);
-    });
-}
-
-
-            // ===== FORMAT HELPERS =====
-            function formatCurrencyVND(n) {
-                try {
-                    return (n ?? 0).toLocaleString("vi-VN");
-                } catch (e) {
-                    return n;
-                }
-            }
-
-            function formatDateForTable(d) {
-                try {
-                    const date = new Date(d);
-                    if (isNaN(date.getTime())) return d || "";
-                    return date.toLocaleDateString("vi-VN");
-                } catch (e) {
-                    return d || "";
-                }
-            }
-
-            const handleColor = () => {
-                let status = document.querySelectorAll(".status");
-                status.forEach((element) => {
-                    if (element.innerHTML === "Cancelled") {
-                        element.classList.add("red");
-                    } else if (element.innerHTML === "Delivering") {
-                        element.classList.add("green");
-                    } else if (
-                        element.innerHTML === "Delivered"
-                    ) {
-                        element.classList.add("blue");
-                    }
-                });
-            };
-
-            // ===== DOM READY =====
-            document.addEventListener("DOMContentLoaded", function () {
-                const links = document.querySelectorAll(".nav-link");
-                const contentDivs = document.querySelectorAll(".main-content > div");
-
-                function activateTab(target) {
-                    contentDivs.forEach(function (div) {
-                        if (div.classList.contains(target)) {
-                            div.style.display = "block";
-                        } else {
-                            div.style.display = "none";
-                        }
-                    });
-
-                    links.forEach(function (link) {
-                        if (link.getAttribute("data-target") === target) {
-                            link.classList.add("active");
-                            link.style.backgroundColor = "rgb(122, 117, 120)";
-                        } else {
-                            link.classList.remove("active");
-                            link.style.backgroundColor = "";
-                        }
-                    });
-
-                    switch (target) {
-                        case "product-manage":
-                            productList();
-                            break;
-                        case "personal-info":
-                            profile();
-                            break;
-                        case "import-goods":
-                            listImport();
-                            break;
-                        case "customer-manage":
-                            listCustomers();
-                            break;
-                    }
-                }
-
-                links.forEach(function (link) {
-                    link.addEventListener("click", function (e) {
-                        e.preventDefault();
-                        const target = this.getAttribute("data-target");
-                        activateTab(target);
-                    });
-                });
-
-                const initialTab =
-                    "${activeTab}" || "${param.activeTab}" || "statistic";
-                activateTab(initialTab);
-                initOrderPagination();
-                handleColor();
-
-                // Toggle sidebar (scope đúng sidebar nav)
-                const toggleBtn = document.getElementById("sidebarToggle");
-                const sidebarNav = document.querySelector(".main > nav");
-                if (toggleBtn && sidebarNav) {
-                    toggleBtn.addEventListener("click", function () {
-                        sidebarNav.classList.toggle("collapsed");
-                    });
-                }
-            });
-
-            // Toggle detail row cho Orders
-            $(document).on("click", ".order-manage .view-btn", function () {
-                var $detailRow = $(this)
-                    .closest("tr")
-                    .next(".order-detail-row");
-
-                if ($detailRow.length) {
-                    $detailRow.slideToggle(200);
-                }
-
-                $(this).toggleClass("active");
-            });
-
-            // Kích hoạt tab từ staff dropdown (nếu sau này bạn thêm menu)
-            function triggerTab(targetId) {
-                const sidebarLink = document.querySelector(
-                    '.nav-link[data-target="' + targetId + '"]'
-                );
-                if (sidebarLink) {
-                    sidebarLink.click();
-                }
-            }
+                                       const BASE_URL = "${pageContext.request.contextPath}";
+
+                                       // ===== CHARTS =====
+                                       const chartData = {
+                                           labels: ["quarter 1", "quarter 2", "quarter 3", "quarter 4"],
+                                           data: [
+            ${empty quarter1 ? 0 : quarter1},
+            ${empty quarter2 ? 0 : quarter2},
+            ${empty quarter3 ? 0 : quarter3},
+            ${empty quarter4 ? 0 : quarter4}
+                                           ]
+                                       };
+
+                                       const myChart = document.querySelector(".my-chart");
+                                       if (myChart && typeof Chart !== "undefined") {
+                                           new Chart(myChart, {
+                                               type: "doughnut",
+                                               data: {
+                                                   labels: chartData.labels,
+                                                   datasets: [{
+                                                           label: "Quarter revenue (${year})",
+                                                           data: chartData.data
+                                                       }]
+                                               }
+                                           });
+                                       }
+
+                                       const ctx = document.querySelector(".my-chart-line");
+                                       if (ctx && typeof Chart !== "undefined") {
+                                           new Chart(ctx, {
+                                               type: "bar",
+                                               data: {
+                                                   labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+                                                   datasets: [{
+                                                           label: "monthly revenue (${year})",
+                                                           data: [
+            ${empty revenue1 ? 0 : revenue1},
+            ${empty revenue2 ? 0 : revenue2},
+            ${empty revenue3 ? 0 : revenue3},
+            ${empty revenue4 ? 0 : revenue4},
+            ${empty revenue5 ? 0 : revenue5},
+            ${empty revenue6 ? 0 : revenue6},
+            ${empty revenue7 ? 0 : revenue7},
+            ${empty revenue8 ? 0 : revenue8},
+            ${empty revenue9 ? 0 : revenue9},
+            ${empty revenue10 ? 0 : revenue10},
+            ${empty revenue11 ? 0 : revenue11},
+            ${empty revenue12 ? 0 : revenue12}
+                                                           ],
+                                                           borderWidth: 1,
+                                                           backgroundColor: "rgba(231, 189, 111, 0.799)",
+                                                           barThickness: 30
+                                                       }]
+                                               },
+                                               options: {
+                                                   scales: {
+                                                       y: {
+                                                           beginAtZero: true
+                                                       }
+                                                   }
+                                               }
+                                           });
+                                       }
+
+                                       // ===== PRODUCTS (AJAX + PAGINATION) =====
+                                       let allProductData = [];
+                                       let currentProdPage = 1;
+                                       const prodPerPage = 10;
+
+                                       function productList() {
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/product",
+                                               data: {}
+                                           }).done(function (data) {
+                                               var data1 = JSON.parse(data);
+                                               if (data1.isSuccess) {
+                                                   allProductData = data1.data || [];
+                                                   currentProdPage = 1;
+                                                   renderProductPage();
+                                               } else {
+                                                   alert("Load product fail");
+                                               }
+                                           });
+                                       }
+
+                                       function search() {
+                                           var input = document.getElementById("search").value;
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/product/search",
+                                               data: {input: input}
+                                           }).done(function (data) {
+                                               var data1 = JSON.parse(data);
+                                               if (data1.isSuccess) {
+                                                   allProductData = data1.data || [];
+                                                   currentProdPage = 1;
+                                                   renderProductPage();
+                                               } else {
+                                                   allProductData = [];
+                                                   renderProductPage();
+                                               }
+                                           });
+                                       }
+
+                                       function sort() {
+                                           var option = document.getElementById("sortID").value;
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/product/sort",
+                                               data: {option: option}
+                                           }).done(function (data) {
+                                               var data1 = JSON.parse(data);
+                                               if (data1.isSuccess) {
+                                                   allProductData = data1.data || [];
+                                                   currentProdPage = 1;
+                                                   renderProductPage();
+                                               } else {
+                                                   alert("Sort fail");
+                                               }
+                                           });
+                                       }
+
+                                       function renderProductPage() {
+                                           const tbody = document.querySelector(".product-table table tbody");
+                                           tbody.innerHTML = "";
+                                           const totalItems = allProductData.length;
+
+                                           if (totalItems === 0) {
+                                               tbody.innerHTML =
+                                                       '<tr><td colspan="5" class="text-center text-muted p-3">No products found.</td></tr>';
+                                               const paginationDiv = document.getElementById("product-pagination");
+                                               if (paginationDiv)
+                                                   paginationDiv.innerHTML = "";
+                                               return;
+                                           }
+
+                                           const startIndex = (currentProdPage - 1) * prodPerPage;
+                                           const endIndex = startIndex + prodPerPage;
+                                           const pageData = allProductData.slice(startIndex, endIndex);
+
+                                           pageData.forEach(function (product) {
+                                               var newRow = document.createElement("tr");
+                                               var pictureCell = document.createElement("td");
+                                               var nameCell = document.createElement("td");
+                                               var categoryIdCell = document.createElement("td");
+                                               var priceCell = document.createElement("td");
+                                               var quantityCell = document.createElement("td");
+
+                                               pictureCell.innerHTML =
+                                                       '<img style="width: 100px; height: 100px; object-fit: cover;" src="' +
+                                                       product.picURL +
+                                                       '" alt="Product Picture">';
+                                               nameCell.textContent = product.name;
+                                               categoryIdCell.textContent = product.categoryID;
+                                               priceCell.textContent = product.price.toLocaleString("vi-VN") + " VND";
+                                               quantityCell.textContent = product.quantity;
+
+                                               newRow.appendChild(pictureCell);
+                                               newRow.appendChild(nameCell);
+                                               newRow.appendChild(categoryIdCell);
+                                               newRow.appendChild(priceCell);
+                                               newRow.appendChild(quantityCell);
+                                               tbody.appendChild(newRow);
+                                           });
+
+                                           renderProductPaginationControls(totalItems);
+                                       }
+
+                                       function renderProductPaginationControls(totalItems) {
+                                           const container = document.getElementById("product-pagination");
+                                           if (!container)
+                                               return;
+                                           const totalPages = Math.ceil(totalItems / prodPerPage);
+
+                                           if (totalPages <= 1) {
+                                               container.innerHTML = "";
+                                               return;
+                                           }
+
+                                           let html =
+                                                   '<nav aria-label="Product pagination"><ul class="pagination justify-content-center">';
+
+                                           const prevDisabled = currentProdPage === 1 ? "disabled" : "";
+                                           html +=
+                                                   '<li class="page-item ' +
+                                                   prevDisabled +
+                                                   '"><button class="page-link" onclick="changeProductPage(' +
+                                                   (currentProdPage - 1) +
+                                                   ')"><i class="bi bi-chevron-left"></i></button></li>';
+
+                                           for (let i = 1; i <= totalPages; i++) {
+                                               if (
+                                                       i === 1 ||
+                                                       i === totalPages ||
+                                                       (i >= currentProdPage - 1 && i <= currentProdPage + 1)
+                                                       ) {
+                                                   const activeClass = i === currentProdPage ? "active" : "";
+                                                   html +=
+                                                           '<li class="page-item ' +
+                                                           activeClass +
+                                                           '"><button class="page-link" onclick="changeProductPage(' +
+                                                           i +
+                                                           ')">' +
+                                                           i +
+                                                           "</button></li>";
+                                               } else if (i === currentProdPage - 2 || i === currentProdPage + 2) {
+                                                   html +=
+                                                           '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                               }
+                                           }
+
+                                           const nextDisabled = currentProdPage === totalPages ? "disabled" : "";
+                                           html +=
+                                                   '<li class="page-item ' +
+                                                   nextDisabled +
+                                                   '"><button class="page-link" onclick="changeProductPage(' +
+                                                   (currentProdPage + 1) +
+                                                   ')"><i class="bi bi-chevron-right"></i></button></li>';
+
+                                           html += "</ul></nav>";
+                                           container.innerHTML = html;
+                                       }
+
+                                       function changeProductPage(newPage) {
+                                           currentProdPage = newPage;
+                                           renderProductPage();
+                                       }
+
+                                       // ===== CUSTOMER LIST (AJAX + PAGINATION) =====
+                                       let allCustomersData = [];
+                                       let currentCustPage = 1;
+                                       const custPerPage = 10;
+
+                                       function listCustomers() {
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/customer",
+                                               dataType: "json"
+                                           }).done(function (resp) {
+                                               if (!resp || !resp.isSuccess) {
+                                                   return;
+                                               }
+                                               allCustomersData = resp.data || [];
+                                               currentCustPage = 1;
+                                               renderCustomerPage();
+                                           });
+                                       }
+
+                                       function searchCustomers(q) {
+                                           q = (q || "").trim();
+                                           if (q.length === 0) {
+                                               listCustomers();
+                                               return;
+                                           }
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/customer/search",
+                                               data: {input: q},
+                                               dataType: "json"
+                                           }).done(function (resp) {
+                                               if (!resp || !resp.isSuccess) {
+                                                   return;
+                                               }
+                                               allCustomersData = resp.data || [];
+                                               currentCustPage = 1;
+                                               renderCustomerPage();
+                                           });
+                                       }
+
+                                       function renderCustomerPage() {
+                                           const totalItems = allCustomersData.length;
+                                           const totalLabel = document.querySelector("#customer-total");
+                                           if (totalLabel)
+                                               totalLabel.textContent = totalItems;
+
+                                           const startIndex = (currentCustPage - 1) * custPerPage;
+                                           const endIndex = startIndex + custPerPage;
+                                           const pageData = allCustomersData.slice(startIndex, endIndex);
+
+                                           renderCustomerRows(pageData, startIndex);
+                                           renderCustomerPaginationControls(totalItems);
+                                       }
+
+                                       function renderCustomerRows(list, startIndex) {
+                                           const tbody = document.querySelector("#customer-list");
+                                           tbody.innerHTML = "";
+
+                                           if (!list.length) {
+                                               tbody.innerHTML =
+                                                       '<tr><td colspan="7"><div class="empty text-center text-muted p-3">No customers found.</div></td></tr>';
+                                               return;
+                                           }
+
+                                           let i = startIndex;
+                                           list.forEach(function (cst) {
+                                               const tr = document.createElement("tr");
+                                               tr.innerHTML =
+                                                       "<td>" +
+                                                       ++i +
+                                                       "</td>" +
+                                                       '<td style="font-weight: bold;">' +
+                                                       (cst.username || "") +
+                                                       "</td>" +
+                                                       "<td>" +
+                                                       (cst.fullName || "") +
+                                                       "</td>" +
+                                                       "<td>" +
+                                                       (cst.email || "") +
+                                                       "</td>" +
+                                                       "<td>" +
+                                                       (cst.phoneNumber || "") +
+                                                       "</td>" +
+                                                       "<td>" +
+                                                       (cst.address || "") +
+                                                       "</td>" +
+                                                       '<td class="action-btn">' +
+                                                       '<button class="view-btn" data-id="' +
+                                                       cst.customer_id +
+                                                       '"><i class="bi bi-eye"></i></button>' +
+                                                       "</td>";
+                                               tbody.appendChild(tr);
+
+                                               const subBody = document.createElement("tbody");
+                                               subBody.classList.add("item");
+                                               subBody.setAttribute("data-customer", cst.customer_id);
+                                               tbody.appendChild(subBody);
+                                           });
+
+                                           tbody.querySelectorAll(".view-btn").forEach(function (btn) {
+                                               btn.addEventListener("click", function () {
+                                                   const id = this.getAttribute("data-id");
+                                                   toggleCustomerOrders(this, id);
+                                               });
+                                           });
+                                       }
+
+                                       function renderCustomerPaginationControls(totalItems) {
+                                           const container = document.getElementById("customer-pagination");
+                                           if (!container)
+                                               return;
+
+                                           const totalPages = Math.ceil(totalItems / custPerPage);
+                                           if (totalPages <= 1) {
+                                               container.innerHTML = "";
+                                               return;
+                                           }
+
+                                           let html =
+                                                   '<nav aria-label="Customer pagination"><ul class="pagination justify-content-center">';
+
+                                           const prevDisabled = currentCustPage === 1 ? "disabled" : "";
+                                           html +=
+                                                   '<li class="page-item ' +
+                                                   prevDisabled +
+                                                   '"><button class="page-link" onclick="changeCustomerPage(' +
+                                                   (currentCustPage - 1) +
+                                                   ')"><i class="bi bi-chevron-left"></i></button></li>';
+
+                                           for (let i = 1; i <= totalPages; i++) {
+                                               if (
+                                                       i === 1 ||
+                                                       i === totalPages ||
+                                                       (i >= currentCustPage - 1 && i <= currentCustPage + 1)
+                                                       ) {
+                                                   const activeClass = i === currentCustPage ? "active" : "";
+                                                   html +=
+                                                           '<li class="page-item ' +
+                                                           activeClass +
+                                                           '"><button class="page-link" onclick="changeCustomerPage(' +
+                                                           i +
+                                                           ')">' +
+                                                           i +
+                                                           "</button></li>";
+                                               } else if (i === currentCustPage - 2 || i === currentCustPage + 2) {
+                                                   html +=
+                                                           '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                               }
+                                           }
+
+                                           const nextDisabled = currentCustPage === totalPages ? "disabled" : "";
+                                           html +=
+                                                   '<li class="page-item ' +
+                                                   nextDisabled +
+                                                   '"><button class="page-link" onclick="changeCustomerPage(' +
+                                                   (currentCustPage + 1) +
+                                                   ')"><i class="bi bi-chevron-right"></i></button></li>';
+
+                                           html += "</ul></nav>";
+                                           container.innerHTML = html;
+                                       }
+
+                                       function changeCustomerPage(newPage) {
+                                           currentCustPage = newPage;
+                                           renderCustomerPage();
+                                       }
+
+                                       function toggleCustomerOrders(button, customerId) {
+                                           const tr = button.closest("tr");
+                                           const next = tr.nextElementSibling;
+                                           if (!next || !next.classList.contains("item"))
+                                               return;
+
+                                           if (next.style.display === "" || next.style.display === "none") {
+                                               if (!next.hasChildNodes() || next.innerHTML.trim() === "") {
+                                                   loadCustomerOrders(customerId, next, function () {
+                                                       next.style.display = "contents";
+                                                   });
+                                               } else {
+                                                   next.style.display = "contents";
+                                               }
+                                           } else {
+                                               next.style.display = "none";
+                                           }
+                                       }
+
+                                       function loadCustomerOrders(customerId, containerTbody, cb) {
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/customer/detail",
+                                               data: {id: customerId},
+                                               dataType: "json"
+                                           }).done(function (resp) {
+                                               if (!resp || !resp.isSuccess) {
+                                                   cb && cb();
+                                                   return;
+                                               }
+
+                                               const orders =
+                                                       resp.data && resp.data.orders ? resp.data.orders : [];
+                                               containerTbody.innerHTML = "";
+
+                                               orders.sort(function (a, b) {
+                                                   const idA = parseInt(a.orderID ?? a.order_id ?? 0, 10);
+                                                   const idB = parseInt(b.orderID ?? b.order_id ?? 0, 10);
+                                                   return idB - idA;
+                                               });
+
+                                               if (!orders.length) {
+                                                   const empty = document.createElement("tr");
+                                                   empty.style.backgroundColor = "white";
+                                                   empty.innerHTML =
+                                                           "<td colspan='7' class='text-muted'>No orders.</td>";
+                                                   containerTbody.appendChild(empty);
+                                                   cb && cb();
+                                                   return;
+                                               }
+
+                                               orders.forEach(function (o) {
+                                                   const row = document.createElement("tr");
+                                                   row.style.backgroundColor = "white";
+                                                   row.innerHTML =
+                                                           "<td>" +
+                                                           (o.orderID ?? o.order_id ?? "") +
+                                                           "</td>" +
+                                                           "<td>" +
+                                                           formatDateForTable(o.date) +
+                                                           "</td>" +
+                                                           "<td>" +
+                                                           (o.address || "") +
+                                                           "</td>" +
+                                                           "<td>" +
+                                                           (o.phone_number || o.phoneNumber || "") +
+                                                           "</td>" +
+                                                           '<td><p class="status">' +
+                                                           (o.status || "") +
+                                                           "</p></td>" +
+                                                           "<td>" +
+                                                           formatCurrencyVND(o.total) +
+                                                           "</td>" +
+                                                           "<td></td>";
+                                                   containerTbody.appendChild(row);
+                                               });
+
+                                               handleColor();
+                                               cb && cb();
+                                           });
+                                       }
+
+                                       // ===== ORDER PAGINATION (CLIENT SIDE) =====
+                                       let allOrderData = [];
+                                       let filteredOrderData = [];
+                                       let currentOrderPage = 1;
+                                       const orderPerPage = 10;
+
+                                       function initOrderPagination() {
+                                           const tbody = document.querySelector(
+                                                   ".order-manage .order-table tbody"
+                                                   );
+                                           if (!tbody)
+                                               return;
+
+                                           const rows = tbody.querySelectorAll(".order-summary-row");
+                                           if (rows.length === 0)
+                                               return;
+
+                                           allOrderData = [];
+                                           rows.forEach((row) => {
+                                               const detailRow = row.nextElementSibling;
+                                               const idCell = row.cells[0];
+                                               let orderId = parseInt(idCell.innerText.trim()) || 0;
+                                               let nameCell = row.cells[1];
+                                               let searchName = nameCell ? nameCell.innerText : "";
+
+                                               allOrderData.push({
+                                                   summaryRow: row,
+                                                   detailRow: detailRow,
+                                                   searchText: searchName.toUpperCase().trim(),
+                                                   id: orderId
+                                               });
+                                           });
+
+                                           allOrderData.sort((a, b) => b.id - a.id);
+                                           filteredOrderData = allOrderData;
+                                           renderOrderPage();
+                                       }
+
+                                       function renderOrderPage() {
+                                           const tbody = document.querySelector(
+                                                   ".order-manage .order-table tbody"
+                                                   );
+                                           if (!tbody)
+                                               return;
+                                           tbody.innerHTML = "";
+
+                                           const totalItems = filteredOrderData.length;
+                                           if (totalItems === 0) {
+                                               tbody.innerHTML =
+                                                       '<tr><td colspan="7"><div class="empty text-center text-muted p-3">No orders found.</div></td></tr>';
+                                               const pageDiv = document.getElementById("order-pagination");
+                                               if (pageDiv)
+                                                   pageDiv.innerHTML = "";
+                                               return;
+                                           }
+
+                                           const startIndex = (currentOrderPage - 1) * orderPerPage;
+                                           const endIndex = startIndex + orderPerPage;
+                                           const pageItems = filteredOrderData.slice(startIndex, endIndex);
+
+                                           pageItems.forEach((item) => {
+                                               tbody.appendChild(item.summaryRow);
+                                               if (item.detailRow) {
+                                                   tbody.appendChild(item.detailRow);
+                                               }
+                                           });
+
+                                           renderOrderPaginationControls(totalItems);
+                                       }
+
+                                       function searchOrderTable() {
+                                           const input = document.getElementById("order-search-input");
+                                           const filter = input.value.toUpperCase().trim();
+
+                                           if (filter === "") {
+                                               filteredOrderData = allOrderData;
+                                           } else {
+                                               filteredOrderData = allOrderData.filter((item) =>
+                                                   item.searchText.includes(filter)
+                                               );
+                                           }
+                                           currentOrderPage = 1;
+                                           renderOrderPage();
+                                       }
+
+                                       function renderOrderPaginationControls(totalItems) {
+                                           const container = document.getElementById("order-pagination");
+                                           if (!container)
+                                               return;
+
+                                           const totalPages = Math.ceil(totalItems / orderPerPage);
+                                           if (totalPages <= 1) {
+                                               container.innerHTML = "";
+                                               return;
+                                           }
+
+                                           let html =
+                                                   '<nav aria-label="Order pagination"><ul class="pagination justify-content-center">';
+
+                                           const prevDisabled = currentOrderPage === 1 ? "disabled" : "";
+                                           html +=
+                                                   '<li class="page-item ' +
+                                                   prevDisabled +
+                                                   '"><button class="page-link" onclick="changeOrderPage(' +
+                                                   (currentOrderPage - 1) +
+                                                   ')"><i class="bi bi-chevron-left"></i></button></li>';
+
+                                           for (let i = 1; i <= totalPages; i++) {
+                                               if (
+                                                       i === 1 ||
+                                                       i === totalPages ||
+                                                       (i >= currentOrderPage - 1 && i <= currentOrderPage + 1)
+                                                       ) {
+                                                   const activeClass = i === currentOrderPage ? "active" : "";
+                                                   html +=
+                                                           '<li class="page-item ' +
+                                                           activeClass +
+                                                           '"><button class="page-link" onclick="changeOrderPage(' +
+                                                           i +
+                                                           ')">' +
+                                                           i +
+                                                           "</button></li>";
+                                               } else if (i === currentOrderPage - 2 || i === currentOrderPage + 2) {
+                                                   html +=
+                                                           '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                               }
+                                           }
+
+                                           const nextDisabled = currentOrderPage === totalPages ? "disabled" : "";
+                                           html +=
+                                                   '<li class="page-item ' +
+                                                   nextDisabled +
+                                                   '"><button class="page-link" onclick="changeOrderPage(' +
+                                                   (currentOrderPage + 1) +
+                                                   ')"><i class="bi bi-chevron-right"></i></button></li>';
+
+                                           html += "</ul></nav>";
+                                           container.innerHTML = html;
+                                       }
+
+                                       function changeOrderPage(newPage) {
+                                           currentOrderPage = newPage;
+                                           renderOrderPage();
+                                       }
+
+                                       // ===== COMMON UTILS =====
+                                       function getCookie(name) {
+                                           var cookies = document.cookie.split(";");
+                                           for (var i = 0; i < cookies.length; i++) {
+                                               var cookie = cookies[i].trim();
+                                               if (cookie.indexOf(name + "=") === 0) {
+                                                   return cookie.substring(name.length + 1);
+                                               }
+                                           }
+                                           return null;
+                                       }
+
+                                       function profile() {
+                                           var input = getCookie("input");
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/profile",
+                                               data: {input: input}
+                                           }).done(function (data) {
+                                               var data1 = JSON.parse(data);
+                                               var cells = document.querySelectorAll(".profile-info td");
+                                               cells.forEach(function (cell) {
+                                                   cell.remove();
+                                               });
+
+                                               if (data1.isSuccess) {
+                                                   var trName = document.getElementById("fullName");
+                                                   var trEmail = document.getElementById("email");
+                                                   var trAddress = document.getElementById("address");
+                                                   var trPhone = document.getElementById("phoneNumber");
+                                                   var info = data1.data;
+
+                                                   document
+                                                           .getElementById("update-pro-btn")
+                                                           .setAttribute("data-name", info.fullName);
+                                                   document
+                                                           .getElementById("update-pro-btn")
+                                                           .setAttribute("data-phone", info.phoneNumber);
+                                                   document
+                                                           .getElementById("update-pro-btn")
+                                                           .setAttribute("data-email", info.email);
+                                                   document
+                                                           .getElementById("update-pro-btn")
+                                                           .setAttribute("data-address", info.address);
+                                                   document
+                                                           .getElementById("update-pro-btn")
+                                                           .setAttribute("data-id", info.username);
+
+                                                   var fullName = document.createElement("td");
+                                                   var phoneNumber = document.createElement("td");
+                                                   var address = document.createElement("td");
+                                                   var email = document.createElement("td");
+
+                                                   fullName.textContent = info.fullName;
+                                                   phoneNumber.textContent = info.phoneNumber;
+                                                   address.textContent = info.address;
+                                                   email.textContent = info.email;
+
+                                                   trName.appendChild(fullName);
+                                                   trEmail.appendChild(email);
+                                                   trAddress.appendChild(address);
+                                                   trPhone.appendChild(phoneNumber);
+                                               }
+                                           });
+                                       }
+
+                                       function updateProfile(pro) {
+                                           var username = pro.getAttribute("data-id");
+                                           var email = document.getElementById("update-profile-email").value;
+                                           var address = document.getElementById("update-profile-address").value;
+                                           var fullName = document.getElementById("update-profile-name").value;
+                                           var phone = document.getElementById("update-profile-phone").value;
+
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/profile/update",
+                                               data: {
+                                                   username: username,
+                                                   fullName: fullName,
+                                                   fullname: fullName,
+                                                   phoneNumber: phone,
+                                                   phone: phone,
+                                                   email: email,
+                                                   address: address
+                                               }
+                                           })
+                                                   .done(function (data) {
+                                                       try {
+                                                           var data1 = JSON.parse(data);
+                                                           if (data1.isSuccess) {
+                                                               alert("Update successfully");
+                                                               profile();
+                                                               document.getElementById("edit-personal").style.display =
+                                                                       "none";
+                                                               document.getElementById("personal-box").style.display = "block";
+                                                           } else {
+                                                               alert("Update failed from server.");
+                                                           }
+                                                       } catch (e) {
+                                                           console.error("JSON parse error:", e);
+                                                           alert(
+                                                                   "Server did not return valid JSON, check servlet /staff/profile/update."
+                                                                   );
+                                                       }
+                                                   })
+                                                   .fail(function (xhr, status, error) {
+                                                       console.error("AJAX error:", status, error);
+                                                       alert("Request error: " + status);
+                                                   });
+                                       }
+
+                                       function toggleEditPersonal(profile) {
+                                           var edit = document.getElementById("edit-personal");
+                                           var personal = document.getElementById("personal-box");
+
+                                           if (edit.style.display === "none" || edit.style.display === "") {
+                                               edit.style.display = "block";
+                                               personal.style.display = "none";
+                                           } else {
+                                               edit.style.display = "none";
+                                               personal.style.display = "block";
+                                           }
+
+                                           var id = profile.getAttribute("data-id");
+                                           document
+                                                   .getElementById("edit-profile-btn")
+                                                   .setAttribute("data-id", id);
+
+                                           document.getElementById("update-profile-email").value =
+                                                   profile.getAttribute("data-email") || "";
+                                           document.getElementById("update-profile-address").value =
+                                                   profile.getAttribute("data-address") || "";
+                                           document.getElementById("update-profile-name").value =
+                                                   profile.getAttribute("data-name") || "";
+                                           document.getElementById("update-profile-phone").value =
+                                                   profile.getAttribute("data-phone") || "";
+                                       }
+
+                                       function toggleChangePassword() {
+                                           var edit = document.getElementById("change-password");
+                                           var personal = document.getElementById("personal-box");
+
+                                           if (edit.style.display === "none" || edit.style.display === "") {
+                                               edit.style.display = "block";
+                                               personal.style.display = "none";
+                                           } else {
+                                               edit.style.display = "none";
+                                               personal.style.display = "block";
+                                           }
+                                       }
+
+                                       // ===== IMPORT LIST / DETAIL =====
+                                       function hideButtons1(button) {
+                                           var id = button.getAttribute("data-id");
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/import/update",
+                                               data: {id: id}
+                                           }).done(function (data) {
+                                               var data1 = JSON.parse(data);
+                                               if (data1.isSuccess) {
+                                                   button.classList.add("d-n");
+                                                   listImport();
+                                               } else {
+                                                   console.error("Error updating status.");
+                                               }
+                                           });
+                                       }
+
+                                       function listImport(page) {
+                                           if (!page)
+                                               page = 1;
+                                           $.ajax({
+                                               method: "POST",
+                                               url: BASE_URL + "/staff/import",
+                                               data: {page: page}
+                                           }).done(function (data) {
+                                               var data1 = JSON.parse(data);
+                                               if (data1.isSuccess) {
+                                                   const tbody = document.querySelector("#import-list");
+                                                   tbody.innerHTML = "";
+                                                   var importList = data1.data.list;
+                                                   var importDetailList = data1.data.listDetail;
+                                                   var currentPage = data1.data.currentPage || 1;
+                                                   var totalPages = data1.data.totalPages || 1;
+                                                   var i = (currentPage - 1) * 10;
+
+                                                   importList.forEach(function (item) {
+                                                       var newTr = document.createElement("tr");
+                                                       newTr.classList.add("import-row-main");
+
+                                                       var numCell = document.createElement("td");
+                                                       var nameCell = document.createElement("td");
+                                                       var quantityCell = document.createElement("td");
+                                                       var dateCell = document.createElement("td");
+                                                       var statusCell = document.createElement("td");
+                                                       var priceCell = document.createElement("td");
+                                                       var btnCell = document.createElement("td");
+
+                                                       numCell.textContent = ++i;
+                                                       nameCell.textContent = item.username;
+                                                       quantityCell.textContent = item.quantity;
+                                                       dateCell.textContent = item.date;
+                                                       priceCell.textContent =
+                                                               item.total.toLocaleString("vi-VN") + " VND";
+
+                                                       statusCell.classList.add("cell-status");
+                                                       statusCell.innerHTML =
+                                                               '<p class="status stt-' +
+                                                               item.status +
+                                                               '">' +
+                                                               item.status +
+                                                               "</p>";
+
+                                                       btnCell.classList.add("action-btn");
+                                                       var actionHtml = "";
+                                                       actionHtml +=
+                                                               '<button class="view-btn me-2" onclick="toggleImportDetail(' +
+                                                               item.id +
+                                                               ')"><i class="bi bi-eye"></i></button>';
+                                                       if (item.status === "Pending") {
+                                                           actionHtml +=
+                                                                   '<button class="accept-btn ' +
+                                                                   item.status +
+                                                                   '" data-id="' +
+                                                                   item.id +
+                                                                   '" onclick="hideButtons1(this)" title="Confirm Import">' +
+                                                                   '<i class="bi bi-check-lg"></i></button>';
+                                                       } else {
+                                                           actionHtml +=
+                                                                   '<span style="color: #398754; font-weight: bold; font-size: 0.9rem; margin-left: 5px;">' +
+                                                                   '<i class="bi bi-check-circle-fill"></i> Delivered</span>';
+                                                       }
+                                                       btnCell.innerHTML = actionHtml;
+
+                                                       newTr.appendChild(numCell);
+                                                       newTr.appendChild(nameCell);
+                                                       newTr.appendChild(quantityCell);
+                                                       newTr.appendChild(dateCell);
+                                                       newTr.appendChild(statusCell);
+                                                       newTr.appendChild(priceCell);
+                                                       newTr.appendChild(btnCell);
+                                                       tbody.appendChild(newTr);
+
+                                                       var detailTr = document.createElement("tr");
+                                                       detailTr.id = "import-detail-" + item.id;
+                                                       detailTr.style.display = "none";
+                                                       detailTr.style.backgroundColor = "#f9f9f9";
+
+                                                       var detailTd = document.createElement("td");
+                                                       detailTd.colSpan = 7;
+                                                       detailTd.style.padding = "10px 20px";
+
+                                                       var subTable = document.createElement("table");
+                                                       subTable.classList.add("detail-table");
+                                                       subTable.style.width = "100%";
+
+                                                       var subThead = document.createElement("thead");
+                                                       subThead.innerHTML =
+                                                               "<tr><th>Product ID</th><th>Product Name</th><th>Quantity</th><th>Size</th><th>Price</th></tr>";
+                                                       subTable.appendChild(subThead);
+
+                                                       var subTbody = document.createElement("tbody");
+                                                       var hasDetail = false;
+
+                                                       importDetailList.forEach(function (detail) {
+                                                           if (item.id === detail.importID) {
+                                                               hasDetail = true;
+                                                               var dId = detail.productID;
+                                                               var dName = detail.productName;
+                                                               var dQty = detail.quantity;
+                                                               var dSize = detail.sizeName;
+                                                               var dPrice = detail.price;
+
+                                                               var subRow = document.createElement("tr");
+                                                               subRow.innerHTML =
+                                                                       "<td>" +
+                                                                       dId +
+                                                                       "</td><td>" +
+                                                                       (dName ? dName : "Unknown") +
+                                                                       "</td><td>" +
+                                                                       dQty +
+                                                                       "</td><td>" +
+                                                                       (dSize ? dSize : "-") +
+                                                                       "</td><td>" +
+                                                                       (dPrice
+                                                                               ? dPrice.toLocaleString("vi-VN")
+                                                                               : 0) +
+                                                                       " VND</td>";
+                                                               subTbody.appendChild(subRow);
+                                                           }
+                                                       });
+
+                                                       if (!hasDetail) {
+                                                           subTbody.innerHTML =
+                                                                   "<tr><td colspan='5' style='text-align:center; color:#999;'>No details found for Import ID " +
+                                                                   item.id +
+                                                                   "</td></tr>";
+                                                       }
+
+                                                       subTable.appendChild(subTbody);
+                                                       detailTd.appendChild(subTable);
+                                                       detailTr.appendChild(detailTd);
+                                                       tbody.appendChild(detailTr);
+                                                   });
+
+                                                   renderImportPagination(currentPage, totalPages);
+                                               }
+                                           });
+                                       }
+
+                                       function toggleImportDetail(id) {
+                                           var detailRow = document.getElementById("import-detail-" + id);
+                                           if (detailRow) {
+                                               if (detailRow.style.display === "none") {
+                                                   $(detailRow).fadeIn(200);
+                                               } else {
+                                                   $(detailRow).fadeOut(200);
+                                               }
+                                           }
+                                       }
+
+                                       function searchImportTable() {
+                                           var input = document.getElementById("import-search-input");
+                                           var filter = input.value.toUpperCase();
+                                           var tbody = document.getElementById("import-list");
+                                           var tr = tbody.getElementsByClassName("import-row-main");
+                                           for (var i = 0; i < tr.length; i++) {
+                                               var tdName = tr[i].getElementsByTagName("td")[1];
+                                               var detailRow = tr[i].nextElementSibling;
+                                               if (tdName) {
+                                                   var txtValue = tdName.textContent || tdName.innerText;
+                                                   if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                                                       tr[i].style.display = "";
+                                                   } else {
+                                                       tr[i].style.display = "none";
+                                                       if (detailRow)
+                                                           detailRow.style.display = "none";
+                                                   }
+                                               }
+                                           }
+                                       }
+
+                                       function renderImportPagination(currentPage, totalPages) {
+                                           var paginationContainer = document.getElementById(
+                                                   "import-pagination-controls"
+                                                   );
+                                           if (totalPages <= 1) {
+                                               paginationContainer.innerHTML = "";
+                                               return;
+                                           }
+
+                                           var html =
+                                                   '<nav aria-label="Import pagination"><ul class="pagination justify-content-center">';
+                                           var prevDisabled = currentPage === 1 ? "disabled" : "";
+                                           html +=
+                                                   '<li class="page-item ' +
+                                                   prevDisabled +
+                                                   '"><button class="page-link" onclick="listImport(' +
+                                                   (currentPage - 1) +
+                                                   ')">Previous</button></li>';
+
+                                           for (var i = 1; i <= totalPages; i++) {
+                                               var activeClass = i === currentPage ? "active" : "";
+                                               html +=
+                                                       '<li class="page-item ' +
+                                                       activeClass +
+                                                       '"><button class="page-link" onclick="listImport(' +
+                                                       i +
+                                                       ')">' +
+                                                       i +
+                                                       "</button></li>";
+                                           }
+
+                                           var nextDisabled = currentPage === totalPages ? "disabled" : "";
+                                           html +=
+                                                   '<li class="page-item ' +
+                                                   nextDisabled +
+                                                   '"><button class="page-link" onclick="listImport(' +
+                                                   (currentPage + 1) +
+                                                   ')">Next</button></li>';
+
+                                           html += "</ul></nav>";
+                                           paginationContainer.innerHTML = html;
+                                       }
+
+                                       function parseUpdateResponse(resp) {
+                                           if (resp == null)
+                                               return {ok: false, raw: resp};
+
+                                           // Nếu server trả JSON đúng header => jQuery auto parse thành object
+                                           if (typeof resp === "object") {
+                                               const ok =
+                                                       resp.isSuccess === true ||
+                                                       resp.success === true ||
+                                                       String(resp.result || resp.status || resp.message || "").toLowerCase() === "success";
+                                               return {ok, raw: resp};
+                                           }
+
+                                           const text = String(resp).trim();
+                                           if (!text)
+                                               return {ok: false, raw: text};
+
+                                           // Nếu là JSON string
+                                           try {
+                                               const obj = JSON.parse(text);
+                                               const ok =
+                                                       obj.isSuccess === true ||
+                                                       obj.success === true ||
+                                                       String(obj.result || obj.status || obj.message || "").toLowerCase() === "success";
+                                               return {ok, raw: obj};
+                                           } catch (e) {
+                                               const ok = ["success", "ok", "true", "1"].includes(text.toLowerCase());
+                                               return {ok, raw: text};
+                                           }
+                                       }
+
+                                       function buildOrderActionButtons(orderId, status, viewHTML) {
+                                           const placeholder = '<span class="btn-placeholder"></span>';
+
+                                           const defaultView =
+                                                   '<button type="button" class="view-btn">' +
+                                                   '<i class="bi bi-eye"></i>' +
+                                                   '<i class="bi bi-eye-slash"></i>' +
+                                                   '</button>';
+
+                                           let accept = placeholder;
+                                           let reject = placeholder;
+
+                                           // Pending / Processing: duyệt đơn hoặc hủy đơn
+                                           if (status === "Pending" || status === "Processing") {
+                                               accept =
+                                                       '<button type="button" class="accept-btn" onclick="updateOrderStatus(' + orderId + ", 'Delivering')" + '" title="Approve">' +
+                                                       '<i class="bi bi-check-lg"></i>' +
+                                                       '</button>';
+                                               reject =
+                                                       '<button type="button" class="reject-btn" onclick="updateOrderStatus(' + orderId + ", 'Cancelled')" + '" title="Cancel">' +
+                                                       '<i class="bi bi-x-lg"></i>' +
+                                                       '</button>';
+
+                                               // Đang giao: hoàn tất (Delivered)
+                                           } else if (status === "Delivering" || status === "Shipped") {
+                                               accept =
+                                                       '<button type="button" class="accept-btn" onclick="updateOrderStatus(' + orderId + ", 'Delivered')" + '" title="Complete">' +
+                                                       '<i class="bi bi-truck"></i>' +
+                                                       '</button>';
+                                               // reject giữ placeholder
+                                           }
+
+                                           const v = viewHTML || defaultView;
+                                           return '<div class="action-wrap">' + accept + reject + v + '</div>';
+                                       }
+
+
+
+                                       function updateOrderStatus(orderId, status) {
+                                           const actionCell = document.querySelector("#action-cell-" + orderId);
+                                           if (actionCell)
+                                               actionCell.querySelectorAll("button").forEach(b => b.disabled = true);
+
+                                           $.ajax({
+                                               url: BASE_URL + "/staff/order/update",
+                                               method: "POST",
+                                               data: {
+                                                   // gửi dư key để “ăn” được nhiều servlet khác nhau (an toàn)
+                                                   orderId: orderId,
+                                                   orderID: orderId,
+                                                   id: orderId,
+                                                   status: status,
+                                                   newStatus: status
+                                               }
+                                           })
+                                                   .done(function (resp) {
+                                                       const r = parseUpdateResponse(resp);
+
+                                                       if (!r.ok) {
+                                                           console.warn("Update failed. Response:", resp);
+                                                           alert("Update failed from server.");
+                                                           return;
+                                                       }
+
+                                                       // update status text
+                                                       const statusEl = document.querySelector("#id" + orderId);
+                                                       if (statusEl) {
+                                                           statusEl.textContent = status;
+                                                           statusEl.className = "status stt-" + status; // reset class đúng trạng thái
+                                                       }
+
+                                                       // rebuild buttons theo status mới
+                                                       if (actionCell) {
+                                                           const viewBtn = actionCell.querySelector(".view-btn");
+                                                           const viewHTML = viewBtn ? viewBtn.outerHTML : null;
+                                                           actionCell.innerHTML = buildOrderActionButtons(orderId, status, viewHTML);
+                                                       }
+
+                                                   })
+                                                   .fail(function (xhr, stt, err) {
+                                                       console.error("AJAX error:", stt, err, xhr.responseText);
+                                                       alert("Error sending update request.");
+                                                   })
+                                                   .always(function () {
+                                                       const cell = document.querySelector("#action-cell-" + orderId);
+                                                       if (cell)
+                                                           cell.querySelectorAll("button").forEach(b => b.disabled = false);
+                                                   });
+                                       }
+
+
+                                       // ===== FORMAT HELPERS =====
+                                       function formatCurrencyVND(n) {
+                                           try {
+                                               return (n ?? 0).toLocaleString("vi-VN");
+                                           } catch (e) {
+                                               return n;
+                                           }
+                                       }
+
+                                       function formatDateForTable(d) {
+                                           try {
+                                               const date = new Date(d);
+                                               if (isNaN(date.getTime()))
+                                                   return d || "";
+                                               return date.toLocaleDateString("vi-VN");
+                                           } catch (e) {
+                                               return d || "";
+                                           }
+                                       }
+
+                                       const handleColor = () => {
+                                           let status = document.querySelectorAll(".status");
+                                           status.forEach((element) => {
+                                               if (element.innerHTML === "Cancelled") {
+                                                   element.classList.add("red");
+                                               } else if (element.innerHTML === "Delivering") {
+                                                   element.classList.add("green");
+                                               } else if (
+                                                       element.innerHTML === "Delivered"
+                                                       ) {
+                                                   element.classList.add("blue");
+                                               }
+                                           });
+                                       };
+
+                                       // ===== DOM READY =====
+                                       document.addEventListener("DOMContentLoaded", function () {
+                                           const links = document.querySelectorAll(".nav-link");
+                                           const contentDivs = document.querySelectorAll(".main-content > div");
+
+                                           function activateTab(target) {
+                                               contentDivs.forEach(function (div) {
+                                                   if (div.classList.contains(target)) {
+                                                       div.style.display = "block";
+                                                   } else {
+                                                       div.style.display = "none";
+                                                   }
+                                               });
+
+                                               links.forEach(function (link) {
+                                                   if (link.getAttribute("data-target") === target) {
+                                                       link.classList.add("active");
+                                                       link.style.backgroundColor = "rgb(122, 117, 120)";
+                                                   } else {
+                                                       link.classList.remove("active");
+                                                       link.style.backgroundColor = "";
+                                                   }
+                                               });
+
+                                               switch (target) {
+                                                   case "product-manage":
+                                                       productList();
+                                                       break;
+                                                   case "personal-info":
+                                                       profile();
+                                                       break;
+                                                   case "import-goods":
+                                                       listImport();
+                                                       break;
+                                                   case "customer-manage":
+                                                       listCustomers();
+                                                       break;
+                                               }
+                                           }
+
+                                           links.forEach(function (link) {
+                                               link.addEventListener("click", function (e) {
+                                                   e.preventDefault();
+                                                   const target = this.getAttribute("data-target");
+                                                   activateTab(target);
+                                               });
+                                           });
+
+                                           const initialTab =
+                                                   "${activeTab}" || "${param.activeTab}" || "statistic";
+                                           activateTab(initialTab);
+                                           initOrderPagination();
+                                           handleColor();
+
+                                           // Toggle sidebar (scope đúng sidebar nav)
+                                           const toggleBtn = document.getElementById("sidebarToggle");
+                                           const sidebarNav = document.querySelector(".main > nav");
+                                           if (toggleBtn && sidebarNav) {
+                                               toggleBtn.addEventListener("click", function () {
+                                                   sidebarNav.classList.toggle("collapsed");
+                                               });
+                                           }
+                                       });
+
+                                       // Toggle detail row cho Orders
+                                       $(document).on("click", ".order-manage .view-btn", function () {
+                                           var $detailRow = $(this)
+                                                   .closest("tr")
+                                                   .next(".order-detail-row");
+
+                                           if ($detailRow.length) {
+                                               $detailRow.slideToggle(200);
+                                           }
+
+                                           $(this).toggleClass("active");
+                                       });
+
+                                       // Kích hoạt tab từ staff dropdown (nếu sau này bạn thêm menu)
+                                       function triggerTab(targetId) {
+                                           const sidebarLink = document.querySelector(
+                                                   '.nav-link[data-target="' + targetId + '"]'
+                                                   );
+                                           if (sidebarLink) {
+                                               sidebarLink.click();
+                                           }
+                                       }
         </script>
 
         <script src="${BASE_URL}/js/staff-import.js"></script>

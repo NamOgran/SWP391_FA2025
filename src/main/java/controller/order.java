@@ -456,15 +456,15 @@ public class Order extends HttpServlet {
                 // Chắc chắn đã check acc ở đầu doGet rồi
                 int orderId = parseIntSafe(request.getParameter("orderId"), 0);
 
-                boolean ok = daoOrder.requestCancel(orderId, customer_id);
+                boolean ok = daoOrder.cancelOrderByCustomer(orderId, customer_id);
 
                 if (ok) {
                     if (session != null) {
-                        session.setAttribute("popupMessage", "Your cancel request has been sent to staff.");
+                        session.setAttribute("popupMessage", "Your order has been cancelled.");
                     }
                 } else {
                     if (session != null) {
-                        session.setAttribute("popupMessage", "Cannot cancel this order. It may not be in Pending status.");
+                        session.setAttribute("popupMessage", "This order cannot be cancelled (maybe already delivering or delivered).");
                     }
                 }
 

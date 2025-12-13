@@ -597,29 +597,39 @@ addToCartBtn.addEventListener('click', function (e) {
             }
             return res.text(); 
         })
-        .then(text => { 
-            // Khôi phục nút bấm
-            this.innerHTML = originalText;
-            this.disabled = false;
+    .then(text => { 
+        // Khôi phục nút bấm
+        this.innerHTML = originalText;
+        this.disabled = false;
 
-            if (text === null) return; // Đã redirect (login)
+        if (text === null) return; // Đã redirect (login)
 
-            // Kiểm tra nội dung trả về từ Controller
-            if (text.trim() === "OK") {
-                 showPopup("Added to cart successfully!", "success"); // Hiện popup xanh
-                 setQty(1);
-            } else if (text.includes("Login")) {
-                 window.location.href = loginUrl; 
-            } else {
-                 showPopup("Added to cart successfully!"); // Fallback
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            this.innerHTML = originalText;
-            this.disabled = false;
-            showPopup("Error adding to cart", "error");
-        });
+        const trimmed = text.trim();
+
+        // Trường hợp thành công
+        if (trimmed === "OK") {
+            showPopup("Added to cart successfully!", "success");
+            setQty(1);
+            return;
+        }
+
+        // Nếu server trả về thông báo lỗi dạng "ERROR: ... "
+        if (trimmed.startsWith("ERROR:")) {
+            const msg = trimmed.substring("ERROR:".length).trim();
+            showPopup(msg); // msg không có chữ 'success'/'added' nên popup sẽ là màu đỏ (error)
+            return;
+        }
+
+        // Phòng hờ nếu server trả về chuỗi có chữ Login
+        if (trimmed.includes("Login")) {
+            window.location.href = loginUrl;
+            return;
+        }
+
+        // Fallback – nếu có text khác lạ, cứ show ra cho user thấy
+        showPopup(trimmed);
+    })
+
 });
 
                 form.addEventListener('submit', function (e) {

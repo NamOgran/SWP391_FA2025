@@ -460,65 +460,30 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
     
-    // ========================= CANCEL FLOW (CUSTOMER & STAFF) =========================
+    // ========================= CANCEL FLOW (CUSTOMER) =========================
+    /**
+     * Customer tự hủy đơn hàng:
+     * - Chỉ hủy được đơn thuộc về chính customer đó
+     * - Và chỉ khi đơn đang ở trạng thái 'Pending'
+     * - Cập nhật thẳng sang 'Cancelled' (không qua Confirming / Staff)
+     */
+    public boolean cancelOrderByCustomer(int orderId, int customerId) {
+        String sql = "UPDATE orders " +
+                     "SET status = 'Cancelled' " +
+                     "WHERE order_id = ? " +
+                     "  AND customer_id = ? " +
+                     "  AND status = 'Pending'";
 
-/**
- * Customer gửi yêu cầu hủy đơn:
- * - Chỉ cho phép nếu đơn thuộc về customer đó
- * - Và đang ở trạng thái Pending
- * - Sau khi gọi thành công, status = 'Confirming'
- */
-public boolean requestCancel(int orderId, int customerId) {
-    String sql = "UPDATE orders " +
-                 "SET status = 'Confirming' " +
-                 "WHERE order_id = ? AND customer_id = ? AND status = 'Pending'";
-    try (PreparedStatement ps = connection.prepareStatement(sql)) {
-        ps.setInt(1, orderId);
-        ps.setInt(2, customerId);
-        int updated = ps.executeUpdate();
-        return updated > 0;
-    } catch (SQLException e) {
-        System.err.println("OrderDAO.requestCancel: " + e.getMessage());
-        return false;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setInt(2, customerId);
+            int updated = ps.executeUpdate();
+            return updated > 0; // >0 nghĩa là có ít nhất 1 dòng được update
+        } catch (SQLException e) {
+            System.err.println("OrderDAO.cancelOrderByCustomer: " + e.getMessage());
+            return false;
+        }
     }
-}
 
-/**
- * Staff APPROVE yêu cầu hủy:
- * - Chỉ xử lý đơn đang 'Confirming'
- * - Sau khi duyệt, status = 'Cancelled'
- */
-public boolean approveCancel(int orderId) {
-    String sql = "UPDATE orders " +
-                 "SET status = 'Cancelled' " +
-                 "WHERE order_id = ? AND status = 'Confirming'";
-    try (PreparedStatement ps = connection.prepareStatement(sql)) {
-        ps.setInt(1, orderId);
-        int updated = ps.executeUpdate();
-        return updated > 0;
-    } catch (SQLException e) {
-        System.err.println("OrderDAO.approveCancel: " + e.getMessage());
-        return false;
-    }
-}
-
-/**
- * Staff REJECT yêu cầu hủy:
- * - Chỉ xử lý đơn đang 'Confirming'
- * - Sau khi reject, status quay về 'Pending'
- */
-public boolean rejectCancel(int orderId) {
-    String sql = "UPDATE orders " +
-                 "SET status = 'Pending' " +
-                 "WHERE order_id = ? AND status = 'Confirming'";
-    try (PreparedStatement ps = connection.prepareStatement(sql)) {
-        ps.setInt(1, orderId);
-        int updated = ps.executeUpdate();
-        return updated > 0;
-    } catch (SQLException e) {
-        System.err.println("OrderDAO.rejectCancel: " + e.getMessage());
-        return false;
-    }
-}
 
 }
