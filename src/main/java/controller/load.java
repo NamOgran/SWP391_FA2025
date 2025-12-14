@@ -112,6 +112,7 @@ public class Load extends HttpServlet {
         Map<Integer, String> nameProduct = new HashMap<>();
         Map<Integer, Integer> priceP = new HashMap<>();
         Map<Integer, List<String>> productSizeMap = new HashMap<>();
+        Map<Integer, Boolean> activeP = new HashMap<>();
 
         for (Product product : productList) {
             int id = product.getId();
@@ -119,6 +120,7 @@ public class Load extends HttpServlet {
             // Ảnh + tên như cũ
             picUrlMap.put(id, product.getPicURL());
             nameProduct.put(id, product.getName());
+            activeP.put(id, product.isIs_active());
 
             // ===== GIÁ BÁN HIỆN TẠI (SAU VOUCHER, NẾU CÓ) =====
             int unitPrice = product.getPrice();     // mặc định = giá gốc
@@ -170,6 +172,7 @@ public class Load extends HttpServlet {
         request.setAttribute("sum", sum);
         request.setAttribute("cartList", cartList);
         request.setAttribute("productSizeMap", productSizeMap);
+        request.setAttribute("activeP", activeP); 
 
         System.out.println(request.getParameter("size") + "load"); // Để debug
 

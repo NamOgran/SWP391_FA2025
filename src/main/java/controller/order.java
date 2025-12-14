@@ -189,31 +189,51 @@ public class Order extends HttpServlet {
                     return;
                 }
 
-                // ===== MUA TỪ GIỎ =====
+// ===== MUA TỪ GIỎ =====
                 List<entity.Cart> cartList = daoCart.getAll(customer_id);
                 if (cartList == null || cartList.isEmpty()) {
                     response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cart is empty");
                     return;
                 }
 
-                // Kiểm kho từng item
+// Kiểm từng item trong giỏ: sản phẩm ngừng bán / size hết hàng / không đủ số lượng
                 StringBuilder issue = new StringBuilder();
                 boolean hasIssue = false;
+
                 for (entity.Cart c : cartList) {
+                    Product p = daoProduct.getProductById(c.getProductID());
                     Size_detail sz = daoSize.getSizeByProductIdAndName(c.getProductID(), c.getSize_name());
-                    if (sz == null || sz.getQuantity() <= 0 || c.getQuantity() > sz.getQuantity()) {
-                        Product p = daoProduct.getProductById(c.getProductID());
-                        String pname = (p != null) ? p.getName() : ("ID " + c.getProductID());
+                    String pname = (p != null) ? p.getName() : ("ID " + c.getProductID());
+
+                    // 1. Sản phẩm đã ngừng bán (is_active = false) hoặc bị xóa
+                    if (p == null || !p.isIs_active()) {
                         hasIssue = true;
-                        issue.append("Sold out! '").append(pname).append("' (")
-                                .append(c.getSize_name()).append(") only ")
-                                .append((sz != null) ? sz.getQuantity() : 0)
+                        issue.append("Product '")
+                                .append(pname)
+                                .append("' is no longer available for sale.\\n");
+                        // Không cần kiểm tiếp size vì đã nghỉ bán
+                        continue;
+                    }
+
+                    // 2. Size không còn / hết hàng / không đủ số lượng
+                    if (sz == null || sz.getQuantity() <= 0 || c.getQuantity() > sz.getQuantity()) {
+                        hasIssue = true;
+                        int remain = (sz != null) ? sz.getQuantity() : 0;
+                        issue.append("Sold out! '")
+                                .append(pname)
+                                .append("' (size ")
+                                .append(c.getSize_name())
+                                .append(") only ")
+                                .append(remain)
                                 .append(" left.\\n");
                     }
                 }
+
                 if (hasIssue) {
-                    request.setAttribute("popupMessage", "Some products are out of size_detail!");
+                    // Gửi full message chi tiết về lỗi
+                    request.setAttribute("popupMessage", issue.toString());
                     request.setAttribute("productList", productList);
+                    request.setAttribute("cartList", cartList); // nếu cart.jsp cần
                     request.getRequestDispatcher("cart.jsp").forward(request, response);
                     return;
                 }
