@@ -1,0 +1,143 @@
+.mid {
+    font-family: "Quicksand", sans-serif;
+    margin: 5% 10%;
+    color: #444;
+}
+
+#highlight {
+    color: #a0816c;
+}
+
+.content {
+    border-bottom: #a0816c solid 2px;
+}
+
+.order {
+    margin: 10px 0;
+    background-color: #aad0d6;
+    padding: 0;
+}
+.edit-info-btn button{
+    border: none;
+    background-color: #c5d4dd;
+    margin: 5px;
+}
+.hr {
+    margin: 0;
+}
+
+#header-order {
+    background-color: #c5d4dd;
+    margin: 0;
+}
+
+#header-order p {
+    color: white;
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
+}
+#mid-order{
+    padding: 20px;
+}
+
+#product-bottom{
+    background-color: #ececec;
+    margin: 0;
+}
+#product-bottom p {
+    padding: 10px 0;
+    color: #444;
+    margin: 0;
+}
+#total{
+    text-align: right;
+}
+
+#price {
+    text-align: left;
+}
+
+.origin-price {
+    text-decoration: line-through;
+    text-align: right;
+}
+
+.saled-price {
+    font-weight: bold;
+    color: red;
+    text-align: right;
+}
+
+#product img {
+    width: 80%;
+    height: 100%;
+    
+}
+
+#proName {
+    margin: 5px 0 15px 0;
+}
+
+
+.feedback{
+    text-align: right;
+    margin-top: 30px;
+}
+
+.feedback .feedback-btn {
+    padding: 8px 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 3px;
+}
+
+.page {
+    border: rgb(199, 198, 198) solid 1px;
+    padding: 10px;
+}
+
+.page a {
+    text-decoration: none;
+    font-weight: 600;
+    color: rgb(70, 70, 70);
+}
+
+.page a:hover {
+    color: #aa9383;
+    position: 0.2s;
+}
+
+
+.flex {
+    display: flex;
+}
+
+.content {
+    text-align: center;
+    border-bottom: #a0816c solid 2px;
+    margin: 5% 0;
+}
+
+.highlight {
+    color: #a0816c;
+}
+
+.dropdown-container {
+    display: none;
+    text-align: center;
+    width: 100%;
+    background-color: #ececec;
+}
+
+.user-info{
+    margin: 10px 0;
+}
+
+.info {
+    display: block;
+    padding-left: 0;
+    list-style: none;
+    background-color: #fbfbfb;
+}
