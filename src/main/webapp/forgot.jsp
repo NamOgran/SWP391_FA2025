@@ -1,7 +1,3 @@
-<%-- 
-    Document    : forgot.jsp
-    Updated     : Modern UI, Stepper, Floating Labels
---%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,7 +15,7 @@
         :root {
             --primary-color: #a0816c;
             --primary-hover: #8a6d5a;
-            --bg-color: #f4f1ea; /* Màu nền kem nhẹ hợp với tông nâu */
+            --bg-color: #f4f1ea;
             --text-dark: #333;
         }
 
@@ -31,7 +27,6 @@
             flex-direction: column;
         }
 
-        /* --- Header Minimal --- */
         .auth-header {
             padding: 20px 0;
             text-align: center;
@@ -44,7 +39,6 @@
             letter-spacing: 2px;
         }
 
-        /* --- Main Card --- */
         .auth-wrapper {
             flex: 1;
             display: flex;
@@ -68,7 +62,6 @@
             padding: 40px;
         }
 
-        /* --- Back Button --- */
         .btn-back {
             position: absolute;
             top: 20px;
@@ -80,7 +73,6 @@
         }
         .btn-back:hover { color: var(--primary-color); transform: translateX(-3px); }
 
-        /* --- Stepper (Thanh tiến trình) --- */
         .stepper-wrapper {
             display: flex;
             justify-content: center;
@@ -134,7 +126,6 @@
         .stepper-item.completed::before { background: var(--primary-color); }
         .stepper-item.active::before { background: var(--primary-color); }
 
-        /* --- Images & Typography --- */
         .reset-icon {
             width: 80px;
             height: 80px;
@@ -147,7 +138,6 @@
         .form-title { font-weight: 700; color: var(--text-dark); margin-bottom: 10px; text-align: center; }
         .form-subtitle { color: #888; text-align: center; margin-bottom: 30px; font-size: 0.95rem; }
 
-        /* --- Inputs --- */
         .form-floating > .form-control {
             border-radius: 12px;
             border: 1px solid #eee;
@@ -160,7 +150,32 @@
         }
         .form-floating label { color: #999; }
 
-        /* --- Buttons --- */
+        .otp-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .otp-input {
+            width: 45px;
+            height: 55px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            background-color: #fcfcfc;
+            transition: all 0.3s;
+            color: var(--primary-color);
+        }
+        .otp-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(160, 129, 108, 0.1);
+            background-color: #fff;
+            outline: none;
+            transform: translateY(-2px);
+        }
+
         .btn-primary-custom {
             background-color: var(--primary-color);
             border: none;
@@ -183,7 +198,6 @@
             box-shadow: none;
         }
 
-        /* --- Step Visibility --- */
         .step-content { display: none; animation: fadeIn 0.5s ease-in-out; }
         .step-content.active { display: block; }
 
@@ -242,10 +256,17 @@
                     <p class="form-subtitle">We have sent a 6-digit code to your email.</p>
                     
                     <form id="codeForm">
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control text-center fw-bold letter-spacing-2" id="code" name="code" placeholder="OTP" maxlength="6" required style="letter-spacing: 5px; font-size: 1.2rem;">
-                            <label for="code"><i class="bi bi-shield-lock"></i> Verification Code</label>
+                        <div class="otp-container">
+                            <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                            <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                            <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                            <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                            <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                            <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
                         </div>
+                        
+                        <input type="hidden" id="code" name="code">
+
                         <div id="messageCode" class="text-center mb-3 small fw-bold"></div>
                         <button type="submit" class="btn btn-primary-custom" id="btn-verify-code">
                             <span class="spinner-border spinner-border-sm d-none me-2"></span>
@@ -285,22 +306,20 @@
     <script>
         $(document).ready(function () {
             
-            // Helper: Manage Steps
             function goToStep(stepNumber) {
-                // Hide all steps
                 $('.step-content').removeClass('active');
                 
-                // Show target step
                 if(stepNumber === 1) $('#step-email').addClass('active');
-                if(stepNumber === 2) $('#step-otp').addClass('active');
+                if(stepNumber === 2) {
+                    $('#step-otp').addClass('active');
+                    setTimeout(() => $('.otp-input').first().focus(), 100); 
+                }
                 if(stepNumber === 3) $('#step-password').addClass('active');
 
-                // Update Stepper UI
                 updateStepper(stepNumber);
             }
 
             function updateStepper(step) {
-                // Reset styling
                 $('.stepper-item').removeClass('active completed');
 
                 if (step >= 1) {
@@ -316,7 +335,6 @@
                 }
             }
 
-            // Helper: Button Loading State
             function setButtonLoading($btn, isLoading, defaultText) {
                 if (isLoading) {
                     $btn.prop('disabled', true);
@@ -329,14 +347,54 @@
                 }
             }
 
-            // Helper: Message Display
             function showMessage($element, message, isSuccess) {
                 $element.text(message)
                         .removeClass(isSuccess ? 'text-danger' : 'text-success')
                         .addClass(isSuccess ? 'text-success' : 'text-danger');
             }
 
-            // --- STEP 1: SEND EMAIL ---
+            const $otpInputs = $('.otp-input');
+            const $hiddenCode = $('#code');
+
+            function updateHiddenCode() {
+                let code = '';
+                $otpInputs.each(function() {
+                    code += $(this).val();
+                });
+                $hiddenCode.val(code);
+            }
+
+            $otpInputs.on('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                updateHiddenCode();
+
+                if (this.value.length === 1) {
+                    $(this).next('.otp-input').focus();
+                }
+            });
+
+            $otpInputs.on('keydown', function(e) {
+                if (e.key === 'Backspace' && !this.value) {
+                    $(this).prev('.otp-input').focus();
+                }
+            });
+
+            $otpInputs.on('paste', function(e) {
+                let pasteData = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                pasteData = pasteData.replace(/\D/g, '').substring(0, 6);
+                
+                if (pasteData) {
+                    $otpInputs.each(function(index) {
+                        if (index < pasteData.length) {
+                            $(this).val(pasteData[index]);
+                        }
+                    });
+                    updateHiddenCode();
+                    $otpInputs.eq(Math.min(pasteData.length, 5)).focus();
+                    e.preventDefault();
+                }
+            });
+
             $('#emailForm').submit(function (e) {
                 e.preventDefault();
                 const $btn = $('#btn-send-email');
@@ -356,7 +414,7 @@
                             if (data.isSuccess) {
                                 showMessage($message, 'Code sent successfully!', true);
                                 setTimeout(function () {
-                                    goToStep(2); // Move to Step 2
+                                    goToStep(2);
                                 }, 1000);
                             } else {
                                 showMessage($message, data.description || 'Email not found.', false);
@@ -370,15 +428,14 @@
                         });
             });
 
-            // --- STEP 2: VERIFY OTP ---
             $('#codeForm').submit(function (e) {
                 e.preventDefault();
                 const $btn = $('#btn-verify-code');
                 const $message = $('#messageCode');
-                const code = $('#code').val().trim();
+                const code = $hiddenCode.val().trim();
 
-                if (!code) {
-                    showMessage($message, 'Please enter the OTP code.', false);
+                if (!code || code.length < 6) {
+                    showMessage($message, 'Please enter the full 6-digit OTP.', false);
                     return;
                 }
 
@@ -390,7 +447,7 @@
                             if (data.isSuccess) {
                                 showMessage($message, 'Verification successful!', true);
                                 setTimeout(function () {
-                                    goToStep(3); // Move to Step 3
+                                    goToStep(3);
                                 }, 1000);
                             } else {
                                 showMessage($message, data.description || 'Invalid OTP.', false);
@@ -404,7 +461,6 @@
                         });
             });
 
-            // --- STEP 3: UPDATE PASSWORD ---
             $('#updateForm').submit(function (e) {
                 e.preventDefault();
                 const $btn = $('#btn-update-pass');
@@ -432,7 +488,6 @@
                         .done(function (data) {
                             if (data.isSuccess) {
                                 showMessage($message, 'Success! Redirecting to login...', true);
-                                // Show checkmark animation or similar here if desired
                                 setTimeout(function () {
                                     window.location.href = "<%= request.getContextPath()%>/login.jsp";
                                 }, 2000);

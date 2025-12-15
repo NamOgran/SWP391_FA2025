@@ -27,16 +27,18 @@ import static url.CustomerURL.URL_FORGOT_PASS;
 import static url.CustomerURL.URL_SIGNUP;
 import static url.CustomerURL.URL_UPDATE_PASS;
 import static url.CustomerURL.URL_VERIFY;
+import static url.CustomerURL.URL_VERIFY_SIGNUP;
 
 /**
  *
  *
  */
 @WebServlet(name = "customerController", urlPatterns = {
-    "/login/signup", 
-    "/login/forgot", 
-    "/login/update", 
-    "/login/verifyCode" 
+    "/login/signup",
+    "/login/forgot",
+    "/login/update",
+    "/login/verifyCode",
+    "/login/verify-signup"
 })
 public class CustomerController extends HttpServlet {
 
@@ -61,6 +63,9 @@ public class CustomerController extends HttpServlet {
                 break;
             case URL_VERIFY:
                 verifyCode(request, response);
+                break;
+            case URL_VERIFY_SIGNUP:
+                confirmRegistration(request, response);
                 break;
         }
     }
@@ -184,7 +189,8 @@ public class CustomerController extends HttpServlet {
     }
 
     /**
-     * STEP 3: Update new password. Only allowed if session is marked as "codeVerified".
+     * STEP 3: Update new password. Only allowed if session is marked as
+     * "codeVerified".
      */
     protected void updatePass(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String password = request.getParameter("password");
@@ -309,51 +315,113 @@ public class CustomerController extends HttpServlet {
 
     protected void signUp(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String username = request.getParameter("username");
-        String password = getMd5(request.getParameter("password")); // Hash password
+        String password = getMd5(request.getParameter("password"));
         String email = request.getParameter("email");
         String address = request.getParameter("address");
         String phoneNumber = request.getParameter("phoneNumber");
         String fullName = request.getParameter("fullName");
         String google_id = request.getParameter("google_id");
         if (google_id == null) {
-            google_id = ""; 
+            google_id = "";
         }
 
-        // --- CHECK FOR DUPLICATES ---
-
-        // 1. Check Username (checks both Customer and Staff tables)
+        // Check Username & Email (Giữ nguyên logic cũ của bạn)
         if (daoCustomer.isUsernameTaken(username)) {
             request.setAttribute("message", "This username is already taken!");
-            // Keep input data
             saveInputAttribute(request, username, email, address, phoneNumber, fullName);
             request.getRequestDispatcher("/signup.jsp").forward(request, response);
-            return; // Stop registration
+            return;
         }
-
-        // 2. Check Email
         if (daoCustomer.checkEmail(email)) {
             request.setAttribute("message", "This email is already registered!");
-            // Keep input data
             saveInputAttribute(request, username, email, address, phoneNumber, fullName);
             request.getRequestDispatcher("/signup.jsp").forward(request, response);
-            return; // Stop registration
+            return;
         }
 
-        // --- END CHECK ---
+        // --- LOGIC MỚI: Verify Email ---
+        try {
+            Customer tempC = new Customer(username, email, password, address, phoneNumber, fullName, google_id);
+            String otp = generateNumericOTP(6); // Hàm tạo OTP bạn đã có sẵn
 
-        // Create object and save if valid
-        Customer c = new Customer(username, email, password, address, phoneNumber, fullName, google_id);
-        boolean isSuccess = daoCustomer.signUp(c);
+            // Gửi mail (Sử dụng EmailUtil bạn đã có)
+            String subject = "[GIO Shop] Verify your Account Registration";
+            String content = "Welcome to GIO Shop! \nYour verification code is: " + otp;
+            EmailUtil.sendEmail(email, subject, content);
 
-        if (isSuccess) {
-            // Registration successful -> Show Popup (Success Logic)
-            request.setAttribute("registerSuccess", true);
-            request.getRequestDispatcher("/signup.jsp").forward(request, response);
-        } else {
-            // System Error
-            request.setAttribute("message", "System error, please try again later!");
+            // Lưu vào Session
+            HttpSession session = request.getSession();
+            session.setAttribute("tempCustomer", tempC); // Lưu object Customer
+            session.setAttribute("registerOtp", otp);    // Lưu mã OTP thực
+
+            // Chuyển sang trang nhập mã (File JSP mới)
+            response.sendRedirect(request.getContextPath() + "/verify_register.jsp");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("message", "Error sending email: " + e.getMessage());
             saveInputAttribute(request, username, email, address, phoneNumber, fullName);
             request.getRequestDispatcher("/signup.jsp").forward(request, response);
+        }
+    }
+
+    protected void confirmRegistration(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String inputCode = request.getParameter("verifyCode");
+        HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới
+
+        // 1. Kiểm tra Session
+        if (session == null) {
+            System.out.println("DEBUG: Session is NULL -> Mất phiên làm việc");
+            request.setAttribute("message", "Session expired. Please sign up again.");
+            request.getRequestDispatcher("/signup.jsp").forward(request, response);
+            return;
+        }
+
+        Customer tempC = (Customer) session.getAttribute("tempCustomer");
+        String serverOtp = (String) session.getAttribute("registerOtp");
+
+        // 2. Debug: In giá trị ra console (Cửa sổ Output của Netbeans/IntelliJ)
+        System.out.println("--------------------------------------------------");
+        System.out.println("DEBUG - Session ID: " + session.getId());
+        System.out.println("DEBUG - Server OTP (trong Session): [" + serverOtp + "]");
+        System.out.println("DEBUG - User Input (nhập vào):      [" + inputCode + "]");
+        System.out.println("--------------------------------------------------");
+
+        if (tempC == null || serverOtp == null) {
+            request.setAttribute("message", "Session data missing. Please sign up again.");
+            request.getRequestDispatcher("/signup.jsp").forward(request, response);
+            return;
+        }
+
+        // 3. XỬ LÝ QUAN TRỌNG: Cắt khoảng trắng (Trim)
+        if (inputCode != null) {
+            inputCode = inputCode.trim(); // Xóa dấu cách thừa ở đầu/cuối
+        }
+
+        // 4. So sánh
+        // Lưu ý: Ở hàm signUp chúng ta lưu mã thô (Plain text), không phải MD5
+        // Nên ở đây so sánh trực tiếp code.equals(serverOtp)
+        if (inputCode != null && inputCode.equals(serverOtp)) {
+
+            // Mã đúng -> Gọi DAO lưu vào Database
+            boolean isSuccess = daoCustomer.signUp(tempC);
+
+            if (isSuccess) {
+                // Xóa session tạm
+                session.removeAttribute("tempCustomer");
+                session.removeAttribute("registerOtp");
+
+                // Thông báo thành công
+                request.setAttribute("registerSuccess", true);
+                request.getRequestDispatcher("/signup.jsp").forward(request, response);
+            } else {
+                request.setAttribute("message", "Database error! Insert failed.");
+                request.getRequestDispatcher("/verify_register.jsp").forward(request, response);
+            }
+        } else {
+            // Mã sai
+            request.setAttribute("message", "Invalid verification code! (Input: " + inputCode + ")");
+            request.getRequestDispatcher("/verify_register.jsp").forward(request, response);
         }
     }
 

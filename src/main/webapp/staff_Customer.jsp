@@ -227,7 +227,7 @@
                                             
                                             <button class="btn-soft btn-soft-info" title="View Details" 
                                                     onclick="openInfoModal('${c.customer_id}', '${c.username}', '${c.fullName}', '${c.email}', '${c.phoneNumber}', '${c.address}', '${c.google_id}')">
-                                                <i class="bi bi-info-circle-fill"></i>
+                                                <i class="bi bi-info-circle"></i>
                                             </button>
 
                                             <button class="btn-soft btn-soft-gray btn-history" onclick="viewOrderHistory(${c.customer_id}, '${c.username}', '${c.fullName}')" title="Order History">

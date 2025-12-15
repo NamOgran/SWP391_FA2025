@@ -62,13 +62,12 @@ import java.nio.file.Path;
 
 @WebServlet(name = "AdminController", urlPatterns = {"/admin"})
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 2, // 2MB
-        maxFileSize = 1024 * 1024 * 10, // 10MB
-        maxRequestSize = 1024 * 1024 * 50 // 50MB
+        fileSizeThreshold = 1024 * 1024 * 2,
+        maxFileSize = 1024 * 1024 * 10,
+        maxRequestSize = 1024 * 1024 * 50
 )
 public class AdminController extends HttpServlet {
 
-    // --- HELPER METHODS ---
     private int parseIntSafe(String value, int defaultValue) {
         try {
             return (value == null || value.trim().isEmpty()) ? defaultValue : Integer.parseInt(value.trim());
@@ -143,7 +142,6 @@ public class AdminController extends HttpServlet {
         return null;
     }
 
-    // --- CONTROLLER METHODS ---
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -162,8 +160,9 @@ public class AdminController extends HttpServlet {
             return;
         }
 
-        // --- API CHO VOUCHER DATA (AJAX) ---
         String action = request.getParameter("action");
+
+        // --- API: VOUCHER DATA ---
         if ("voucher_data".equals(action)) {
             String voucherSearch = request.getParameter("search");
             int voucherPageIndex = parseIntSafe(request.getParameter("page"), 1);
@@ -185,7 +184,153 @@ public class AdminController extends HttpServlet {
             return;
         }
 
-        // --- LOGIC CHO CÁC TAB KHÁC ---
+        // --- API: PRODUCT RELATED DATA ---
+        if ("get_product_related_data".equals(action)) {
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            Gson gson = new Gson();
+            try {
+                int productId = Integer.parseInt(request.getParameter("productId"));
+                Size_detailDAO sizeDAO = new Size_detailDAO();
+                CartDAO cartDAO = new CartDAO();
+                OrderDAO orderDAO = new OrderDAO();
+                ImportDetailDAO importDetailDAO = new ImportDetailDAO();
+                FeedBackDAO feedbackDAO = new FeedBackDAO();
+
+                Map<String, Object> relatedData = new HashMap<>();
+                relatedData.put("sizes", sizeDAO.getSizesByProductId(productId));
+                relatedData.put("carts", cartDAO.getCartItemsByProductId(productId));
+                relatedData.put("orders", orderDAO.getOrderDetailsByProductId(productId));
+                relatedData.put("imports", importDetailDAO.getImportDetailsByProductId(productId));
+                relatedData.put("feedbacks", feedbackDAO.getFeedbackByProductId(productId));
+
+                out.print(gson.toJson(relatedData));
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson("Invalid Product ID"));
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(gson.toJson("Server Error: " + e.getMessage()));
+            }
+            return;
+        }
+
+        // --- [NEW] API: ACCOUNT RELATED DATA (Customer/Staff) ---
+        if ("get_account_related_data".equals(action)) {
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            Gson gson = new Gson();
+            try {
+                String type = request.getParameter("type");
+                int id = Integer.parseInt(request.getParameter("id"));
+
+                Map<String, Object> relatedData = new HashMap<>();
+
+                if ("customer".equals(type)) {
+                    CartDAO cartDAO = new CartDAO();
+                    FeedBackDAO feedbackDAO = new FeedBackDAO();
+                    OrderDAO orderDAO = new OrderDAO();
+
+                    relatedData.put("carts", cartDAO.getAll(id));
+                    relatedData.put("feedbacks", feedbackDAO.getFeedbackByCustomerId(id));
+                    relatedData.put("orders", orderDAO.orderUser(id));
+
+                } else if ("staff".equals(type)) {
+                    OrderDAO orderDAO = new OrderDAO();
+                    ImportDAO importDAO = new ImportDAO();
+
+                    relatedData.put("orders", orderDAO.getOrdersByStaffId(id));
+                    relatedData.put("imports", importDAO.getImportsByStaffId(id));
+                }
+
+                out.print(gson.toJson(relatedData));
+
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson("Invalid Account ID"));
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(gson.toJson("Server Error: " + e.getMessage()));
+            }
+            return;
+        }
+
+        // --- API: VOUCHER RELATED DATA ---
+        if ("get_voucher_related_data".equals(action)) {
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            Gson gson = new Gson();
+            try {
+                String voucherId = request.getParameter("voucherId");
+                if (voucherId == null) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson("Missing Voucher ID"));
+                    return;
+                }
+                ProductDAO productDAO = new ProductDAO();
+                List<Product> products = productDAO.getProductsByVoucherId(voucherId);
+                out.print(gson.toJson(products));
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(gson.toJson("Server Error: " + e.getMessage()));
+            }
+            return;
+        }
+
+        // --- ACTION: TOGGLE PRODUCT STATUS ---
+        if ("toggle_product_status".equals(action)) {
+            int id = 0;
+            try {
+                id = Integer.parseInt(request.getParameter("id"));
+            } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/admin?tab=product&msg=invalid_id");
+                return;
+            }
+
+            ProductDAO dao = new ProductDAO();
+            Product p = dao.getProductById(id);
+            if (p == null) {
+                response.sendRedirect(request.getContextPath() + "/admin?tab=product&msg=not_found");
+                return;
+            }
+
+            boolean newStatus = !p.isIs_active();
+            boolean success = dao.toggleActiveStatus(id, newStatus);
+
+            String page = request.getParameter("page");
+            String sort = request.getParameter("sort");
+            String search = request.getParameter("search");
+            String category = request.getParameter("category");
+            String status = request.getParameter("status");
+            String msg = "toggle_failed";
+            if (success) {
+                msg = newStatus ? "activated" : "deactivated";
+            }
+
+            StringBuilder redirectUrl = new StringBuilder(request.getContextPath() + "/admin");
+            redirectUrl.append("?tab=product&msg=").append(encode(msg));
+
+            if (page != null && !page.isEmpty()) {
+                redirectUrl.append("&page=").append(encode(page));
+            }
+            if (sort != null && !sort.isEmpty()) {
+                redirectUrl.append("&sort=").append(encode(sort));
+            }
+            if (search != null && !search.isEmpty()) {
+                redirectUrl.append("&search=").append(encode(search));
+            }
+            if (category != null && !category.isEmpty() && !category.equals("0")) {
+                redirectUrl.append("&category=").append(encode(category));
+            }
+            if (status != null && !status.isEmpty() && !status.equals("all")) {
+                redirectUrl.append("&status=").append(encode(status));
+            }
+
+            response.sendRedirect(redirectUrl.toString());
+            return;
+        }
+
+        // --- DASHBOARD AND TABS LOGIC ---
         String tab = request.getParameter("tab");
         if (tab == null || tab.isEmpty()) {
             tab = "dashboard";
@@ -636,7 +781,6 @@ public class AdminController extends HttpServlet {
             handleUpdateImportStatus(request, response);
             return;
         }
-        // [NEW] XỬ LÝ HỦY IMPORT
         if ("cancel_import".equals(action)) {
             handleCancelImport(request, response);
             return;
@@ -1146,10 +1290,9 @@ public class AdminController extends HttpServlet {
             ImportDAO importDAO = new ImportDAO();
             ImportDetailDAO detailDAO = new ImportDetailDAO();
             Size_detailDAO size_detailDAO = new Size_detailDAO();
-            
-            // [FIXED] Pass BOTH integer ID and "Delivered" status
-            boolean ok = importDAO.updateStatus(importId, "Delivered"); 
-            
+
+            boolean ok = importDAO.updateStatus(importId, "Delivered");
+
             if (ok) {
                 List<ImportDetail> details = detailDAO.getListToImport(importId);
                 for (ImportDetail d : details) {
@@ -1168,7 +1311,6 @@ public class AdminController extends HttpServlet {
         out.flush();
     }
 
-    // [NEW] METHOD: Xử lý hủy đơn nhập hàng
     private void handleCancelImport(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json; charset=UTF-8");
         PrintWriter out = response.getWriter();
@@ -1177,10 +1319,9 @@ public class AdminController extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             ImportDAO importDAO = new ImportDAO();
-            
-            // [FIXED] Pass BOTH integer ID and "Cancelled" status
+
             boolean ok = importDAO.updateStatus(id, "Cancelled");
-            
+
             responseData.setIsSuccess(ok);
             responseData.setDescription(ok ? "Import cancelled successfully" : "Failed to cancel import");
         } catch (Exception e) {

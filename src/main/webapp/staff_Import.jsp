@@ -212,7 +212,7 @@
                                 <th style="width: 10%">ID</th>
                                 <th style="width: 25%">Username</th>
                                 <th style="width: 15%" class="text-center">Date</th>
-                                <th style="width: 10%" class="text-center">Qty</th>
+                                <th style="width: 10%" class="text-center">Quantity</th>
                                 <th style="width: 15%" class="text-center">Status</th>
                                 <th style="width: 15%" class="text-end">Total Amount</th>
                                 <th style="width: 10%" class="text-center">Action</th>
@@ -333,9 +333,9 @@
                             <select id="import_size" class="form-select form-control-modern"><option>S</option><option>M</option><option>L</option></select>
                         </div>
                         <div class="col-md-2">
-                            <label class="fw-bold small text-muted mb-1">Qty</label>
-                            <input type="number" id="import_qty" class="form-control form-control-modern text-center" min="1" value="1">
-                        </div>
+    <label class="fw-bold small text-muted mb-1">Quantity</label>
+    <input type="number" id="import_qty" class="form-control form-control-modern text-center" min="1" value="1" oninput="if(this.value > 0) this.classList.remove('is-invalid-custom')">
+</div>
                         <div class="col-md-2">
                             <button type="button" class="btn-add-item" onclick="addItemToTable()"><i class="bi bi-plus-lg"></i> Add</button>
                         </div>
@@ -344,7 +344,7 @@
                     <div class="import-list-box">
                         <table class="table table-hover mb-0 align-middle">
                             <thead class="bg-light sticky-top">
-                                <tr><th class="ps-3">Product Name</th><th class="text-center">Size</th><th class="text-center">Qty</th><th class="text-center">Remove</th></tr>
+                                <tr><th class="ps-3">Product Name</th><th class="text-center">Size</th><th class="text-center">Quantity</th><th class="text-center">Remove</th></tr>
                             </thead>
                             <tbody id="import-items-list">
                                 <tr id="empty-row"><td colspan="4" class="text-center text-muted py-4">List is empty. Add products above.</td></tr>
@@ -580,18 +580,22 @@
                 showToast("Please select a product info!", "error");
                 $('#import_product').addClass('is-invalid-custom');
                 return;
+            } else {
+                $('#import_product').removeClass('is-invalid-custom');
             }
+
             if (qty <= 0 || isNaN(qty)) {
                 showToast("Quantity must be greater than 0", "error");
+                $('#import_qty').addClass('is-invalid-custom'); 
                 return;
+            } else {
+                $('#import_qty').removeClass('is-invalid-custom');
             }
-            
-            $('#import_product').removeClass('is-invalid-custom');
             
             const exists = importItems.find(i => i.productId === pId && i.size === size);
             if (exists) {
                 exists.quantity += qty;
-                showToast(`Updated qty for ${pName} (${size})`);
+                showToast(`Updated quantity for ${pName} (${size})`);
             } else {
                 importItems.push({ productId: pId, productName: pName, size: size, quantity: qty });
             }

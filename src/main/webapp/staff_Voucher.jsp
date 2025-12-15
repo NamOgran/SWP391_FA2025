@@ -121,7 +121,7 @@
                         <%-- [NEW] Reset Button --%>
                         <div class="col-md-2">
                             <button onclick="resetFilters()" class="btn btn-light border w-100 text-muted" title="Reset Filters">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>
                             </button>
                         </div>
                     </div>
