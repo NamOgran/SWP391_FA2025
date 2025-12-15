@@ -1,876 +1,498 @@
-
+<%-- 
+    Document    : signup.jsp
+    Updated     : Removed reCAPTCHA & Layout Rearranged
+--%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Sign up</title>
-        <link rel="stylesheet" href="./boostrap/bootstrap.min.css"/>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> <!-- bootstrap icon -->
-        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'> <!-- font family -->
-        <link rel="icon" href="/Project_SWP391_Group4/images/LG1.png" type="image/x-icon">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sign Up | GIO</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+        <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+        <link href='https://fonts.googleapis.com/css?family=Quicksand:300,400,500,600,700&display=swap' rel='stylesheet'>
+        <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon">
 
         <style>
-            * {
-                margin: 0;
-                padding: 0;
-                font-family: 'Quicksand', sans-serif;
-                box-sizing: border-box;
-                color: rgb(151, 143, 137);
-            }
-            img {
-                width: 100%;
-            }
             :root {
-                --logo-color: #a0816c;
-                --nav-list-color: #a0816c;
-                --icon-color: #a0816c;
-                --text-color: #a0816c;
-                --bg-color: #a0816c;
+                --primary-color: #a0816c;
+                --primary-hover: #8a6d5a;
+                --text-dark: #333;
+                --text-muted: #666;
+                --border-color: #e0e0e0;
             }
 
-            body::-webkit-scrollbar {
-                width: 0.5em;
-            }
-            body::-webkit-scrollbar-track {
-                box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-            }
-            body::-webkit-scrollbar-thumb {
-                border-radius: 50px;
-                background-color: var(--bg-color);
-                outline: 1px solid slategrey;
-            }
-
-            nav {
-                height: 70px;
-                justify-content: center;
-                display: flex;
-            }
-
-            .header_title {
-                display: flex;
-                text-align: center;
-                justify-content: center;
-                align-items: center;
-                background-color: #f5f5f5;
-                font-size: 0.8125rem;
-                font-weight: 500;
-                height: 30px;
-            }
-
-            .headerContent {
-                max-width: 1200px;
-                margin: 0 auto;
-            }
-
-            .headerContent,
-            .headerList,
-            .headerTool {
-                display: flex;
-                align-items: center;
-            }
-
-            .headerContent {
-                justify-content: space-around;
-            }
-
-            .logo a {
-                text-decoration: none;
-                color: var(--logo-color);
-                font-size: 1.5em;
-                font-weight: bold;
-            }
-
-            .logo a:hover {
-                color: var(--logo-color);
-            }
-
-            .headerList {
-                margin: 0;
-                list-style-type: none;
-            }
-
-            /* hiệu ứng hover */
-            .headerListItem {
-                transition: font-size 0.3s ease;
-                height: 24px;
-            }
-
-            .headerListItem:hover {
-                font-size: 18px;
-            }
-
-            /* hiệu ứng hover */
-            .headerListItem a {
-                margin: 0 10px;
-                padding: 22px 0;
-                text-decoration: none;
-                color: var(--text-color);
-            }
-
-            .dropdown-icon {
-                width: 18px;
-                margin-left: 2px;
-            }
-
-            .dropdownMenu {
-                position: absolute;
-                width: 200px;
-                padding: 0;
-                margin-top: 17px;
+            body {
+                font-family: 'Quicksand', sans-serif;
                 background-color: #fff;
-                display: none;
-                z-index: 1;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-            }
-
-            .dropdownMenu li {
-                list-style-type: none;
-                margin: 0;
-                border-bottom: 1px solid rgb(235 202 178);
-            }
-
-            .dropdownMenu li a {
-                text-decoration: none;
-                padding: 5px 15px;
-                margin: 0;
-                width: fit-content;
-                display: flex;
-                font-size: 0.9em;
-                width: 100%;
-                color: var(--text-color);
-            }
-
-            .dropdownMenu li:hover {
-                background-color: #f1f1f1
-            }
-
-            .headerListItem:hover .dropdownMenu {
-                display: block;
-            }
-
-            .headerTool a {
-                padding: 5px;
-            }
-
-            /* .headerToolIcon {
-                padding-left: 10px;
-            } */
-
-            .icon {
-                cursor: pointer;
-                width: 30px;
-            }
-
-            .infoBox {
-                width: auto;
-                min-width: 260px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-            .infoBox-content, .cartBox-content {
-                width: 100%;
-                height: 100%;
-                max-height: 100%;
+                height: 100vh;
                 overflow: hidden;
-                padding: 9px 20px 20px;
-            }
-            .headerToolIcon h2 {
-                font-size: 15px;
-                text-align: center;
-                padding-bottom: 9px;
-                color: var(--text-color);
-                border-bottom: 1px solid #e7e7e7;
-            }
-            .infoBox-content ul {
-                padding: 0;
-                margin: 0;
-            }
-            .infoBox-content ul li {
-                list-style-type: none;
-            }
-            .infoBox-content ul li:first-child {
-                color: black;
-                padding-left: 7px;
-            }
-            .infoBox-list li a {
-                text-decoration: none;
-                font-size: 14px;
-                color: black;
-                padding: 0;
-            }
-            .infoBox-list li a:hover {
-                color: var(--text-color);
-            }
-            .infoBox-icon * {
-                color: black;
             }
 
-            .cartBox {
-                width: 340px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-            .noneProduct {
-                padding: 0 0 10px;
-            }
-            .shopping-cart-icon {
-                margin: 0 auto 7px;
-                display: block;
-                width: 15%;
-                height: 15%;
-            }
-            .noneProduct p {
-                text-align: center;
-                font-size: 14px;
-                margin: 0;
+            /* --- LAYOUT --- */
+            .login-wrapper {
+                height: 100vh;
+                width: 100%;
             }
 
-            .haveProduct {
-                margin-bottom: 8px;
-                display: none;
-            }
-            .miniCartImg {
-                padding-left: 0;
-            }
-            .miniCartDetail {
-                padding-right: 0;
+            /* LEFT SIDE - IMAGE */
+            .signup-image-side {
+                background-image: url('${pageContext.request.contextPath}/images/BG3.jpeg');
+                background-size: cover;
+                background-position: center;
                 position: relative;
+                height: 100%;
             }
-            .miniCartDetail p {
-                font-size: 0.8em;
-                color: black;
-                font-weight: bold;
-                padding-right: 20px;
-            }
-            .miniCartDetail p span {
-                display: block;
-                text-align: left;
-                color: #677279;
-                font-weight: normal;
-                font-size: 12px;
-            }
-            .miniCart-quan span{
-                float: left;
-                width: auto;
-                color: black;
-                margin-right: 12px;
-                padding: 6px 12px;
-                text-align: center;
-                line-height: 1;
-                font-weight: normal;
-                font-size: 13px;
-                background: #f7f7f7;
-            }
-            .miniCart-price span {
-                color: #677279;
-                float: left;
-                font-weight: 500;
-            }
-            .miniCartDetail .deleteBtn {
+            .signup-image-side::before {
+                content: '';
                 position: absolute;
-                top: 0;
-                right: 0px;
-                line-height: 20px;
-                text-align: center;
-                width: 19px;
-                height: 19px;
+                inset: 0;
+                background: rgba(0,0,0,0.3);
             }
-            .miniCartDetail .deleteBtn * {
-                color: black;
+            .brand-caption {
+                position: absolute;
+                bottom: 50px;
+                left: 50px;
+                color: #fff;
+                z-index: 2;
             }
-
-            .sumPrice {
-                border-top: 1px solid #e7e7e7;
-            }
-            .sumPrice table {
-                width: 100%;
-            }
-            .sumPrice td {
-                width: 50%;
-            }
-            .sumPrice .tbTextLeft, .tbTextRight {
-                padding: 10px 0;
-            }
-            .sumPrice .tbTextRight, span {
-                text-align: right;
-                color: red;
-                font-weight: bold;
-            }
-            .miniCartButton {
-                width: 100%;
-                border-radius: 2px;
-                width: 100%;
-                background-color: var(--bg-color);
-                border: none;
-                color: white;
-                font-size: 13px;
-                height: 30px;
-                font-weight: bold;
-            }
-            .cartButton td:first-child {
-                padding-right: 5px;
-            }
-            .cartButton td:last-child {
-                padding-left: 5px;
-            }
-            .cartButton .btnRight {
-                transition: 0.3s;
-            }
-            .cartButton .btnRight:hover {
-                background-color: white;
-                border: 1px solid var(--bg-color);
-                color: var(--text-color);
-                transition: 0.3s;
-            }
-
-            hr {
-                margin-top: 0;
+            .brand-caption h1 {
+                font-weight: 700;
+                letter-spacing: 2px;
                 margin-bottom: 10px;
             }
-
-            /* main content */
-            .main {
-                max-width: 1200px;
-                margin: 30px auto 50px;
+            .brand-caption p {
+                font-size: 1.1rem;
+                opacity: 0.9;
+                font-weight: 300;
             }
 
-            .mainContent {
-                max-width: 100%;
+            /* RIGHT SIDE - FORM */
+            .signup-form-side {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                background: #fff;
+                overflow-y: auto;
+                padding: 40px 0;
             }
 
-            .mainHeading {
-                text-align: center;
+            .signup-container {
+                width: 100%;
+                max-width: 650px;
+                padding: 20px 40px;
+            }
+
+            /* --- FORM ELEMENTS --- */
+            .page-title {
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--text-dark);
+                margin-bottom: 10px;
+            }
+            .page-subtitle {
+                color: var(--text-muted);
                 margin-bottom: 30px;
             }
 
-            .headingContent a {
-                text-decoration: none;
-                color: var(--text-color);
-                font-weight: bold;
-                box-sizing: border-box;
+            .form-floating > .form-control {
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                height: 55px;
             }
-
-            .productImg img {
-                width: 100%;
+            .form-floating > .form-control:focus {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 4px rgba(160, 129, 108, 0.1);
             }
-
-            .productDetail {
-                padding: 15px 12px 15px;
-                background-color: rgba(255, 255, 255, 0.83);
-                position: relative;
-                transition: 0.3s;
+            .form-floating label {
+                color: #999;
             }
-
-            .productDetail h3 {
-                font-size: 15px;
-                color: black;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .productDetail p {
-                margin: 0;
-            }
-
-            .price {
-                font-weight: bold;
-                color: black;
-            }
-
-            .productButton {
-                transition: 0.3s;
-                color: white;
-                width: 90%;
-                display: flex;
-                text-align: center;
-                padding: 5px;
-                position: absolute;
-                display: none;
-                transform: translateY(20%);
-                background-color: var(--bg-color);
-                border-radius: 4px;
-                justify-content: center;
-                line-height: 2;
-            }
-            .productDetail:hover .productButton {
-                display: flex;
-            }
-            .productDetail:hover {
-                transform: translateY(-50%);
-            }
-            .productButton *{
-                width: 50%;
-            }
-            .productButton .right{
-                background: white;
-                position: relative;
-                color: white;
-                background: transparent;
-                border-radius: 4px;
-                overflow: hidden;
-                border: none;
-                font-weight: bold;
-            }
-            .addBtn {
-                border: none;
-                background-color: var(--bg-color);
-                border-radius: 4px;
-            }
-            .addBtn span {
-                color: white;
-            }
-            .productButton .right:hover {
-                color:#a0816c;
-            }
-
-            .right span {
-                background-color: white;
-                height: 100%;
-                width: 0;
-                position: absolute;
-                left: 0;
-                bottom: 0;
-                transition: 0.4s;
-                z-index: -1;
-            }
-
-            .productButton .right:hover span {
-                width: 100%;
-            }
-            /* END main content */
-
-            /* footer */
-            footer {
-                background-color: #f5f5f5;
-            }
-
-            .content-footer {
-                text-align: center;
-                padding: 30px;
-            }
-
-            .content-footer h3 {
-                color: #a0816c;
-            }
-
-            .bct {
-                width: 50%;
-            }
-
-            footer p {
-                font-size: 15px;
-            }
-
-            footer a {
-                text-decoration: none;
-                color: rgb(151, 143, 137);
-            }
-
-            .items-footer {
-                margin: 5%;
-            }
-
-            #highlight {
-                color: #a0816c;
-            }
-
-            #img-footer img {
-                padding: 0;
-            }
-
-            #img-footer {
-                margin: 0 auto;
-            }
-
-            .phone-icon {
-                width: 100%;
-                height: 100%;
-            }
-
-            .contact-item {
-                display: flex;
-            }
-
-            .contact-link {
-                margin: 5px;
-                border: 1px solid #a0816c;
-                border-radius: 5px;
-                padding: 5px;
-
-            }
-
-            .contact-link:hover {
-                background-color: var(--bg-color);
-
-                .contact-icon * {
-                    color: white;
-                }
-            }
-
-            /* END footer */
-
-            @media (max-width: 768px) and (min-width: 601px) {
-                .headerListItem {
-                    font-size: 12px;
-                    height: 18px;
-                }
-                .headerListItem:hover {
-                    font-size: 13px;
-                }
-                .dropdown-icon {
-                    height: 18px;
-                }
-                .productDetail h3 {
-                    height: 50px;
-                }
-                .infoBox {
-                    right:  0;
-                }
-            }
-
-            #wrapper {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                height: 100%;
-
-            }
-            .bao {
-                text-align: center;
-                margin-top: 42px;
-                width:48%;
-                margin:0 auto;
-                margin-top:42px;
-            }
-            #wrapper h2 {
-                color: #a0816c;
-                margin-top: 0px;
-                font-size: 28px;
-                font-family: "Quicksand", sans-serif;
-            }
-
-            form {
-                border: 1px solid #a0816c;
-                border-radius: 5px;
-                padding: 0px;
-                min-height: 80vh;
-            }
-            .form-group input{
-                margin: 8px 0;
-                height: fit-content;
-                width: 300px;
-                outline: none;
-                border: 2px solid#a0816c;
-                padding: 5px;
-                border-radius: 0;
-                font-size: inherit;
-            }
-            .check label {
-                display: flex;
-            }
-            #wrapper h4 {
-                text-align: left;
-                font-family: "Quicksand", sans-serif;
-                font-size: 15px;
-                color: #9e9e9e;
-            }
-            .btn-register{
-                background: #a0816c;
-                color: #fff;
-                padding: 10px 0;
-                outline: none;
-                width: 40%;
-                height: fit-content;
-                font-size: 14px;
-                border: none;
-
-            }
-            .back-button {
-                display: inline-block;
-                background-color: #fff;
-                color:#a0816c;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                text-decoration: none;
-                font-size: 14px;
-                font-family: "Quicksand", sans-serif;
-            }
-
-            .back-arrow {
+            .form-floating label i {
                 margin-right: 5px;
+                color: var(--primary-color);
             }
 
-            .highlight {
-                color: #7069f0;
+            /* === VALIDATION ERROR STYLES === */
+            label.error {
+                color: #dc3545; /* Màu đỏ */
+                font-size: 0.85rem;
+                margin-top: 5px;
+                margin-left: 5px;
+                display: block;
+                font-weight: 600;
             }
-            .foot {
+
+            .form-floating label.error {
+                position: static;
+                transform: none;
+                opacity: 1;
+                padding-top: 5px;
+
+                /* --- CÁC DÒNG SỬA LỖI 3 CHẤM --- */
+                white-space: normal;       /* Cho phép xuống dòng */
+                overflow: visible;         /* Hiển thị toàn bộ nội dung, không cắt */
+                text-overflow: clip;       /* Bỏ dấu 3 chấm */
+                height: auto;              /* Chiều cao tự động dãn theo nội dung */
+                width: 100%;               /* Chiếm hết chiều ngang */
+                line-height: 1.2;          /* Giãn dòng một chút cho dễ đọc nếu tin nhắn dài */
+            }
+            .form-control.error {
+                border-color: #dc3545;
+                background-image: none !important;
+            }
+
+            .btn-primary-custom {
+                background-color: var(--primary-color);
+                border: none;
+                color: white;
+                padding: 15px;
                 width: 100%;
+                font-weight: 700;
+                border-radius: 12px;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(160, 129, 108, 0.2);
+                /* Tăng margin-top lên một chút để bù lại khoảng trống của ReCaptcha nếu muốn, hiện tại để 20px cho thoáng */
+                margin-top: 20px;
             }
-            .btn-register:hover {
-                background-color:#8d481b;
+            .btn-primary-custom:hover {
+                background-color: var(--primary-hover);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(160, 129, 108, 0.3);
             }
-            .back-arrow:hover{
-                color:#642d08;
+
+            /* Back Button */
+            .btn-back-home {
+                position: absolute;
+                top: 30px;
+                left: 30px;
+                text-decoration: none;
+                color: var(--text-dark);
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 20px;
+                border-radius: 30px;
+                transition: all 0.3s ease;
+                z-index: 10;
             }
-            .back-button:hover{
-                color:#642d08;
+            .btn-back-home:hover {
+                color: #fff !important;
+                background-color: var(--primary-color);
+                transform: translateX(-5px);
+                box-shadow: 0 4px 10px rgba(160, 129, 108, 0.3);
             }
-            .error {
-                color: red;
+
+            /* ĐÃ XÓA CSS RECAPTCHA WRAPPER */
+
+            /* === TOAST NOTIFICATION === */
+            .toast-alert {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                padding: 15px 20px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+                border-left: 5px solid;
+                max-width: 350px;
+            }
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(120%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOutRight {
+                from {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateX(120%);
+                }
+            }
+            .toast-alert.hide-toast {
+                animation: slideOutRight 0.5s ease-in forwards;
+            }
+            .toast-alert.danger {
+                border-color: #dc3545;
+            }
+            .toast-alert.danger i {
+                color: #dc3545;
+                font-size: 1.5rem;
+            }
+            .toast-message {
+                font-weight: 600;
+                color: #333;
+                font-size: 15px;
+            }
+            .toast-close {
+                margin-left: auto;
+                cursor: pointer;
+                color: #999;
+            }
+
+            /* Responsive */
+            @media (max-width: 992px) {
+                .signup-image-side {
+                    display: none;
+                }
+                .signup-form-side {
+                    justify-content: center;
+                    height: 100vh;
+                }
+                .signup-container {
+                    padding: 80px 20px 40px 20px;
+                }
+                .btn-back-home {
+                    top: 20px;
+                    left: 20px;
+                }
             }
         </style>
-
     </head>
     <body>
-        <!-- header -->
-        <header class="header">
-            <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND</strong></div>
-            <div class="headerContent">
-                <div class="logo"><a href="/headerDemo.html">GIO</a></div>
-                <nav>
-                    <ul class="headerList">
-                        <li class="headerListItem"><a href="/headerDemo.html">Home page</a></li>
-                        <li class="headerListItem">
-                            <a href="">Men's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="">T-shirt</a></li>
-                                <li><a href="">Shirt</a></li>
-                                <li><a href="">Jackets, sweatshirts, sweaters</a></li>
-                                <li><a href="">Long pants</a></li>
-                                <li><a href="">Shorts</a></li>
-                                <li><a href="">Discount</a></li>
-                            </ul>
-                        </li>
-                        <li class="headerListItem">
-                            <a href="">Women's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="">T-shirt</a></li>
-                                <li><a href="">Shirt</a></li>
-                                <li><a href="">Jackets, sweatshirts, sweaters</a></li>
-                                <li><a href="">Long pants</a></li>
-                                <li><a href="">Skirt</a></li>
-                                <li><a href="">Dress</a></li>
-                                <li><a href="">Discount</a></li>
-                            </ul>
-                        </li>
-                        <li class="headerListItem"><a href="">Accessory</a></li>
-                        <li class="headerListItem">
-                            <a href="">Information<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="/Project_SWP391_Group4/aboutUs.jsp">About Us</a></li>
 
-                                <li><a href="/Project_SWP391_Group4/contact.jsp">Contact</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderView">View order</a></li>
-                                <li><a href="/Project_SWP391_Group4/policy.jsp">Exchange policy</a></li>
-                                <li><a href="/Project_SWP391_Group4/orderHistoryView">Order's history</a></li>
-                        </li>
-                    </ul>
-                </nav>
-                <div class="headerTool">
-                    <div class="headerToolIcon">
-                        <i class="bi bi-search icon" onclick="toggleBox('box1')"></i>
-                        <div class="searchBox box" id="box1">
+        <c:if test="${not empty message}">
+            <div class="toast-alert danger" id="toast-alert">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <div class="toast-message">${message}</div>
+                <i class="bi bi-x-lg toast-close" onclick="closeToast()"></i>
+            </div>
+        </c:if>
 
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center p-4 border-0 shadow">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
                         </div>
-                    </div>
-                    <div class="headerToolIcon">
-                        <i class="bi bi-person icon" onclick="toggleBox('box2')"></i>
-                        <!-- khi chưa login thì khi nhấp vào sẽ chuyển tới trang login /ps: tui khum bít làm :< -->
+                        <h3 class="fw-bold mb-2">Sign Up Successful!</h3>
+                        <p class="text-muted mb-4">Your account has been created successfully.<br>Welcome to GIO Shop.</p>
 
-                        <a href="http://localhost:8080/Project_SWP391_Group4/profile"><i class="bi bi-person icon"></i></a>
-                        <!-- khi chưa login thì khi nhấp vào sẽ chuyển tới trang login <
-                        <!-- khi đã login thì khi nhấp vào icon -> box này hiện ra -->
-                        <div class="infoBox box" id="box2">
-                            <div class="infoBox-content">
-                                <h2>ACCOUNT INFORMATION</h2>
-                                <ul class="infoBox-list">
-                                    <li>Username</li>
-                                    <li><i class="infoBox-icon bi bi-dot"></i><a href="/login.html">My account</a></li>
-                                    <li><i class="infoBox-icon bi bi-dot"></i><a href="">Address</a></li>
-                                    <li><i class="infoBox-icon bi bi-dot"></i><a href="">Log out</a></li>
-                                </ul>
-                            </div>
-                        </div>
+                        <a href="${pageContext.request.contextPath}/login.jsp" class="btn btn-primary-custom w-100">
+                            OK, Go to Login
+                        </a>
                     </div>
-                    <div class="headerToolIcon">
-                        <i class="bi bi-cart2 icon" onclick="toggleBox('box3')"></i>
-                        <div class="cartBox box" id="box3">
-                            <div class="cartBox-content">
-                                <h2>SHOPPING CART</h2>
-                                <div class="noneProduct">
-                                    <div class="cartIcon"><i class="bi bi-cart2 icon"></i></div>
-                                    <p>There are currently no products</p>
-                                </div>
-                                <!-- nếu có product thì haveProduct display: block -->
-                                <div class="haveProduct">
-                                    <div class="container">
-                                        <div class="row">
-                                            <div class="col-md-4 miniCartImg">
-                                                <img src="images/img1.jpg" alt="">
-                                            </div>
-                                            <div class="col-md-8 miniCartDetail">
-                                                <p>DOTAI - Áo thun wash Cafe Clementine 8122
-                                                    <span>Color / size</span>
-                                                </p>
-                                                <div class="miniCart-quan">
-                                                    <span>1</span>
-                                                </div>
-                                                <div class="miniCart-price">
-                                                    <span>000,000 VND</span>
-                                                </div>
-                                                <div class="deleteBtn">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </div>
-                                            </div>
-                                        </div>
+                </div>
+            </div>
+        </div>
+
+        <a href="${pageContext.request.contextPath}" class="btn-back-home">
+            <i class="bi bi-arrow-left"></i> Back to Home
+        </a>
+
+        <div class="container-fluid login-wrapper g-0">
+            <div class="row g-0 h-100">
+
+                <div class="col-lg-5 signup-image-side" data-aos="fade-right" data-aos-duration="1000">
+                    <div class="brand-caption">
+                        <h1>Join GIO</h1>
+                        <p>Experience the art of timeless fashion.</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-7 signup-form-side">
+                    <div class="signup-container" data-aos="fade-up" data-aos-duration="800" data-aos-delay="200">
+
+                        <h2 class="page-title">Create Account</h2>
+                        <p class="page-subtitle">Fill in the details below to become a member.</p>
+
+                        <form action="${pageContext.request.contextPath}/login/signup" method="POST" id="signUp-form">
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="username" name="username" placeholder="Username" value="${inputUsername}">
+                                        <label for="username"><i class="bi bi-person"></i> Username</label>
                                     </div>
                                 </div>
-                                <div class="sumPrice">
-                                    <table>
-                                        <tr>
-                                            <td class="tbTextLeft">TOTAL MONEY:</td>
-                                            <td class="tbTextRight">0<span>VND</span></td>
-                                        </tr>
-                                        <tr class="cartButton">
-                                            <td><button class="miniCartButton" onclick="redirectCartPage()">View cart</button></td>
-                                            <td><button class="miniCartButton btnRight">Pay</button></td>
-                                        </tr>
-                                    </table>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Full Name" value="${inputFullName}">
+                                        <label for="fullName"><i class="bi bi-card-text"></i> Full Name</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                                        <label for="password"><i class="bi bi-lock"></i> Password</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="password" class="form-control" id="rePassword" name="rePassword" placeholder="Confirm Password">
+                                        <label for="rePassword"><i class="bi bi-check2-circle"></i> Confirm Password</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="email" class="form-control" id="email" name="email" placeholder="Email" value="${inputEmail}">
+                                        <label for="email"><i class="bi bi-envelope"></i> Email</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Phone" value="${inputPhone}">
+                                        <label for="phoneNumber"><i class="bi bi-telephone"></i> Phone</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="address" name="address" placeholder="Address" value="${inputAddress}">
+                                        <label for="address"><i class="bi bi-geo-alt"></i> Address</label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <hr width="100%" , color="#d0a587" />
-        </header>
-        <!-- end header -->
+                            <button type="submit" class="btn-primary-custom btn-register">SIGN UP</button>
+                        </form>
 
-        <div id="wrapper">
-            <form action="${pageContext.request.contextPath}/login/signup" method="post" id="signUp-form">
-
-                <div class="bao">
-                    <h2>Register An Account</h2>
-                    <hr>
-                    <div class="form-group">
-                        <label for="fullname"></label>
-                        <input type="text" id="fullName" name="fullName" placeholder="Fullname" required true>
+                        <p class="text-center mt-4 text-muted">
+                            Already have an account? <a href="${pageContext.request.contextPath}/login.jsp" class="fw-bold text-decoration-none" style="color: var(--primary-color);">Log in</a>
+                        </p>
                     </div>
-                    <div class="form-group">
-                        <label for="username"></label>
-                        <input type="text" id="username" name="username" placeholder="Username" required true>
-                    </div>
-                    <div class="form-group">
-                        <label for="password"></label>
-                        <input type="password" id="password" name="password" placeholder="Password" required true>
-                    </div>
-                    <div class="form-group">
-                        <label for="email"></label>
-                        <input type="email" id="email" name="email" placeholder="Email" required true>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="address"></label>
-                        <input type="text" id="address" name="address" placeholder="Address" required true>
-                    </div>          
-                    <div class="form-group">
-                        <label for="phone"></label>
-                        <input type="tel" id="phoneNumber"  name="phoneNumber" placeholder="Phone number" pattern="[0]{1}[0-9]{9}" required true>
-                        <div class="policyText">
-                            <h4>This site is protected by reCAPTCHA and the Google <a href="#" class="highlight">Privacy Policy</a> and <a href="#" class="highlight">Terms of Service</a> apply.</h4>
-                        </div>
-                        <div class="g-recaptcha" data-sitekey="6LdZuIkpAAAAAJkyWF_aBPQcctXb-PqjyNorBG28"></div><br>
-                        <div id="error">${message}</div>
-                    </div>
-                    <button class="btn-register">Register</button>
-                </div>
-        </div>
-        <a href="login.jsp" class="back-button">
-            <span class="back-arrow">&larr;</span>Quay lại trang chủ
-        </a>
-    </form>
-</div>
-
-<!-- footer -->
-<footer>
-    <div class="content-footer">
-        <h3 id="highlight">Follow us on Instagram</h3>
-        <p>@dotai.vn & @fired.vn</p>
-    </div>
-
-    <div class="row" id="img-footer">
-        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_1_img.jpg?v=55" alt="">
-        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_2_img.jpg?v=55" alt="">
-        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_3_img.jpg?v=55" alt="">
-        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_4_img.jpg?v=55" alt="">
-        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_5_img.jpg?v=55" alt="">
-        <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_6_img.jpg?v=55" alt="">
-    </div>
-
-    <div class="items-footer">
-        <div class="row">
-            <div class="col-sm-3">
-                <h4 id="highlight">About Gio</h4>
-                <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
-                <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..." class="bct">
-            </div>
-            <div class="col-sm-3">
-                <h4 id="highlight">Contact</h4>
-                <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
-                <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                <p><b>Email:</b> info@gio.vn</p>
-            </div>
-            <div class="col-sm-3">
-                <h4 id="highlight">Customer support</h4>
-                <ul class="CS">
-                    <li><a href="">Search</a></li>
-                    <li><a href="">Introduce</a></li>
-                </ul>
-            </div>
-            <div class="col-sm-3">
-                <h4 id="highlight">Customer care</h4>
-                <div class="row phone">
-                    <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
-                    <div class="col-9"> 
-                        <h4 id="highlight">0123.456.789</h4>
-                        <a href="">info@gio.vn</a>
-                    </div>
-                </div>
-                <h5 id="highlight">Follow Us</h5>
-                <div class="contact-item">
-                    <a href="" class="contact-link"><i class="bi bi-facebook contact-icon"></i></a>
-                    <a href="" class="contact-link"><i class="bi bi-instagram contact-icon"></i></a>
                 </div>
             </div>
         </div>
-    </div>
 
+        <script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
+        <script src="${pageContext.request.contextPath}/js/jquery.validate.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-</footer>
-<!-- end footer -->
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
+        <script type="text/javascript">
+                    // Init Animation
+                    AOS.init();
 
-<script src="js/jquery-3.7.0.min.js"></script>
-<script src="js/jquery.validate.min.js"></script>
-<script src="js/signUp.js"></script>
-</body>
+                    // Toast Logic
+                    function closeToast() {
+                        var alert = document.getElementById('toast-alert');
+                        if (alert) {
+                            alert.classList.add('hide-toast');
+                            alert.addEventListener('animationend', function () {
+                                alert.style.display = 'none';
+                            });
+                        }
+                    }
+
+                    $(document).ready(function () {
+                        // Auto close toast
+                        setTimeout(function () {
+                            closeToast();
+                        }, 5000);
+
+                        // --- CONFIG VALIDATION ---
+                        $("#signUp-form").validate({
+                            // Quy tắc
+                            rules: {
+                                username: {
+                                    required: true,
+                                    minlength: 5,
+                                    maxlength: 20
+                                },
+                                fullName: {
+                                    required: true,
+                                    minlength: 2
+                                },
+                                password: {
+                                    required: true,
+                                    minlength: 6
+                                },
+                                rePassword: {
+                                    required: true,
+                                    equalTo: "#password" // Bắt buộc phải giống ô password
+                                },
+                                email: {
+                                    required: true,
+                                    email: true
+                                },
+                                phoneNumber: {
+                                    required: true,
+                                    digits: true, // Chỉ được nhập số
+                                    minlength: 10,
+                                    maxlength: 11
+                                },
+                                address: {
+                                    required: true
+                                }
+                            },
+                            // Thông báo lỗi (Có thể đổi sang tiếng Việt)
+                            messages: {
+                                username: {
+                                    required: "Please enter your username",
+                                    minlength: "Username must be at least 5 characters"
+                                },
+                                fullName: "Please enter your full name",
+                                password: {
+                                    required: "Please provide a password",
+                                    minlength: "Your password must be at least 6 characters"
+                                },
+                                rePassword: {
+                                    required: "Please confirm your password",
+                                    equalTo: "Passwords do not match"
+                                },
+                                email: "Please enter a valid email address",
+                                phoneNumber: {
+                                    required: "Please enter your phone number",
+                                    digits: "Please enter only digits",
+                                    minlength: "Phone number must be at least 10 digits"
+                                },
+                                address: "Please enter your address"
+                            },
+                            // Cấu hình vị trí hiện lỗi
+                            errorElement: "label",
+                            errorPlacement: function (error, element) {
+                                // Nếu dùng form-floating, error sẽ nằm trong div form-floating (sau input và label)
+                                error.insertAfter(element.next("label"));
+                            },
+                            highlight: function (element, errorClass, validClass) {
+                                $(element).addClass("error").removeClass("valid");
+                            },
+                            unhighlight: function (element, errorClass, validClass) {
+                                $(element).removeClass("error").addClass("valid");
+                            },
+
+                            // Xử lý khi form hợp lệ
+                            submitHandler: function (form) {
+                                // Hiệu ứng loading nút bấm
+                                $('.btn-register').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...').prop('disabled', true);
+                                form.submit();
+                            }
+                        });
+
+                        // Logic Popup Success
+            <c:if test="${not empty registerSuccess}">
+                        var myModal = new bootstrap.Modal(document.getElementById('successModal'));
+                        myModal.show();
+            </c:if>
+                    });
+        </script>
+    </body>
 </html>

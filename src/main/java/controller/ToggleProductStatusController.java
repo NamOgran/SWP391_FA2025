@@ -1,6 +1,6 @@
 /*
  * File: controller (java).txt
- * Nội dung: ToggleProductStatusServlet.java (ĐÃ CẬP NHẬT)
+ * Nội dung: ToggleProductStatusController.java (ĐÃ CẬP NHẬT)
  */
 package controller;
 
@@ -22,7 +22,7 @@ import jakarta.servlet.http.HttpSession;
 // Import HttpSession
 
 @WebServlet(name = "ToggleProductStatusServlet", urlPatterns = {"/toggleProductStatus"})
-public class ToggleProductStatusServlet extends HttpServlet {
+public class ToggleProductStatusController extends HttpServlet {
 
     // NEW: Utility method to encode URL parameters
     private String encode(String value) {

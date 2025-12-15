@@ -1,27 +1,26 @@
 package DAO;
 
-import entity.Promo;
+import entity.Voucher;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * 
- */
-public class PromoDAO extends DBConnect.DBConnect {
+public class VoucherDAO extends DBConnect.DBConnect {
 
-    public List<Promo> getAll() {
-        List<Promo> list = new ArrayList<>();
-        String sql = "SELECT * FROM promo";
+    // IMPORTANT: Make sure Entity Voucher.java is also updated to use String voucherID!
+
+    public List<Voucher> getAll() {
+        List<Voucher> list = new ArrayList<>();
+        // [FIX] Use voucher_id (varchar)
+        String sql = "SELECT * FROM voucher";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
-                Promo p = new Promo(
-                        rs.getInt("promo_id"),
-                        rs.getInt("promo_percent"),
+                Voucher p = new Voucher(
+                        rs.getString("voucher_id"),   // [FIX] getString
+                        rs.getInt("voucher_percent"),
                         rs.getDate("start_date"),
                         rs.getDate("end_date"));
                 list.add(p);
@@ -32,23 +31,19 @@ public class PromoDAO extends DBConnect.DBConnect {
         return list;
     }
 
-    // === START: NEW PAGINATION METHODS ===
+    // === PAGINATION METHODS ===
 
-    /**
-     * Lấy tổng số khuyến mãi (hỗ trợ tìm kiếm)
-     * @param searchKeyword Từ khóa tìm kiếm (theo %)
-     * @return Tổng số khuyến mãi
-     */
-    public int getTotalPromoCount(String searchKeyword) {
-        String sql = "SELECT COUNT(*) FROM promo";
+    public int getTotalVoucherCount(String searchKeyword) {
+        String sql = "SELECT COUNT(*) FROM voucher";
+        // Search by ID or Percent
         if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
-            // Đảm bảo tìm kiếm hoạt động trên SQL Server (chuyển int sang varchar)
-            sql += " WHERE CAST(promo_percent AS VARCHAR) LIKE ?";
+            sql += " WHERE voucher_id LIKE ? OR CAST(voucher_percent AS VARCHAR) LIKE ?";
         }
 
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
                 st.setString(1, "%" + searchKeyword + "%");
+                st.setString(2, "%" + searchKeyword + "%");
             }
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
@@ -56,32 +51,27 @@ public class PromoDAO extends DBConnect.DBConnect {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Lỗi PromoDAO.getTotalPromoCount: " + e.getMessage());
+            System.err.println("Error VoucherDAO.getTotalVoucherCount: " + e.getMessage());
         }
         return 0;
     }
 
-    /**
-     * Lấy danh sách khuyến mãi đã phân trang (hỗ trợ tìm kiếm)
-     * @param searchKeyword Từ khóa tìm kiếm (theo %)
-     * @param pageIndex Trang hiện tại (bắt đầu từ 1)
-     * @param pageSize Số lượng mỗi trang
-     * @return Danh sách Promo
-     */
-    public List<Promo> getPaginatedPromos(String searchKeyword, int pageIndex, int pageSize) {
-        List<Promo> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM promo");
+    public List<Voucher> getPaginatedVouchers(String searchKeyword, int pageIndex, int pageSize) {
+        List<Voucher> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM voucher");
 
         if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
-            sql.append(" WHERE CAST(promo_percent AS VARCHAR) LIKE ?");
+            sql.append(" WHERE voucher_id LIKE ? OR CAST(voucher_percent AS VARCHAR) LIKE ?");
         }
 
-        sql.append(" ORDER BY promo_id DESC"); // Sắp xếp mặc định
-        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"); // Phân trang SQL Server
-
+        // [FIX] Sort by voucher_id instead of int ID
+        sql.append(" ORDER BY voucher_id ASC");
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        
         try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
             int paramIndex = 1;
             if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                st.setString(paramIndex++, "%" + searchKeyword + "%");
                 st.setString(paramIndex++, "%" + searchKeyword + "%");
             }
 
@@ -91,34 +81,35 @@ public class PromoDAO extends DBConnect.DBConnect {
 
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
-                    Promo p = new Promo(
-                            rs.getInt("promo_id"),
-                            rs.getInt("promo_percent"),
+                    Voucher p = new Voucher(
+                            rs.getString("voucher_id"),   // [FIX] getString
+                            rs.getInt("voucher_percent"),
                             rs.getDate("start_date"),
                             rs.getDate("end_date"));
                     list.add(p);
                 }
             }
         } catch (Exception e) {
-            System.err.println("Lỗi PromoDAO.getPaginatedPromos: " + e.getMessage());
+            System.err.println("Error VoucherDAO.getPaginatedVouchers: " + e.getMessage());
         }
         return list;
     }
     
-    // === END: NEW PAGINATION METHODS ===
+    // === CRUD METHODS ===
 
-
-    public boolean addIfNotExist(int percent) {
-        String sql
-                = "IF NOT EXISTS (SELECT 1 FROM promo WHERE promo_percent = ?)\n"
-                + "BEGIN\n"
-                + "  INSERT INTO promo (promo_percent, start_date, end_date)\n"
-                + "  VALUES (?,'2024-02-26','2024-04-01')\n"
-                + "END";
+    // [FIX] This method was logic-heavy based on Int ID. 
+    // Replaced logic: Add voucher if the String ID doesn't exist.
+    public boolean addIfNotExist(String voucherId, int percent) {
+        String sql = "IF NOT EXISTS (SELECT 1 FROM voucher WHERE voucher_id = ?) "
+                   + "BEGIN "
+                   + "  INSERT INTO voucher (voucher_id, voucher_percent, start_date, end_date) "
+                   + "  VALUES (?, ?, CAST(GETDATE() AS DATE), DATEADD(month, 1, GETDATE())) "
+                   + "END";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, percent);
-            st.setInt(2, percent);
+            st.setString(1, voucherId);
+            st.setString(2, voucherId);
+            st.setInt(3, percent);
             st.executeUpdate();
             return true;
         } catch (Exception e) {
@@ -127,75 +118,81 @@ public class PromoDAO extends DBConnect.DBConnect {
         return false;
     }
 
-    public int getIdPromo(int percent) {
-        String sql = "SELECT promo_id FROM promo WHERE promo_percent = ?";
-        int id = 0;
+    // [FIX] Returns String ID.
+    // If logic needs to find an ID by percent (which is ambiguous), return first match.
+    public String getIdVoucher(int percent) {
+        String sql = "SELECT TOP 1 voucher_id FROM voucher WHERE voucher_percent = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, percent);
             ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                id = rs.getInt("promo_id");
+            if (rs.next()) {
+                return rs.getString("voucher_id");
             }
         } catch (Exception e) {
             System.out.println(e);
         }
-        return id;
+        return null;
     }
 
-    // Thêm promo mới
-    public void addPromo(Promo p) {
-        String sql = "INSERT INTO promo (promo_percent, start_date, end_date) VALUES (?, ?, ?)";
+    // Add new voucher
+    public void addVoucher(Voucher p) {
+        // [FIX] Must insert ID explicitly because it's not identity
+        String sql = "INSERT INTO voucher (voucher_id, voucher_percent, start_date, end_date) VALUES (?, ?, ?, ?)";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, p.getPromoPercent());
+            st.setString(1, p.getVoucherID()); // [FIX] setString
+            st.setInt(2, p.getVoucherPercent());
+            st.setDate(3, new java.sql.Date(p.getStartDate().getTime()));
+            st.setDate(4, new java.sql.Date(p.getEndDate().getTime()));
+            st.executeUpdate();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    // Update voucher
+    public void updateVoucher(Voucher p) {
+        // [FIX] Where clause uses String ID
+        String sql = "UPDATE voucher SET voucher_percent = ?, start_date = ?, end_date = ? WHERE voucher_id = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, p.getVoucherPercent());
             st.setDate(2, new java.sql.Date(p.getStartDate().getTime()));
             st.setDate(3, new java.sql.Date(p.getEndDate().getTime()));
+            st.setString(4, p.getVoucherID()); // [FIX] setString
             st.executeUpdate();
         } catch (Exception e) {
             System.out.println(e);
         }
     }
 
-    // Cập nhật promo
-    public void updatePromo(Promo p) {
-        String sql = "UPDATE promo SET promo_percent = ?, start_date = ?, end_date = ? WHERE promo_id = ?";
+    // Delete voucher
+    public void deleteVoucher(String id) { // [FIX] param String
+        String sql = "DELETE FROM voucher WHERE voucher_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, p.getPromoPercent());
-            st.setDate(2, new java.sql.Date(p.getStartDate().getTime()));
-            st.setDate(3, new java.sql.Date(p.getEndDate().getTime()));
-            st.setInt(4, p.getPromoID());
+            st.setString(1, id); // [FIX] setString
             st.executeUpdate();
         } catch (Exception e) {
             System.out.println(e);
         }
     }
 
-    // Xóa promo
-    public void deletePromo(int id) {
-        String sql = "DELETE FROM promo WHERE promo_id = ?";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, id);
-            st.executeUpdate();
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    // Tìm kiếm promo theo phần trăm
-    public List<Promo> searchPromo(String keyword) {
-        List<Promo> list = new ArrayList<>();
-        String sql = "SELECT * FROM promo WHERE CAST(promo_percent AS VARCHAR) LIKE ?";
+    // Search
+    public List<Voucher> searchVoucher(String keyword) {
+        List<Voucher> list = new ArrayList<>();
+        // Search by ID or Percent
+        String sql = "SELECT * FROM voucher WHERE voucher_id LIKE ? OR CAST(voucher_percent AS VARCHAR) LIKE ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, "%" + keyword + "%");
+            st.setString(2, "%" + keyword + "%");
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
-                list.add(new Promo(
-                        rs.getInt("promo_id"),
-                        rs.getInt("promo_percent"),
+                list.add(new Voucher(
+                        rs.getString("voucher_id"),
+                        rs.getInt("voucher_percent"),
                         rs.getDate("start_date"),
                         rs.getDate("end_date")
                 ));
@@ -206,17 +203,17 @@ public class PromoDAO extends DBConnect.DBConnect {
         return list;
     }
 
-    // Lấy promo theo ID (không kiểm tra hiệu lực)
-    public Promo getById(int id) {
-        String sql = "SELECT promo_id, promo_percent, start_date, end_date FROM promo WHERE promo_id = ?";
+    // Get by ID
+    public Voucher getById(String id) { // [FIX] param String
+        String sql = "SELECT * FROM voucher WHERE voucher_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, id);
+            st.setString(1, id);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
-                return new Promo(
-                        rs.getInt("promo_id"),
-                        rs.getInt("promo_percent"),
+                return new Voucher(
+                        rs.getString("voucher_id"),
+                        rs.getInt("voucher_percent"),
                         rs.getDate("start_date"),
                         rs.getDate("end_date")
                 );
@@ -227,12 +224,12 @@ public class PromoDAO extends DBConnect.DBConnect {
         return null;
     }
 
-    // Kiểm tra có tồn tại promo theo ID không
-    public boolean existsById(int id) {
-        String sql = "SELECT 1 FROM promo WHERE promo_id = ?";
+    // Check exist
+    public boolean existsById(String id) { // [FIX] param String
+        String sql = "SELECT 1 FROM voucher WHERE voucher_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, id);
+            st.setString(1, id);
             ResultSet rs = st.executeQuery();
             return rs.next();
         } catch (Exception e) {
@@ -241,15 +238,15 @@ public class PromoDAO extends DBConnect.DBConnect {
         return false;
     }
 
-    // Lấy phần trăm giảm theo ID (tiện dùng nhanh)
-    public Integer getPercentById(int id) {
-        String sql = "SELECT promo_percent FROM promo WHERE promo_id = ?";
+    // Get percent
+    public Integer getPercentById(String id) { // [FIX] param String
+        String sql = "SELECT voucher_percent FROM voucher WHERE voucher_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, id);
+            st.setString(1, id);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
-                return rs.getInt("promo_percent");
+                return rs.getInt("voucher_percent");
             }
         } catch (Exception e) {
             System.out.println(e);
@@ -257,22 +254,20 @@ public class PromoDAO extends DBConnect.DBConnect {
         return null;
     }
 
-    // Lấy Promo theo ID nhưng CHỈ khi còn hiệu lực ngày (lọc ở SQL - SQL Server)
-    public Promo getActiveById(int id) {
-        String sql
-                = "SELECT promo_id, promo_percent, start_date, end_date "
-                + "FROM promo "
-                + "WHERE promo_id = ? "
-                + "  AND (start_date IS NULL OR CAST(GETDATE() AS DATE) >= CAST(start_date AS DATE)) "
-                + "  AND (end_date   IS NULL OR CAST(GETDATE() AS DATE) <= CAST(end_date   AS DATE))";
+    // Get Active Voucher
+    public Voucher getActiveById(String id) { // [FIX] param String
+        String sql = "SELECT * FROM voucher "
+                   + "WHERE voucher_id = ? "
+                   + "  AND (start_date IS NULL OR CAST(GETDATE() AS DATE) >= CAST(start_date AS DATE)) "
+                   + "  AND (end_date   IS NULL OR CAST(GETDATE() AS DATE) <= CAST(end_date   AS DATE))";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, id);
+            st.setString(1, id);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
-                return new Promo(
-                        rs.getInt("promo_id"),
-                        rs.getInt("promo_percent"),
+                return new Voucher(
+                        rs.getString("voucher_id"),
+                        rs.getInt("voucher_percent"),
                         rs.getDate("start_date"),
                         rs.getDate("end_date")
                 );
@@ -283,29 +278,20 @@ public class PromoDAO extends DBConnect.DBConnect {
         return null;
     }
 
-    // --- THÊM VÀO CUỐI FILE PromoDAO ---
-    /**
-     * Lấy promo còn hiệu lực (lọc theo ngày ngay tại DB).
-     * PostgreSQL dùng
-     * CURRENT_DATE.
-     */
-    public Promo getActiveByIdDb(int id) {
-        String sql
-                = "SELECT promo_id, promo_percent, start_date, end_date "
-                + "FROM public.promo "
-                + // dùng public.promo để chắc chắn đúng schema
-          
-                "WHERE promo_id = ? "
-                + "  AND (start_date IS NULL OR start_date <= CURRENT_DATE) "
-                + "  AND (end_date   IS NULL OR end_date   >= CURRENT_DATE)";
+    // Fallback Active Voucher
+    public Voucher getActiveByIdDb(String id) { // [FIX] param String
+        String sql = "SELECT * FROM voucher "
+                   + "WHERE voucher_id = ? "
+                   + "  AND (start_date IS NULL OR CAST(GETDATE() AS DATE) >= start_date) "
+                   + "  AND (end_date   IS NULL OR CAST(GETDATE() AS DATE) <= end_date)";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, id);
+            st.setString(1, id);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
-                return new Promo(
-                        rs.getInt("promo_id"),
-                        rs.getInt("promo_percent"),
+                return new Voucher(
+                        rs.getString("voucher_id"),
+                        rs.getInt("voucher_percent"),
                         rs.getDate("start_date"),
                         rs.getDate("end_date")
                 );
@@ -316,18 +302,13 @@ public class PromoDAO extends DBConnect.DBConnect {
         return null;
     }
 
-    /**
-     * Debug: xem servlet đang kết nối tới DB nào.
-     */
     public String debugUrl() {
         try {
             return (connection != null && !connection.isClosed())
-                    ?
-                    connection.getMetaData().getURL()
+                    ? connection.getMetaData().getURL()
                     : "connection is null/closed";
         } catch (Exception e) {
             return "debugUrl error: " + e.getMessage();
         }
     }
-
 }

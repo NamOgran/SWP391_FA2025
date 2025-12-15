@@ -1,817 +1,622 @@
+<%-- 
+    Document   : admin_VoucherManagement.jsp
+    Description: Voucher Management (Full CRUD + Date Filters)
+--%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="entity.Staff" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <c:set var="BASE_URL" value="${pageContext.request.contextPath}" />
 
 <%
     Staff s = (Staff) session.getAttribute("staff");
-    if (s == null) {
-        response.sendRedirect(request.getContextPath() + "/login.jsp");
-        return;
-    }
-    if (!"admin".equalsIgnoreCase(s.getRole())) {
-        response.sendRedirect(request.getContextPath() + "/staff.jsp");
-        return;
+    if (s == null || !"admin".equalsIgnoreCase(s.getRole())) {
+        response.sendRedirect(request.getContextPath() + (s == null ? "/login.jsp" : "/"));
+        return; 
     }
 %>
 
 <!DOCTYPE html>
 <html lang="en">
-
     <head> 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Admin Dashboard - GIO</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
-              integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+        <title>Admin | Voucher Management</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'> <link rel="icon" href="${BASE_URL}/images/LG1.png" type="image/x-icon"> 
-
         <script src="https://kit.fontawesome.com/1bd876819f.js" crossorigin="anonymous"></script>
+        <link href='https://fonts.googleapis.com/css?family=Quicksand:400,500,600,700&display=swap' rel='stylesheet'> 
+        <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon"> 
 
+        <style>
+            :root { --primary-color: #4e73df; --light-bg: #f8f9fc; --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); }
+            body { font-family: 'Quicksand', sans-serif; background-color: var(--light-bg); color: #5a5c69; }
+            .main-content { padding: 20px; }
+            .card-modern { background: #fff; border: none; border-radius: 15px; box-shadow: var(--card-shadow); margin-bottom: 25px; overflow: hidden; }
+            .card-header-modern { background: #fff; padding: 20px 25px; border-bottom: 1px solid #e3e6f0; display: flex; justify-content: space-between; align-items: center; }
+            .page-title { font-weight: 700; color: var(--primary-color); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+            .stat-badge { background: rgba(78, 115, 223, 0.1); color: var(--primary-color); padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; }
+            
+            /* Filter & Search */
+            .filter-container { padding: 20px 25px; background-color: #fff; border-bottom: 1px solid #f0f0f0; }
+            .search-input-group .input-group-text { background: transparent; border-right: none; color: #aaa; }
+            .search-input-group .form-control { border-left: none; box-shadow: none; }
+            .search-input-group .form-control:focus { border-color: #ced4da; }
+            .filter-label { font-size: 0.75rem; font-weight: 700; color: #b7b9cc; text-transform: uppercase; margin-bottom: 4px; display: block; }
 
+            /* Table Styles */
+            .table-modern { width: 100%; margin-bottom: 0; }
+            .table-modern thead th { background-color: #f8f9fc; color: #858796; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; border-bottom: 2px solid #e3e6f0; padding: 15px; border-top: none; }
+            .table-modern tbody td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #e3e6f0; color: #5a5c69; font-size: 0.95rem; }
+            .table-modern tbody tr:hover { background-color: #fcfcfc; }
+            
+            .table-blur { opacity: 0.5; pointer-events: none; transition: opacity 0.2s ease; }
+            #table-loader { min-height: 200px; display: flex; align-items: center; justify-content: center; }
 
-  
-       <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                font-family: 'Quicksand', sans-serif;
-            }
-            html, body {
-                height: 100%;
-            }
-            body {
-                display: flex;
-                flex-direction: column;
-            }
-            .main {
-                display: flex;
-                flex-grow: 1;
-                min-height: calc(100vh - 50px);
-            }
-            nav {
-                width: 17%;
-                flex-shrink: 0;
-                background-color: #2f2b2b;
-            }
-            .nav-list {
-                list-style-type: none;
-                padding: 0;
-                height: 100%;
-            }
-            header {
-                height: 50px;
-                background-color: #2f2b2b;
-                flex-shrink: 0;
-            }
-            .header-top, .admin-info {
-                display: flex;
-                align-items: center;
-            }
-            .header-top {
-                max-width: 1200px;
-                height: 100%;
-                margin: 0 auto;
-                justify-content: space-between;
-                padding: 0 15px;
-            }
-            .header-top * {
-                color: white;
-            }
-            .logo {
-                font-size: 1.5em;
-                font-weight: bold;
-            }
-            .admin-name, .signout {
-                margin: 0 10px;
-            }
-            .signout a {
-                text-decoration: none;
-            }
-            .signout a:hover {
-                color: #ddd;
-            }
-            .nav-list li {
-                padding: 15px 10px;
-                cursor: pointer;
-                border-bottom: 1px solid #444;
-            }
-            .nav-list li:last-child {
-                border-bottom: none;
-            }
-            .nav-list li:hover {
-                background-color: rgb(122, 117, 120);
-            }
-            .nav-list li.active {
-                background-color: rgb(122, 117, 120);
-            } /* Đánh dấu tab đang active */
-            .nav-list li a {
-                text-decoration: none;
-                color: white;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-            .nav-list li a span {
-                color: white;
-            }
-            .nav-list li i {
-                font-size: 1.1em;
-                width: 20px;
-                text-align: center;
-            }
-            .main-content {
-                width: 83%;
-                padding: 30px 40px;
-                overflow-y: auto;
-            }
-            .main-content h3 {
-                margin-bottom: 15px;
-                color: #333;
-            }
-            .main-content hr {
-                margin-bottom: 25px;
-            }
+            /* Badges & Buttons */
+            .voucher-badge { background-color: #ffeeba; color: #856404; font-weight: 700; padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #ffe8a1; }
+            .btn-soft { border: none; border-radius: 8px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; margin: 0 2px; cursor: pointer; }
+            .btn-soft:hover { transform: translateY(-2px); }
+            .btn-soft-primary { background: rgba(78, 115, 223, 0.1); color: #4e73df; } .btn-soft-primary:hover { background: #4e73df; color: #fff; }
+            .btn-soft-danger { background: rgba(231, 74, 59, 0.1); color: #e74a3b; } .btn-soft-danger:hover { background: #e74a3b; color: #fff; }
+            .btn-add-new { background: linear-gradient(45deg, #1cc88a, #13855c); border: none; box-shadow: 0 4px 10px rgba(28, 200, 138, 0.3); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 600; transition: transform 0.2s; }
+            .btn-add-new:hover { transform: translateY(-2px); color: whitesmoke !important; }
 
-            /* CSS cho Toast */
-            .toast-notification {
-                position: fixed;
-                top: 0;
-                left: 50%;
-                transform: translate(-50%, -150%);
-                min-width: 300px;
-                max-width: 90%;
-                z-index: 1050;
-                padding: 15px 20px;
-                border-radius: 0 0 8px 8px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                text-align: center;
-                font-size: 1.1em;
-                opacity: 0;
-                transition: transform 0.5s ease-out, opacity 0.5s ease-out;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-            }
-            .toast-notification.active {
-                transform: translate(-50%, 20px);
-                opacity: 1;
-            }
-            .toast-success {
-                background: #d4edda;
-                color: #155724;
-                border: 1px solid #c3e6cb;
-            }
-            .toast-info {
-                background: #d1ecf1;
-                color: #0c5460;
-                border: 1px solid #bee5eb;
-            }
-            .toast-danger {
-                background: #f8d7da;
-                color: #721c24;
-                border: 1px solid #f5c6cb;
-            }
-            .toast-warning {
-                background: #fff3cd;
-                color: #856404;
-                border: 1px solid #ffeeba;
-            }
+            /* Modal & Form */
+            .modal-content-modern { border-radius: 15px; border: none; overflow: hidden; }
+            .modal-header-modern { padding: 20px; border-bottom: 1px solid #eee; }
+            .modal-header-modern.bg-green { background: #d4edda; color: #155724; }
+            .modal-header-modern.bg-blue { background: #cfe2ff; color: #084298; }
+            .form-floating > .form-control { border-radius: 10px; border: 1px solid #d1d3e2; }
+            .form-floating > .form-control:focus { border-color: #4e73df; box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25); }
+            
+            /* Validation */
+            label.error { color: #e74a3b; font-size: 0.85rem; margin-top: 5px; display: block; margin-left: 5px; font-weight: 600; }
+            .form-control.error { border-color: #e74a3b !important; background-color: #fff8f8 !important; }
 
-            /* CSS cho Modal Validation */
-            .modal-body label.error {
-                color: #e74c3c;
-                font-size: 0.9em;
-                margin-top: 5px;
-                display: block;
-                font-weight: 500;
-            }
-            .modal-body input.error {
-                border-color: #e74c3c !important;
-                background: #fffafa !important;
-            }
+            /* Pagination */
+            .pagination-wrapper { margin-top: 20px; display: flex; justify-content: flex-end; }
+            .custom-pagination { display: flex; list-style: none; gap: 5px; padding: 0; }
+            .custom-page-link { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #fff; border: 1px solid #e3e6f0; color: #858796; text-decoration: none; transition: all 0.2s; cursor: pointer; }
+            .custom-page-link:hover { background: #f8f9fc; }
+            .custom-page-item.active .custom-page-link { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+            .custom-page-item.disabled .custom-page-link { opacity: 0.5; cursor: default; }
+
+            /* Toast */
+            .toast-notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1060; padding: 12px 20px; border-radius: 10px; background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); display: none; align-items: center; gap: 10px; border-left: 4px solid #4e73df; animation: slideDown 0.4s ease; }
+            .toast-notification.active { display: flex; }
+            .toast-success { border-left-color: #1cc88a; } .toast-success i { color: #1cc88a; }
+            .toast-danger { border-left-color: #e74a3b; } .toast-danger i { color: #e74a3b; }
+            @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
         </style>
     </head>
 
-    <body>
+    <body id="admin-body">
 
-        <c:if test="${param.msg == 'promo_added'}">
-            <div id="toast-message" class="toast-notification toast-success active">
-                <i class="fas fa-check-circle"></i> Promo added successfully!
-            </div>
-        </c:if>
-        <c:if test="${param.msg == 'promo_updated'}">
-            <div id="toast-message" class="toast-notification toast-info active">
-                <i class="fas fa-info-circle"></i> Promo updated successfully!
-            </div>
-        </c:if>
-        <c:if test="${param.msg == 'promo_deleted'}">
-            <div id="toast-message" class="toast-notification toast-danger active">
-                <i class="fas fa-trash-alt"></i> Promo deleted successfully!
-            </div>
-        </c:if>
-        <c:if test="${param.msg == 'promo_invalid_percent'}">
-            <div id="toast-message" class="toast-notification toast-danger active">
-                <i class="fas fa-exclamation-triangle"></i> Error: Percent must be between 1 and 100.
-            </div>
-        </c:if>
-        <c:if test="${param.msg == 'promo_invalid_date'}">
-        
-             <div id="toast-message" class="toast-notification toast-danger active">
-                <i class="fas fa-exclamation-triangle"></i> Error: End date cannot be before start date.
-            </div>
-        </c:if>
-        <c:if test="${param.msg == 'promo_invalid_date_format'}">
-            <div id="toast-message" class="toast-notification toast-danger active">
-                <i class="fas fa-exclamation-triangle"></i> Error: Invalid date format.
-            </div>
-        </c:if>
-        
-        <%-- === BẮT ĐẦU SỬA ĐỔI: Thêm Toast cho lỗi mới === --%>
-        <c:if test="${param.msg == 'promo_in_use'}">
-            <div id="toast-message" class="toast-notification toast-danger active">
-                <i class="fas fa-exclamation-triangle"></i> Error: Promo is in use by products and cannot be deleted.
-            </div>
-        </c:if>
-        <%-- === KẾT THÚC SỬA ĐỔI === --%>
-        
-        <header>
-            <div class="header-top">
-                <div class="logo">GIO Admin</div> 
+        <%-- Toast Message Container --%>
+        <div id="toast-message" class="toast-notification">
+            <i class="fas"></i> <span id="toast-text"></span>
+        </div>
 
-                <div class="admin-info">
-                    <div class="admin-name"><i class="bi bi-person-fill"></i>: <c:out value="${sessionScope.staff.username}"/></div>
+        <jsp:include page="admin_header-sidebar.jsp" />
 
-          
-                     <div class="signout"><a href="${BASE_URL}/cookieHandle"><i class="bi bi-box-arrow-right"></i> Sign out</a></div>
-                </div>
-            </div>
-        </header>
-
-        <div class="main">
-            <nav>
-                <ul class="nav-list">
-          
-                     <li class="nav-link" data-target="statistic">
-                        <a href="${BASE_URL}/admin?tab=dashboard"><i class="fa-solid fa-chart-line"></i> <span>Dashboard</span> </a>
-                    </li>
-                    <li class="nav-link" data-target="product-manage">
-                 
-                         <a href="${BASE_URL}/admin?tab=product" ><i class="bi bi-box"></i> <span>Product Management</span> </a>
-                    </li>
-                    <li class="nav-link" data-target="account-manage">
-                        <a href="${BASE_URL}/admin?tab=account" ><i class="bi bi-person-badge-fill"></i> <span>Account management</span> </a>
-             
-                     </li>
-                    <li class="nav-link active" data-target="promo-manage"> <a href="${BASE_URL}/admin?tab=promo" ><i class="bi bi-tags-fill"></i> <span>Promo Management</span> </a>
-                    </li>
-                    <li class="nav-link" data-target="personal-info">
-                    
-                         <a href="${BASE_URL}/admin?tab=personal" ><i class="bi bi-person-fill"></i> <span>Personal information</span> </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <div class="main-content">
-
-                <div class="promo-manage" style="display: block;">
-         
-                     <h3 style="font-weight: bold;"><i class="bi bi-tags-fill"></i> Promo Management</h3>
-                    <hr>
-                    <div style="margin-top: 20px;
-                         display: flex; justify-content: space-between; align-items: center;">
-
-                        <form action="${BASE_URL}/admin" method="get" style="display: flex;
-                              gap:10px;">
-                            <input type="hidden" name="tab" value="promo">
-
-                            <div class="input-group" style="width: 250px;">
-                                <input type="text" name="promo_search" placeholder="Search promo percent" 
-                                     class="form-control" value="<c:out value='${promoSearch}'/>">
-                                <button type="submit" class="btn btn-secondary"><i class="bi bi-search"></i></button>
-                            </div>
-                        </form>
-         
-                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPromoModal">
-                            <i class="bi bi-plus-circle"></i> Add New Promo
-                        </button>
+        <div class="main-content">
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <div class="page-title">
+                        <i class="bi bi-tags-fill"></i> Voucher Management
+                        <span class="stat-badge" id="totalVouchersBadge">0 Vouchers</span>
                     </div>
+                    <button class="btn-add-new" data-bs-toggle="modal" data-bs-target="#addVoucherModal">
+                        <i class="bi bi-plus-lg me-1"></i> Add Voucher
+                    </button>
+                </div>
 
-    
-                     <div style="margin-top: 25px;" class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead class="table-dark"> <tr>
-                        
-                                 <th>ID</th>
-                                    <th>Percent (%)</th>
-                                    <th>Start Date</th>
-              
-                                     <th>End Date</th>
-                                    <th>Actions</th>
+                <%-- Filter Bar --%>
+                <div class="filter-container">
+                    <div class="row g-2 align-items-end">
+                        <%-- Search Input --%>
+                        <div class="col-md-4">
+                            <span class="filter-label">Search</span>
+                            <div class="input-group search-input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" id="liveSearchInput" class="form-control" placeholder="Search Code, Percent..." autocomplete="off">
+                            </div>
+                        </div>
+
+                        <%-- [NEW] Start Date Filter --%>
+                        <div class="col-md-3">
+                            <span class="filter-label">Start From</span>
+                            <input type="date" id="startDateFilter" class="form-control">
+                        </div>
+
+                        <%-- [NEW] End Date Filter --%>
+                        <div class="col-md-3">
+                            <span class="filter-label">End To</span>
+                            <input type="date" id="endDateFilter" class="form-control">
+                        </div>
+
+                        <%-- [NEW] Reset Button --%>
+                        <div class="col-md-2">
+                            <button onclick="resetFilters()" class="btn btn-light border w-100 text-muted" title="Reset Filters">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <%-- Table Loader --%>
+                <div id="table-loader">
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+
+                <%-- Table Container (Hidden initially) --%>
+                <div id="voucher-content-container" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table table-modern align-middle" id="voucherTableMain">
+                            <thead>
+                                <tr>
+                                    <th width="25%">Code (ID)</th>
+                                    <th width="20%">Discount</th>
+                                    <th width="15%">Start Date</th>
+                                    <th width="15%">End Date</th>
+                                    <th width="25%" class="text-center">Actions</th>
                                 </tr>
-         
-                             </thead>
-
-                            <tbody>
-                                <c:forEach var="p" items="${promoList}">
-                   
-                                     <tr>
-                                        <td>${p.promoID}</td>
-                                        <td>${p.promoPercent}%</td>
-   
-                                         <td><fmt:formatDate value="${p.startDate}" pattern="yyyy-MM-dd"/></td>
-                                        <td><fmt:formatDate value="${p.endDate}" pattern="yyyy-MM-dd"/></td>
-                   
-                                         <td>
-                                            <button type="button" class="btn btn-sm btn-warning"
-                               
-                                                     data-bs-toggle="modal" data-bs-target="#editPromoModal"
-                                                    data-id="${p.promoID}"
-                          
-                                                     data-percent="${p.promoPercent}"
-                                                    data-start="<fmt:formatDate value='${p.startDate}' pattern='yyyy-MM-dd'/>"
-                    
-                                                     data-end="<fmt:formatDate value='${p.endDate}' pattern='yyyy-MM-dd'/>">
-                                                <i class="bi bi-pencil-square"></i>
-                
-                                             </button>
-                                            
-                                            <%-- === BẮT ĐẦU SỬA ĐỔI: Thay thế form bằng button === --%>
-                                            <button type="button" class="btn btn-sm btn-danger"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deletePromoModal"
-                                                    data-promo-id="${p.promoID}"
-                                                    data-promo-percent="${p.promoPercent}"
-                                                    title="Delete Promo">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                            <%-- === KẾT THÚC SỬA ĐỔI === --%>
-                                            
-                                         </td>
-                                    </tr>
-                                </c:forEach> 
-
-           
-                                 <c:if test="${empty promoList}">
-                                    <tr>
-                                        <td 
-                                             colspan="5" class="text-center text-muted">No promos found matching your criteria.</td>
-                                    </tr>
-                                </c:if>
-                         
-                             </tbody>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
                         </table>
                     </div>
-
-                    <c:if test="${promoTotalPages > 1}">
-                        <nav aria-label="Promo pagination" class="mt-4">
-   
-                             <ul class="pagination justify-content-center">
-                                <li class="page-item ${promoCurrentPage == 1 ?
-                                                        'disabled' : ''}">
-                                    <a class="page-link" href="${BASE_URL}/admin?promo_page=${promoCurrentPage - 1}&promo_search=${promoSearch}&tab=promo">Previous</a>
-                                </li>
-                          
-                                 <c:forEach begin="1" end="${promoTotalPages}" var="i">
-                                    <li class="page-item ${i == promoCurrentPage ?
-                                                         'active' : ''}">
-                                        <a class="page-link" href="${BASE_URL}/admin?promo_page=${i}&promo_search=${promoSearch}&tab=promo">${i}</a>
-                                    </li>
-                    
-                                 </c:forEach>
-
-                                <li class="page-item ${promoCurrentPage == promoTotalPages ?
-                                                        'disabled' : ''}">
-                                    <a class="page-link" href="${BASE_URL}/admin?promo_page=${promoCurrentPage + 1}&promo_search=${promoSearch}&tab=promo">Next</a>
-                                </li>
-                          
-                             </ul>
-                        </nav>
-                    </c:if>
-                </div>
+                    <%-- Pagination Container --%>
+                    <div class="pagination-wrapper px-4 pb-3" id="paginationContainer"></div>
+                </div> 
             </div>
         </div>
 
-
-        <div class="modal fade" id="addPromoModal" tabindex="-1" aria-labelledby="addPromoModalLabel" aria-hidden="true">
-    
-             <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="${BASE_URL}/admin" method="post" id="addPromoForm">
-                        <div class="modal-header">
-                          
-                             <h5 class="modal-title" id="addPromoModalLabel">Add New Promo</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-             
-                             <input type="hidden" name="action" value="add">
-                            <input type="hidden" name="promo_page" value="${promoCurrentPage}">
-                            <input type="hidden" name="promo_search" value="${promoSearch}">
-
-                    
-                             <div class="mb-3">
-                                <label for="addPercent" class="form-label">Percent (%)</label>
-                                <input type="number" name="percent" id="addPercent" class="form-control" placeholder="Percent (1-100)" required>
-                 
-                             </div>
-                            <div class="mb-3">
-                                <label for="addStartDate" class="form-label">Start Date</label>
-                         
-                                 <input type="date" name="startDate" id="addStartDate" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                               
-                                 <label for="addEndDate" class="form-label">End Date</label>
-                                <input type="date" name="endDate" id="addEndDate" class="form-control" required>
-                            </div>
-                        </div>
-       
-                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-success">Add Promo</button>
-                  
-                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="editPromoModal" tabindex="-1" aria-labelledby="editPromoModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-           
-                 <div class="modal-content">
-                    <form action="${BASE_URL}/admin" method="post" id="editPromoForm">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editPromoModalLabel">Edit Promo</h5>
-               
-                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="hidden" name="action" value="edit">
-   
-                             <input type="hidden" name="id" id="editPromoID">
-                            <input type="hidden" name="promo_page" value="${promoCurrentPage}">
-                            <input type="hidden" name="promo_search" value="${promoSearch}">
-
-          
-                             <div class="mb-3">
-                                <label for="editPercent" class="form-label">Percent (%)</label>
-                                <input type="number" name="percent" id="editPercent" class="form-control" required>
-         
-                             </div>
-                            <div class="mb-3">
-                                <label for="editStartDate" class="form-label">Start Date</label>
-                 
-                                 <input type="date" name="startDate" id="editStartDate" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                       
-                                 <label for="editEndDate" class="form-label">End Date</label>
-                                <input type="date" name="endDate" id="editEndDate" class="form-control" required>
-                            </div>
-                       
-                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-          
-                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div class="modal fade" id="deletePromoModal" tabindex="-1" aria-labelledby="deletePromoModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deletePromoModalLabel">Delete Promo: <span></span></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <%-- Modal Definitions (Add/Edit/Delete) --%>
+        <div class="modal fade" id="addVoucherModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-content-modern">
+                    <div class="modal-header-modern bg-green d-flex justify-content-between">
+                        <h5 class="text-success"><i class="bi bi-plus-circle-fill me-2"></i> Add New Voucher</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        
-                        <div id="deletePromoWarning" class="alert alert-danger" style="display: none;">
-                            <strong>Cannot Delete:</strong> This promo is linked to the following products and cannot be deleted.
-                        </div>
-                        <div id="deletePromoSuccess" class="alert alert-success" style="display: none;">
-                            <strong>Safe to Delete:</strong> No related products found. This promo can be safely deleted.
-                        </div>
-
-                        <div id="promoDataLoading" class="text-center p-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                    <div class="modal-body p-4">
+                        <form id="addVoucherForm">
+                            <input type="hidden" name="action" value="add">
+                            <div class="form-floating mb-3">
+                                <input type="text" name="id" id="addVoucherID" class="form-control" placeholder="Voucher Code" style="text-transform: uppercase;" required>
+                                <label for="addVoucherID">Voucher Code (ID)</label>
                             </div>
-                            <p class="mt-2">Checking for related products...</p>
-                        </div>
-
-                        <div id="promoDataContent" style="display: none;">
-                            <table class="table table-sm table-bordered">
-                                <thead><tr><th>ID</th><th>Product Name</th><th>Status</th></tr></thead>
-                                <tbody id="promo-products-table-body"></tbody>
-                            </table>
-                            <p id="promo-products-none" class="text-muted" style="display: none;">No related products found.</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <form id="confirmDeletePromoForm" action="${BASE_URL}/admin" method="post" style="display: none;">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" id="confirmDeletePromoId">
-                            <input type="hidden" name="promo_page" value="${promoCurrentPage}">
-                            <input type="hidden" name="promo_search" value="${promoSearch}">
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash"></i> Confirm Delete
-                            </button>
+                            <div class="form-floating mb-3">
+                                <input type="number" name="percent" id="addPercent" class="form-control" placeholder="Percent" required>
+                                <label for="addPercent">Discount Percent (%)</label>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="date" name="startDate" id="addStartDate" class="form-control" required>
+                                        <label for="addStartDate">Start Date</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="date" name="endDate" id="addEndDate" class="form-control" required>
+                                        <label for="addEndDate">End Date</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-end">
+                                <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success px-4 fw-bold">Create Voucher</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
-                integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
-     
-             crossorigin="anonymous"></script>
 
+        <div class="modal fade" id="editVoucherModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-content-modern">
+                    <div class="modal-header-modern bg-blue d-flex justify-content-between">
+                        <h5 class="text-primary"><i class="bi bi-pencil-square me-2"></i> Edit Voucher</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form id="editVoucherForm">
+                            <input type="hidden" name="action" value="edit">
+                            <div class="form-floating mb-3">
+                                <input type="text" name="id" id="editVoucherID" class="form-control bg-light" readonly>
+                                <label for="editVoucherID">Voucher Code (ID)</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input type="number" name="percent" id="editPercent" class="form-control" required>
+                                <label for="editPercent">Discount Percent (%)</label>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="date" name="startDate" id="editStartDate" class="form-control" required>
+                                        <label for="editStartDate">Start Date</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="date" name="endDate" id="editEndDate" class="form-control" required>
+                                        <label for="editEndDate">End Date</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-end">
+                                <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary px-4 fw-bold">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="deleteVoucherModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-content-modern border-danger border-top border-5">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title text-danger fw-bold"><i class="bi bi-trash-fill me-2"></i> Delete Voucher</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <h5 class="mb-3" id="deleteVoucherModalLabel">Delete Voucher: <span></span>?</h5>
+                        <div id="voucherDataLoading" class="py-3">
+                            <div class="spinner-border text-danger"></div>
+                            <div class="small mt-2 text-muted">Checking usage...</div>
+                        </div>
+                        <div id="deleteVoucherWarning" class="alert alert-danger text-start small" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Cannot Delete:</strong> Used by active products.
+                        </div>
+                        <div id="deleteVoucherSuccess" class="alert alert-success text-start small" style="display: none;">
+                            <i class="bi bi-check-circle-fill me-1"></i> <strong>Safe to Delete:</strong> No products linked.
+                        </div>
+                        <div id="voucherDataContent" style="display: none; max-height: 150px; overflow-y: auto;" class="border rounded mt-2 text-start p-2 bg-light small">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tbody id="voucher-products-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center">
+                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+                        <form id="confirmDeleteVoucherForm" style="display: none;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" id="confirmDeleteVoucherId">
+                            <button type="submit" class="btn btn-danger px-4 fw-bold">Confirm Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
 
         <script>
-                                                     // Validation rule for Promo End Date
-            
-                                                           $.validator.addMethod("greaterThanEqual", function (value, element, param) {
-                                                      
-                                                            var startDate = $(param).val();
-                                                         if (!startDate || !value) {
-                                                             return true;
-                                                             // Don't validate if either field is empty
-                                                         }
-                                    
-                                                          return new Date(value) >= new Date(startDate);
-                                                         }, "End date must be on or after start date.");
-                                                         document.addEventListener("DOMContentLoaded", function () {
-                                                         // Logic cho Toast
-                                     
-                                                         const toast = document.getElementById('toast-message');
-                                                         if (toast) {
-                  
-                                                                setTimeout(() => {
-                                                       
-                                                                   toast.classList.add('active');
-                                                             }, 300);
-                            
-                                                                 setTimeout(() => {
-                                                                 
-                                                                    toast.classList.remove('active');
-                                                             }, 4000);
-                                      
-                                                         }
+            // --- GLOBAL VARIABLES ---
+            const BASE_URL = '${BASE_URL}';
+            let currentPage = 1;
+            let currentSearch = "";
+            // [NEW] Date Variables
+            let currentStart = "";
+            let currentEnd = "";
 
-                                                         // === SỬA ĐỔI JAVASCRIPT ĐIỀU HƯỚNG ===
-                 
-                                                         const navLinks = document.querySelectorAll('.nav-link');
-                                                         const currentTarget = 'promo-manage'; // Tab này là 'promo-manage'
+            // --- [NEW] TABLE EFFECT UTILS ---
+            function toggleTableBlur(active) {
+                if(active) $('#voucherTableMain tbody').addClass('table-blur');
+                else $('#voucherTableMain tbody').removeClass('table-blur');
+            }
 
-                                                         navLinks.forEach(link => {
-                                 
-                                                             const targetId = link.getAttribute('data-target');
-                                                             if (targetId === currentTarget) {
-    
-                                                                  link.classList.add('active'); // Đánh dấu tab hiện tại
-                                 
-                                                             }
+            // --- HELPER: SHOW TOAST ---
+            function showToast(type, message) {
+                const toast = $('#toast-message');
+                const icon = toast.find('i');
+                const text = $('#toast-text');
+                toast.removeClass('toast-success toast-danger').addClass(type === 'success' ? 'toast-success' : 'toast-danger');
+                icon.removeClass().addClass(type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle');
+                text.text(message);
+                toast.addClass('active');
+                setTimeout(() => { toast.removeClass('active'); }, 3000);
+            }
 
-                                                             link.addEventListener('click', function (e) {
-        
-                                                                  e.preventDefault();
-                                           
-                                                                   const targetLink = this.querySelector('a');
-                                                                 if (targetLink && targetLink.href) {
-      
-                                                                       window.location.href = targetLink.href;
-                                                                       // Chuyển hướng đến URL trong thẻ <a>
-                                                                 }
-                            
-                                                                 });
-                                                         });
-                                                         // === KẾT THÚC SỬA ĐỔI ===
+            // --- HELPER: FORMAT DATES ---
+            function formatDateForInput(dateString) {
+                if (!dateString) return "";
+                const d = new Date(dateString);
+                if (isNaN(d.getTime())) return "";
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0'); 
+                const day = String(d.getDate()).padStart(2, '0');
+                return `\${year}-\${month}-\${day}`;
+            }
 
+            function formatDateForDisplay(dateString) {
+                if (!dateString) return "";
+                const d = new Date(dateString);
+                if (isNaN(d.getTime())) return "";
+                return d.toLocaleDateString('en-GB'); 
+            }
 
-                                                         // === VALIDATION CHO ADD PROMO ===
-                              
-                                                           $("#addPromoForm").validate({
-                                                             rules: {
-           
-                                                                       percent: {
-                                             
-                                                                     required: true,
-                                                                     digits: true,
-     
-                                                                         min: 1,
-                                   
-                                                                         max: 100
-                                                                 
-                                                                 },
-                                                                 startDate: {
-                                  
-                                                                     required: true,
-                                                                
-                                                                         date: true
-                                                                 },
-                             
-                                                                     endDate: {
-                                                               
-                                                                         required: true,
-                                                                     date: true,
-                       
-                                                                         greaterThanEqual: "#addStartDate"
-                                                     
-                                                                 }
-                                                             },
-                           
-                                                                   messages: {
-                                                                 
-                                                                     percent: {
-                                                                     required: "Please enter a percent",
-                          
-                                                                         digits: "Must be a whole number",
-                                                    
-                                                                         min: "Percent must be at least 1",
-                                                                     max: "Percent cannot exceed 100"
-    
-                                                                 },
-                                       
-                                                                   startDate: "Please select a start date",
-                                                                 endDate: {
-   
-                                                                         required: "Please select an end date",
-                             
-                                                                         greaterThanEqual: "End date must be on or after start date"
-                                                   
-                                                                 }
-                                                             },
-                         
-                                                                     errorElement: "label",
-                                                             errorClass: "error"
- 
-                                                                         });
-                                                         // === VALIDATION CHO EDIT PROMO ===
-                                                         $("#editPromoForm").validate({
-                                     
-                                                                 rules: {
-                                                                 percent: {
-         
-                                                                         required: true,
-                                       
-                                                                         digits: true,
-                                                                     
-                                                                         min: 1,
-                                                                     max: 100
-                             
-                                                                     },
-                                                                
-                                                                   startDate: {
-                                                                     required: true,
-                            
-                                                                         date: true
-                                                          
-                                                                     },
-                                                                 endDate: {
-                           
-                                                                         required: true,
-                                                         
-                                                                         date: true,
-                                                                     greaterThanEqual: "#editStartDate"
-                 
-                                                                     }
-                                                    
-                                                         },
-                                                             messages: {
-                             
-                                                                     percent: {
-                                                               
-                                                                         required: "Please enter a percent",
-                                                                     digits: "Must be a whole number",
+            // --- CORE: FETCH DATA & RENDER TABLE (AJAX) ---
+            function fetchVouchers(page = 1) {
+                currentPage = page;
                 
-                                                                         min: "Percent must be at least 1",
-                                         
-                                                                         max: "Percent cannot exceed 100"
-                                                                 },
-   
-                                                                   startDate: "Please select a start date",
-                                 
-                                                                   endDate: {
-                                                                   
-                                                                         required: "Please select an end date",
-                                                                     greaterThanEqual: "End date must be on or after start date"
-               
-                                                                     }
-                                                  
-                                                         },
-                                                             errorElement: "label",
-                           
-                                                                   errorClass: "error"
-                                                         });
-                                                         // === LOGIC POPULATE MODAL EDIT PROMO ===
-                                                         var editPromoModal = document.getElementById('editPromoModal');
-                                                         if (editPromoModal) {
-                                                             editPromoModal.addEventListener('show.bs.modal', function (event) {
-                                  
-                                                                 // Clear previous validation
-                                                                 $("#editPromoForm").validate().resetForm();
- 
-                                                                 $("#editPromoForm .form-control").removeClass("error");
+                // Trigger Blur Effect immediately
+                toggleTableBlur(true);
 
-                                   
-                                                                   var button = event.relatedTarget;
-                                                                 var promoID 
-                                                                     = button.getAttribute('data-id');
-                                                                 var percent = button.getAttribute('data-percent');
-                               
-                                                                     var startDate = button.getAttribute('data-start');
-                                                               
-                                                                     var endDate = button.getAttribute('data-end');
-                                                                 var modalPromoIDInput = editPromoModal.querySelector('#editPromoID');
-                                                                 var modalPercentInput = editPromoModal.querySelector('#editPercent');
-                                                                 var modalStartDateInput = editPromoModal.querySelector('#editStartDate');
-                                                                 var modalEndDateInput = editPromoModal.querySelector('#editEndDate');
-                                                                 modalPromoIDInput.value = promoID;
-                                                                 modalPercentInput.value = percent;
-                                                                 modalStartDateInput.value = startDate;
-                                                                 modalEndDateInput.value = endDate;
-                                                             });
-                                                         }
-                                                         
-                                                        // === LOGIC CHO MODAL XÁC NHẬN XÓA PROMO (MỚI) ===
-                                                        var deletePromoModal = document.getElementById('deletePromoModal');
-                                                        if (deletePromoModal) {
-                                                            deletePromoModal.addEventListener('show.bs.modal', function (event) {
-                                                                var button = event.relatedTarget;
-                                                                var promoId = button.getAttribute('data-promo-id');
-                                                                var promoPercent = button.getAttribute('data-promo-percent');
+                $.ajax({
+                    url: BASE_URL + '/admin',
+                    type: 'GET',
+                    // [UPDATED] Send date params
+                    data: { 
+                        action: 'voucher_data', 
+                        page: page, 
+                        search: currentSearch,
+                        startDate: currentStart,
+                        endDate: currentEnd
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        renderTable(response.list);
+                        renderPagination(response.totalPages, response.currentPage);
+                        $('#totalVouchersBadge').text(response.totalItems + " Vouchers");
+                        
+                        // Wait slightly for smooth transition, then unblur
+                        setTimeout(() => { toggleTableBlur(false); }, 150);
+                    },
+                    error: function() {
+                        showToast('error', 'Failed to load data');
+                        toggleTableBlur(false);
+                    }
+                });
+            }
 
-                                                                // Cập nhật tiêu đề
-                                                                var modalTitle = deletePromoModal.querySelector('#deletePromoModalLabel span');
-                                                                modalTitle.textContent = promoPercent + "% (ID: " + promoId + ")";
+            function renderTable(list) {
+                const tbody = $('#tableBody');
+                tbody.empty();
+                if (!list || list.length === 0) {
+                    tbody.append('<tr><td colspan="5" class="text-center py-4 text-muted">No vouchers found.</td></tr>');
+                    return;
+                }
+                
+                list.forEach(p => {
+                    const displayStart = formatDateForDisplay(p.startDate);
+                    const displayEnd = formatDateForDisplay(p.endDate);
+                    const inputStart = formatDateForInput(p.startDate);
+                    const inputEnd = formatDateForInput(p.endDate);
 
-                                                                // Cập nhật ID trong form ẩn
-                                                                $('#confirmDeletePromoId').val(promoId);
+                    const row = `
+                        <tr>
+                            <td class="fw-bold text-primary">\${p.voucherID}</td>
+                            <td><span class="voucher-badge">\${p.voucherPercent}% OFF</span></td>
+                            <td><i class="bi bi-calendar-event me-2 text-muted"></i>\${displayStart}</td>
+                            <td><i class="bi bi-calendar-check me-2 text-muted"></i>\${displayEnd}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn-soft btn-soft-primary" 
+                                        data-bs-toggle="modal" data-bs-target="#editVoucherModal"
+                                        data-id="\${p.voucherID}" 
+                                        data-percent="\${p.voucherPercent}"
+                                        data-start="\${inputStart}" 
+                                        data-end="\${inputEnd}" 
+                                        title="Edit">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button type="button" class="btn-soft btn-soft-danger" 
+                                        data-bs-toggle="modal" data-bs-target="#deleteVoucherModal"
+                                        data-voucher-id="\${p.voucherID}" 
+                                        data-voucher-percent="\${p.voucherPercent}" 
+                                        title="Delete">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+            }
 
-                                                                // Reset trạng thái modal
-                                                                $('#promoDataLoading').show();
-                                                                $('#promoDataContent').hide();
-                                                                $('#deletePromoWarning').hide();
-                                                                $('#deletePromoSuccess').hide();
-                                                                $('#confirmDeletePromoForm').hide();
-                                                                $('#promo-products-table-body').empty();
-                                                                $('#promo-products-none').hide();
+            function renderPagination(totalPages, current) {
+                const container = $('#paginationContainer');
+                container.empty();
+                if (totalPages <= 1) return;
 
-                                                                // Gọi AJAX đến servlet mới
-                                                                $.ajax({
-                                                                    url: '${BASE_URL}/admin/promoRelatedData', // Servlet bạn tạo
-                                                                    type: 'GET',
-                                                                    data: { promoId: promoId },
-                                                                    dataType: 'json',
-                                                                    success: function(products) {
-                                                                        var hasRelatedData = (products && products.length > 0);
+                let html = '<ul class="custom-pagination">';
+                
+                // Prev
+                html += `<li class="custom-page-item \${current == 1 ? 'disabled' : ''}">
+                            <a class="custom-page-link" onclick="fetchVouchers(\${current - 1})"><i class="bi bi-chevron-left"></i></a>
+                         </li>`;
+                
+                // Numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    html += `<li class="custom-page-item \${i == current ? 'active' : ''}">
+                                <a class="custom-page-link" onclick="fetchVouchers(\${i})">\${i}</a>
+                             </li>`;
+                }
 
-                                                                        $('#promoDataLoading').hide();
-                                                                        
-                                                                        if (hasRelatedData) {
-                                                                            // Hiển thị cảnh báo và danh sách sản phẩm
-                                                                            $('#deletePromoWarning').show();
-                                                                            $('#promoDataContent').show();
-                                                                            $('#confirmDeletePromoForm').hide();
-                                                                            
-                                                                            $.each(products, function(i, product) {
-                                                                                var status = product.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>';
-                                                                                $('#promo-products-table-body').append('<tr><td>' + product.id + '</td><td>' + product.name + '</td><td>' + status + '</td></tr>');
-                                                                            });
+                // Next
+                html += `<li class="custom-page-item \${current == totalPages ? 'disabled' : ''}">
+                            <a class="custom-page-link" onclick="fetchVouchers(\${current + 1})"><i class="bi bi-chevron-right"></i></a>
+                         </li>`;
+                
+                html += '</ul>';
+                container.html(html);
+            }
 
-                                                                        } else {
-                                                                            // Hiển thị thông báo an toàn và nút xóa
-                                                                            $('#deletePromoSuccess').show();
-                                                                            $('#promoDataContent').hide(); // Không cần hiển thị bảng rỗng
-                                                                            //$('#promo-products-none').show(); // Bạn có thể bỏ dòng này nếu không muốn thấy "No related data" khi đã an toàn
-                                                                            $('#confirmDeletePromoForm').show();
-                                                                        }
-                                                                    },
-                                                                    error: function(jqXHR, textStatus, errorThrown) {
-                                                                        $('#promoDataLoading').html('<div class="alert alert-danger"><strong>Error:</strong> ' + (jqXHR.responseJSON || errorThrown) + '</div>');
-                                                                    }
-                                                                });
-                                                            });
-                                                        }
-                                                        // === KẾT THÚC LOGIC MODAL XÓA PROMO ===
-                                                         
-                                                     });
+            // [NEW] RESET FUNCTION
+            function resetFilters() {
+                $('#liveSearchInput').val('');
+                $('#startDateFilter').val('');
+                $('#endDateFilter').val('');
+                currentSearch = "";
+                currentStart = "";
+                currentEnd = "";
+                toggleTableBlur(true);
+                fetchVouchers(1);
+            }
+
+            function handleFormSubmit(formId, modalId) {
+                const form = $(formId);
+                if (!form.valid()) return;
+                
+                toggleTableBlur(true);
+
+                $.ajax({
+                    url: BASE_URL + '/admin',
+                    type: 'POST',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: function(resp) {
+                        if (resp.isSuccess) {
+                            showToast('success', resp.description);
+                            $(modalId).modal('hide');
+                            fetchVouchers(currentPage); 
+                            form[0].reset();
+                        } else {
+                            showToast('error', resp.description);
+                            toggleTableBlur(false); // Unblur if error
+                        }
+                    },
+                    error: function() {
+                        showToast('error', 'Server connection failed.');
+                        toggleTableBlur(false);
+                    }
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                // [NEW] 1. Initial Load Effect
+                setTimeout(function() {
+                    $('#table-loader').fadeOut(200, function() {
+                        $('#voucher-content-container').fadeIn(200);
+                        fetchVouchers(1);
+                    });
+                }, 400);
+
+                // 2. LIVE SEARCH (Input Event)
+                let searchTimeout;
+                $('#liveSearchInput').on('input', function() {
+                    currentSearch = $(this).val();
+                    
+                    toggleTableBlur(true);
+                    
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        fetchVouchers(1); 
+                    }, 300);
+                });
+
+                // [NEW] 3. DATE FILTER EVENTS
+                $('#startDateFilter, #endDateFilter').on('change', function() {
+                    currentStart = $('#startDateFilter').val();
+                    currentEnd = $('#endDateFilter').val();
+                    toggleTableBlur(true);
+                    fetchVouchers(1);
+                });
+
+                // 4. VALIDATION RULES
+                $.validator.addMethod("greaterThanEqual", function (value, element, param) {
+                    var startDate = $(param).val();
+                    if (!startDate || !value) return true;
+                    return new Date(value) >= new Date(startDate);
+                }, "End date must be >= start date.");
+
+                $.validator.addMethod("regexCode", function(value, element) {
+                    return this.optional(element) || /^[A-Z0-9]+$/.test(value);
+                }, "Only uppercase letters (A-Z) and numbers (0-9) allowed.");
+
+                const validationConfig = {
+                    errorElement: "label", errorClass: "error",
+                    errorPlacement: function (error, element) {
+                        if (element.closest('.form-floating').length) error.insertAfter(element.closest('.form-floating'));
+                        else error.insertAfter(element);
+                    }
+                };
+
+                $("#addVoucherForm").validate({
+                    ...validationConfig,
+                    rules: {
+                        id: { required: true, regexCode: true }, 
+                        percent: { required: true, digits: true, min: 1, max: 100 },
+                        startDate: { required: true, date: true },
+                        endDate: { required: true, date: true, greaterThanEqual: "#addStartDate" }
+                    },
+                    submitHandler: function() { handleFormSubmit('#addVoucherForm', '#addVoucherModal'); }
+                });
+
+                $("#editVoucherForm").validate({
+                    ...validationConfig,
+                    rules: {
+                        percent: { required: true, digits: true, min: 1, max: 100 },
+                        startDate: { required: true, date: true },
+                        endDate: { required: true, date: true, greaterThanEqual: "#editStartDate" }
+                    },
+                    submitHandler: function() { handleFormSubmit('#editVoucherForm', '#editVoucherModal'); }
+                });
+
+                $('#confirmDeleteVoucherForm').on('submit', function(e) {
+                    e.preventDefault();
+                    handleFormSubmit('#confirmDeleteVoucherForm', '#deleteVoucherModal');
+                });
+
+                // EDIT MODAL POPULATE
+                const editVoucherModal = document.getElementById('editVoucherModal');
+                if (editVoucherModal) {
+                    editVoucherModal.addEventListener('show.bs.modal', function (event) {
+                        $("#editVoucherForm").validate().resetForm();
+                        const btn = event.relatedTarget;
+                        $('#editVoucherID').val(btn.getAttribute('data-id'));
+                        $('#editPercent').val(btn.getAttribute('data-percent'));
+                        $('#editStartDate').val(btn.getAttribute('data-start'));
+                        $('#editEndDate').val(btn.getAttribute('data-end'));
+                    });
+                }
+
+                // Delete Modal Logic
+                const deleteVoucherModal = document.getElementById('deleteVoucherModal');
+                if (deleteVoucherModal) {
+                    deleteVoucherModal.addEventListener('show.bs.modal', function (event) {
+                        const btn = event.relatedTarget;
+                        const voucherId = btn.getAttribute('data-voucher-id');
+                        const percent = btn.getAttribute('data-voucher-percent');
+
+                        $('#deleteVoucherModalLabel span').text(percent + "% (Code: " + voucherId + ")");
+                        $('#confirmDeleteVoucherId').val(voucherId);
+
+                        $('#voucherDataLoading').show();
+                        $('#deleteVoucherWarning, #deleteVoucherSuccess, #confirmDeleteVoucherForm, #voucherDataContent').hide();
+                        $('#voucher-products-table-body').empty();
+
+                        $.ajax({
+                            url: BASE_URL + '/admin/voucherRelatedData',
+                            type: 'GET', data: {voucherId: voucherId}, dataType: 'json',
+                            success: function (products) {
+                                $('#voucherDataLoading').hide();
+                                if (products && products.length > 0) {
+                                    $('#deleteVoucherWarning').show();
+                                    $('#voucherDataContent').show();
+                                    products.forEach(p => {
+                                        $('#voucher-products-table-body').append(`<tr><td><strong>\${p.name}</strong></td><td class="text-end text-muted small">ID: \${p.id}</td></tr>`);
+                                    });
+                                } else {
+                                    $('#deleteVoucherSuccess').show();
+                                    $('#confirmDeleteVoucherForm').show();
+                                }
+                            }
+                        });
+                    });
+                }
+                
+                $('#addVoucherID').on('input', function() {
+                    $(this).val($(this).val().toUpperCase());
+                });
+            });
         </script>
-
     </body>
-
 </html>

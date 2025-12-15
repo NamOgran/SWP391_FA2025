@@ -45,13 +45,12 @@ public class LoginProcessController extends HttpServlet {
         Staff staff = daoStaff.getStaffByEmailOrUsernameAndPassword(input, hashedPassword);
 
         if (staff != null) {
-            // === ĐĂNG NHẬP THÀNH CÔNG VỚI TƯ CÁCH STAFF/ADMIN ===
             session.setAttribute("staff", staff); // Đặt session "staff"
 
             if ("admin".equalsIgnoreCase(staff.getRole())) {
                 response.sendRedirect(request.getContextPath() + "/admin?tab=dashboard");
             } else if ("staff".equalsIgnoreCase(staff.getRole())) {
-                response.sendRedirect(request.getContextPath() + "/staff.jsp");
+                response.sendRedirect(request.getContextPath() + "/staff");
             } else {
                 // Đề phòng trường hợp role không xác định
                 request.setAttribute("message", "<div style='color:red'>Invalid staff role!</div>");
@@ -70,7 +69,7 @@ public class LoginProcessController extends HttpServlet {
             if (customer != null) {
                 session.setAttribute("acc", customer); // Đặt session "acc"
                 session.setAttribute("successMessage", "Login successful!");
-                response.sendRedirect(request.getContextPath() + "/productList");
+                response.sendRedirect(request.getContextPath());
             } else {
                 // Lỗi hiếm gặp: checkLogin() true nhưng không lấy được data
                 request.setAttribute("message", "<div style='color:red'>Cannot load customer data!</div>");

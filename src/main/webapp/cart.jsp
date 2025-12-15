@@ -1,867 +1,859 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%-- JSTL core / fmt / fn --%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-
-
-<%
-    // Nếu user quay lại cart (không phải vừa applyPromo hoặc đang ở payment)
-    String referer = request.getHeader("referer");
-    boolean fromPromo = (referer != null && referer.contains("applyPromo"));
-    boolean fromPayment = (referer != null && referer.contains("payment.jsp"));
-    if (!fromPromo && !fromPayment) {
-        session.removeAttribute("promoPercent");
-        session.removeAttribute("promoId");
-        session.removeAttribute("promoCode");
-        session.removeAttribute("promoType");
-        session.removeAttribute("promoValue");
-    }
-%>
-
+<%@page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
-              integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+        <title>Shopping Cart | GIO</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'>
-        <title>Cart</title>
-        <link rel="icon" href="${pageContext.request.contextPath}/images/LG1.png" type="image/x-icon">
+        <link href='https://fonts.googleapis.com/css?family=Quicksand:300,400,500,600,700&display=swap' rel='stylesheet'>
+        <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon">
+
         <script>
             const BASE = '${pageContext.request.contextPath}';
             function safeIdPart(s) {
                 return (s || '').toString().replace(/\W/g, '_');
             }
         </script>
-    </head>
 
-    <style>
-        body {
-            font-family:"Quicksand",sans-serif;
-            margin:0 10%;
-            color:#444;
-        }
-        .content {
-            text-align: center;
-            border-bottom: #a0816c solid 2px;
-            margin-top: 3%;
-            margin-bottom: 4%;
-        }
-        #highlight {
-            color:#a0816c;
-        }
-        .product {
-            margin:2% 0;
-        }
-        .product img {
-            width:100%;
-            height:100%;
-        }
-        .quan {
-            display:flex;
-            border:rgb(230,230,230) solid 1px;
-            width:40%;
-            margin:20px 0;
-        }
-        .quan button {
-            width:30%;
-            font-size:16px;
-            border:none;
-        }
-        .quan input {
-            border:none;
-            width:41%;
-            text-align:center;
-        }
-        .info {
-            border: 1px solid #dddddd;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-            background-color: #fff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            margin-top: -50px;
-        }
-        .payment{
-            width:100%;
-            padding:10px 0;
-            border:none;
-            background-color:rgb(255,207,49);
-            color:#65b9c4;
-            font-weight:1000;
-        }
-        .payment:hover{
-            background-color:red;
-            color:white;
-            transition:.7s;
-        }
-        .note li{
-            font-size:12px;
-            list-style:none;
-        }
-        .policy {
-            margin-top: 20px;
-            border: 1px solid #81e7f5;
-            background-color: #d7f0f3;
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-        }
-        .order-info {
-            top: -30px;
-            padding: 20px;
-        }
-        * {
-            margin:0;
-            padding:0;
-            font-family:'Quicksand',sans-serif;
-            box-sizing:border-box;
-            color:rgb(151,143,137);
-        }
-        img{
-            width:100%;
-        }
-        :root{
-            --logo-color:#a0816c;
-            --nav-list-color:#a0816c;
-            --icon-color:#a0816c;
-            --text-color:#a0816c;
-            --bg-color:#a0816c;
-        }
-        body::-webkit-scrollbar{
-            width:.5em;
-        }
-        body::-webkit-scrollbar-track{
-            box-shadow:inset 0 0 6px rgba(0,0,0,.3);
-        }
-        body::-webkit-scrollbar-thumb{
-            border-radius:50px;
-            background-color:var(--bg-color);
-            outline:1px solid slategrey;
-        }
-        nav{
-            height:70px;
-            justify-content:center;
-            display:flex;
-        }
-        .header_title{
-            display:flex;
-            text-align:center;
-            justify-content:center;
-            align-items:center;
-            background-color:#f5f5f5;
-            font-size:.8125rem;
-            font-weight:500;
-            height:30px;
-        }
-        .headerContent{
-            max-width:1200px;
-            margin:0 auto;
-        }
-        .headerContent,.headerList,.headerTool{
-            display:flex;
-            align-items:center;
-        }
-        .headerContent{
-            justify-content:space-around;
-        }
-        .logo a{
-            text-decoration:none;
-            color:var(--logo-color);
-            font-size:1.5em;
-            font-weight:bold;
-        }
-        .headerList{
-            margin:0;
-            list-style-type:none;
-        }
-        .headerListItem{
-            transition:font-size .3s ease;
-            height:24px;
-        }
-        .headerListItem:hover{
-            font-size:18px;
-        }
-        .headerListItem a{
-            margin:0 10px;
-            padding:22px 0;
-            text-decoration:none;
-            color:var(--text-color);
-        }
-        .dropdownMenu{
-            position:absolute;
-            width:200px;
-            padding:0;
-            margin-top:17px;
-            background-color:#fff;
-            display:none;
-            z-index:1;
-            box-shadow:rgba(0,0,0,.35) 0 5px 15px;
-        }
-        .dropdownMenu li{
-            list-style-type:none;
-            margin:0;
-            border-bottom:1px solid rgb(235 202 178);
-        }
-        .dropdownMenu li a{
-            text-decoration:none;
-            padding:5px 15px;
-            margin:0;
-            width:100%;
-            display:flex;
-            font-size:.9em;
-            color:var(--text-color);
-        }
-        .dropdownMenu li:hover{
-            background-color:#f1f1f1
-        }
-        .headerTool a{
-            padding:5px;
-        }
-        .headerToolIcon{
-            width:45px;
-            justify-content:center;
-            display:flex;
-        }
-        .icon{
-            cursor:pointer;
-            font-size:26px;
-        }
-        .searchBox,.infoBox{
-            right:13%;
-        }
-        .nowrap{
-            white-space:nowrap;
-        }
-        .money{
-            display:inline-block;
-            max-width:100%;
-            white-space:nowrap;
-            font-weight:800;
-            color:#d33;
-            line-height:1.2;
-            font-size: clamp(14px, 2vw, 22px);
-            font-variant-numeric: tabular-nums;
-        }
-        .promo-badge{
-            font-size:.85rem;
-            background:#f1f1f1;
-            border:1px dashed #d0a587;
-            padding:.1rem .4rem;
-            border-radius:.4rem;
-            color:#a0816c;
-        }
-        .promo-remove{
-            cursor:pointer;
-            margin-left:.5rem;
-            font-size:.85rem;
-        }
-                /* footer */
-        footer {
-            background-color: #f5f5f5;
-        }
+        <style>
+            /* --- VARIABLES --- */
+            :root {
+                --primary-color: #a0816c;
+                --primary-dark: #8a6d5a;
+                --text-main: #333;
+                --text-light: #777;
+                --bg-body: #f5f5f5;
+                --white: #ffffff;
+                --border-color: #e8e8e8;
+            }
 
-        .content-footer {
-            text-align: center;
-            padding: 30px;
-        }
+            body {
+                font-family: 'Quicksand', sans-serif;
+                background-color: var(--bg-body);
+                color: var(--text-main);
+                padding-bottom: 50px;
+                font-size: 14px;
+            }
 
-        .content-footer h3 {
-            color: #a0816c;
-        }
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
 
-        .bct {
-            width: 50%;
-        }
+            /* --- LOADING --- */
+            #page-loader {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: var(--white);
+                z-index: 99999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                transition: opacity 0.4s ease-out, visibility 0.4s;
+            }
+            .spinner-custom {
+                width: 50px;
+                height: 50px;
+                border: 3px solid rgba(160, 129, 108, 0.3);
+                border-radius: 50%;
+                border-top-color: var(--primary-color);
+                animation: spin 1s ease-in-out infinite;
+            }
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
 
-        footer p {
-            font-size: 15px;
-        }
+            /* --- STEP BAR --- */
+            .checkout-steps {
+                display: flex;
+                justify-content: center;
+                margin: 20px 0 30px 0;
+            }
+            .step-item {
+                display: flex;
+                align-items: center;
+                color: #ccc;
+                font-weight: 600;
+                font-size: 0.95rem;
+            }
+            .step-item.active {
+                color: var(--text-main);
+            }
+            .step-item.active .step-count {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+                color: #fff;
+            }
+            .step-count {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                border: 2px solid #ccc;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 8px;
+                font-size: 0.85rem;
+            }
+            .step-line {
+                width: 40px;
+                height: 2px;
+                background-color: #e0e0e0;
+                margin: 0 10px;
+            }
 
-        footer a {
-            text-decoration: none;
-            color: rgb(151, 143, 137);
-        }
+            /* --- LAYOUT --- */
+            .main-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 15px;
+            }
 
-        .items-footer {
-            margin: 5%;
-        }
+            /* =================================================================
+               GRID LAYOUT SYSTEM (SHOPEE STYLE - CÂN ĐỐI)
+               ================================================================= */
 
-        #highlight {
-            color: #a0816c;
-        }
+            /* Định nghĩa cột dùng chung cho Header và Item Row */
+            /* Cột: [Ảnh 100px] [Info Tự giãn] [Đơn giá 120px] [Số lượng 120px] [Thành tiền 120px] [Xóa 50px] */
+            .grid-template {
+                display: grid;
+                grid-template-columns: 100px 1fr 120px 130px 140px 50px;
+                gap: 15px;
+                align-items: center; /* Quan trọng: Căn giữa theo chiều dọc */
+            }
 
-        #img-footer img {
-            padding: 0;
-        }
+            /* --- Header Row --- */
+            .cart-header {
+                padding: 15px 20px;
+                background: #fff;
+                border-radius: 3px;
+                box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+                margin-bottom: 12px;
+                color: #888;
+                font-weight: 500;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+            .header-start {
+                text-align: left;
+            }
+            .header-end {
+                text-align: right;
+            }
 
-        #img-footer {
-            margin: 0 auto;
-        }
+            /* --- Cart Item Card --- */
+            .cart-item-card {
+                background: var(--white);
+                padding: 20px;
+                margin-bottom: 12px;
+                box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+                border-radius: 3px;
+                border: 1px solid transparent;
+                transition: all 0.2s;
+            }
+            .cart-item-card:hover {
+                border-color: rgba(160, 129, 108, 0.3);
+            }
+            .cart-item-card.item-disabled {
+                opacity: 0.6;
+                background-color: #fafafa;
+            }
 
-        .phone {
-            position: relative;
-        }
+            /* 1. Image */
+            .cart-img-wrapper {
+                width: 80px;
+                height: 80px;
+                flex-shrink: 0;
+                border: 1px solid #e1e1e1;
+                background: #f9f9f9;
+            }
+            .cart-img-wrapper img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
 
-        .bi-telephone {
-            cursor: pointer;
-            font-size: 3em;
-            /* width: 85px; */
-            /* height: 60px; */
-            /* display: flex; */
-            position: absolute;
-            top: -16%;
-            left: 15px;
-        }
+            /* 2. Info (Name + Size) */
+            .cart-info {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                text-align: left;
+            }
+            .product-name {
+                font-size: 1rem;
+                font-weight: 600;
+                color: rgba(0,0,0,.87);
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                text-decoration: none;
+            }
+            .product-name:hover {
+                color: var(--primary-color);
+            }
 
-        .contact-item {
-            display: flex;
-        }
+            /* Size Dropdown (Nằm dưới tên) */
+            .size-wrapper {
+                display: flex;
+                align-items: center;
+            }
+            .size-label {
+                font-size: 0.8rem;
+                color: #999;
+                margin-right: 5px;
+            }
+            .size-select {
+                padding: 2px 8px;
+                border: 1px solid #ddd;
+                border-radius: 2px;
+                background-color: #fff;
+                font-size: 0.8rem;
+                color: #555;
+                cursor: pointer;
+                outline: none;
+            }
+            .size-select:focus {
+                border-color: var(--primary-color);
+            }
 
-        .contact-link {
-            margin-right: 10px;
-            border: 1px solid #a0816c;
-            border-radius: 5px;
-            padding: 5px;
-            width: 35.6px;
-            justify-content: center;
-            display: flex;
-        }
+            /* 3. Unit Price */
+            .col-unit-price {
+                text-align: center;
+                color: #666;
+                font-size: 0.95rem;
+            }
 
-        .contact-link:hover {
-            background-color: var(--bg-color);
+            /* 4. Quantity (Căn giữa ô) */
+            .col-qty {
+                display: flex;
+                justify-content: center;
+            }
+            .qty-control {
+                display: flex;
+                align-items: center;
+                border: 1px solid #ddd;
+                border-radius: 2px;
+            }
+            .qty-btn {
+                width: 30px;
+                height: 30px;
+                border: none;
+                background: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: 0.2s;
+                color: #333;
+            }
+            .qty-btn:hover:not(:disabled) {
+                background: #f8f8f8;
+                color: var(--primary-color);
+            }
+            .qty-btn:first-child {
+                border-right: 1px solid #ddd;
+            }
+            .qty-btn:last-child {
+                border-left: 1px solid #ddd;
+            }
 
-            .bi-facebook::before,
-            .bi-instagram::before {
+            .qty-input {
+                width: 45px;
+                height: 30px;
+                border: none;
+                text-align: center;
+                font-weight: 500;
+                color: var(--text-main);
+                font-size: 0.95rem;
+                background: #fff;
+                pointer-events: none;
+            }
+
+            /* 5. Total Price */
+            .col-total {
+                text-align: right;
+            }
+            .line-total {
+                font-size: 1rem;
+                font-weight: 700;
+                color: var(--primary-color);
+                display: block;
+            }
+            .old-price {
+                font-size: 0.85rem;
+                color: #999;
+                text-decoration: line-through;
+            }
+
+            /* 6. Action */
+            .col-action {
+                text-align: center;
+            }
+            .btn-remove {
+                border: none;
+                background: transparent;
+                color: #333;
+                font-size: 1.1rem;
+                cursor: pointer;
+                transition: 0.2s;
+            }
+            .btn-remove:hover {
+                color: #dc3545;
+            }
+
+            /* Warnings */
+            .cart-warning {
+                font-size: 0.75rem;
+                margin-top: 4px;
+                font-weight: 500;
+            }
+            .cart-warning.error {
+                color: #dc3545;
+            }
+            .cart-warning.info {
+                color: #fd7e14;
+            }
+
+            /* --- ORDER SUMMARY (Sticky Right) --- */
+            .summary-card {
+                background: var(--white);
+                border-radius: 3px;
+                padding: 20px;
+                box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+                position: sticky;
+                top: 80px;
+            }
+            .summary-header {
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 1px dashed #ddd;
+            }
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 12px;
+                font-size: 0.95rem;
+                color: #666;
+            }
+            .summary-row.total {
+                border-top: 1px dashed #ddd;
+                padding-top: 15px;
+                margin-top: 15px;
+                color: var(--text-main);
+                font-weight: 700;
+                font-size: 1.2rem;
+                align-items: center;
+            }
+            .text-highlight {
+                color: var(--primary-color) !important;
+                font-size: 1.4rem;
+            }
+
+            .checkout-btn {
+                width: 100%;
+                padding: 12px;
+                margin-top: 20px;
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 2px;
+                font-weight: 600;
+                font-size: 1rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                transition: all 0.2s;
+            }
+            .checkout-btn:hover:not(:disabled) {
+                background-color: var(--primary-dark);
+                opacity: 0.9;
+            }
+            .checkout-btn:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+
+            /* --- EMPTY STATE --- */
+            .empty-cart-box {
+                background: white;
+                border-radius: 3px;
+                padding: 60px 20px;
+                text-align: center;
+                box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+            }
+            .empty-icon {
+                font-size: 4rem;
+                color: #ddd;
+                margin-bottom: 15px;
+            }
+            .btn-continue {
+                display: inline-block;
+                padding: 10px 30px;
+                background: var(--text-main);
+                color: white;
+                border-radius: 2px;
+                font-weight: 600;
+                margin-top: 15px;
+                transition: 0.3s;
+            }
+            .btn-continue:hover {
+                background: #000;
                 color: white;
             }
-        }
-    </style>
+
+            /* --- RESPONSIVE MOBILE --- */
+            @media (max-width: 768px) {
+                .cart-header {
+                    display: none;
+                }
+
+                .cart-item-card {
+                    display: block;
+                    position: relative;
+                    padding: 15px;
+                }
+
+                .grid-template {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0;
+                }
+
+                /* Layout Mobile */
+                .cart-img-wrapper {
+                    width: 80px;
+                    height: 80px;
+                    margin-right: 15px;
+                    margin-bottom: 10px;
+                }
+                .cart-info {
+                    width: calc(100% - 100px);
+                    margin-bottom: 10px;
+                }
+                .col-unit-price {
+                    display: none;
+                } /* Ẩn đơn giá trên mobile */
+
+                .col-qty {
+                    width: auto;
+                    margin-right: auto;
+                }
+                .col-total {
+                    width: auto;
+                    margin-left: auto;
+                    text-align: right;
+                }
+
+                .col-action {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                }
+
+                .checkout-steps {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
 
     <body>
-        <!-- Header + Nav -->
-        <header class="header">
-            <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND </strong></div>
-            <div class="headerContent">
-                <div class="logo"><a href="${pageContext.request.contextPath}/productList">GIO</a></div>
-                <nav>
-                    <ul class="headerList">
-                        <li class="headerListItem"><a href="${pageContext.request.contextPath}/productList">Home page</a></li>
-                        <li class="headerListItem">
-                            <a href="${pageContext.request.contextPath}/productList/male">Men's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="${pageContext.request.contextPath}/productList/male/t_shirt">T-shirt</a></li>
-                                <li><a href="${pageContext.request.contextPath}/productList/male/pant">Long pants</a></li>
-                                <li><a href="${pageContext.request.contextPath}/productList/male/short">Shorts</a></li>
-                            </ul>
-                        </li>
-                        <li class="headerListItem">
-                            <a href="${pageContext.request.contextPath}/productList/female">Women's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="${pageContext.request.contextPath}/productList/female/t_shirt">T-shirt</a></li>
-                                <li><a href="${pageContext.request.contextPath}/productList/female/pant">Long pants</a></li>
-                                <li><a href="${pageContext.request.contextPath}/productList/female/dress">Dress</a></li>
-                            </ul>
-                        </li>
-                        <li class="headerListItem">
-                            <a href="${pageContext.request.contextPath}/aboutUs.jsp">Information<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="${pageContext.request.contextPath}/aboutUs.jsp">About Us</a></li>
-                                <li><a href="${pageContext.request.contextPath}/contact.jsp">Contact</a></li>
-                                <li><a href="${pageContext.request.contextPath}/policy.jsp">Exchange policy</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </nav>
-                <div class="headerTool">
-                    <div class="headerToolIcon">
-                        <a href="${pageContext.request.contextPath}/profile"><i class="bi bi-person icon"></i></a>
+        <div id="page-loader"><div class="spinner-custom"></div></div>
+
+        <%@ include file="header.jsp" %>
+
+        <div class="main-container">
+
+            <c:choose>
+                <%-- EMPTY CART --%>
+                <c:when test="${empty requestScope.cartList}">
+                    <div class="empty-cart-box mt-4" data-aos="fade-up">
+                        <i class="bi bi-cart-x empty-icon"></i>
+                        <h3>Your cart is empty</h3>
+                        <p class="text-muted">Looks like you haven't added anything to your cart yet.</p>
+                        <a href="${pageContext.request.contextPath}/" class="btn-continue">Start Shopping</a>
                     </div>
-                    <div class="headerToolIcon">
-                        <a href="${pageContext.request.contextPath}/loadCart"><i class="bi bi-cart2 icon"></i></a>
+                </c:when>
+
+                <%-- HAS ITEMS --%>
+                <c:otherwise>
+                    <div class="checkout-steps">
+                        <div class="step-item active"><span class="step-count">1</span> Shopping Cart</div>
+                        <div class="step-line"></div>
+                        <div class="step-item"><span class="step-count">2</span> Checkout</div>
+                        <div class="step-line"></div>
+                        <div class="step-item"><span class="step-count">3</span> Order Complete</div>
                     </div>
-                </div>
-            </div>
-            <hr width="100%" color="#d0a587" />
-        </header>
 
-        <div class="content"><h2 id="highlight">Your Cart</h2></div>
+                    <div class="row g-4">
+                        <div class="col-lg-8">
 
-        <!-- Thông báo số lượng sản phẩm -->
-        <div class="status">
-            <p>You currently have <b id="productCount">${quanP}</b><b> products</b> in your cart</p>
-        </div>
+                            <div class="cart-header grid-template d-none d-md-grid">
+                                <div class="header-start" style="grid-column: span 2;">Product</div>
+                                <div>Unit Price</div>
+                                <div>Quantity</div>
+                                <div class="header-end">Total Price</div>
+                                <div><i class="bi bi-trash3"></i></div>
+                            </div>
 
-        <div class="row">
-            <!-- Cột danh sách item -->
-            <div class="col-md-8">
-                <%-- Lặp qua cartList để render từng item --%>
-                <c:forEach items="${requestScope.cartList}" var="cart">
-                    <%-- size an toàn để gắn vào id --%>
-                    <c:set var="safeSize" value="${fn:replace(fn:replace(cart.size_name, ' ', '_'), '-', '_')}" />
+                            <c:set var="hasCartError" value="false" />
+                            <div class="cart-items-column">
+                                <c:forEach items="${requestScope.cartList}" var="cart">
 
-                    <%-- Định dạng đơn giá & thành tiền --%>
-                    <fmt:formatNumber var="unitPriceFmt" type="number" value="${cart.price}" pattern="###,###" />
-                    <c:set var="lineTotalRaw" value="${cart.price * cart.quantity}" />
-                    <fmt:formatNumber var="lineTotalFmt" type="number" value="${lineTotalRaw}" pattern="###,###" />
+                                    <c:set var="availableQty" value="${cart.stockQuantity}" />
+                                    <c:set var="isMissingProduct" value="${empty nameProduct[cart.productID]}" />
+                                    <c:set var="isOutOfStock" value="${availableQty le 0}" />
+                                    <c:set var="isStoppedSelling" value="${activeP[cart.productID] != null and not activeP[cart.productID]}" />
+                                    <c:set var="isInsufficient" value="${availableQty lt cart.quantity}" />
+                                    <c:if test="${isMissingProduct or isOutOfStock or isInsufficient or isStoppedSelling}">
+                                        <c:set var="hasCartError" value="true" />
+                                    </c:if>
 
-                    <!-- Item -->
-                    <div class="row" id='user${cart.productID}${safeSize}'>
-                        <div class="product">
-                            <div class="row">
-                                <div class="col-2">
-                                    <!-- Ảnh sản phẩm theo productID -->
-                                    <img src="${picUrlMap[cart.productID]}" alt="">
-                                </div>
+                                    <c:set var="priceAtAdd" value="${cart.price}" />
+                                    <c:set var="priceNow" value="${priceP[cart.productID]}" />
+                                    <c:if test="${empty priceNow}"><c:set var="priceNow" value="${priceAtAdd}" /></c:if>
+                                    <c:set var="hasPriceChanged" value="${not empty priceNow and priceNow ne priceAtAdd}" />
+                                    <c:set var="safeSize" value="${fn:replace(fn:replace(cart.size_name, ' ', '_'), '-', '_')}" />
+                                    <c:set var="lineCurrent" value="${priceNow * cart.quantity}" />
+                                    <fmt:formatNumber var="lineCurrentFmt" type="number" value="${lineCurrent}" pattern="###,###" />
+                                    <c:set var="lineOriginal" value="${priceAtAdd * cart.quantity}" />
+                                    <fmt:formatNumber var="lineOriginalFmt" type="number" value="${lineOriginal}" pattern="###,###" />
+                                    <fmt:formatNumber var="unitPriceFmt" type="number" value="${priceNow}" pattern="###,###" />
 
-                                <div class="col-8">
-                                    <b id="highlight">${nameProduct[cart.productID]}</b>
-                                    <p>Size: ${cart.size_name}</p>
+                                    <div class="cart-item-card grid-template ${isMissingProduct or isOutOfStock or isStoppedSelling ? 'item-disabled' : ''}" 
+                                         id='user${cart.productID}${safeSize}'>
 
-                                    <!-- Cụm tăng/giảm số lượng (readonly input để đồng bộ bằng Ajax) -->
-                                    <div class="quan">
-                                        <button onclick="decrementQuantity(${cart.productID},${cart.price},${cart.quantity}, '${cart.size_name}')" data-product-id="${cart.productID}">-</button>
-                                        <input type="number" name="quantity" id="quantity${cart.productID}${safeSize}" value="${cart.quantity}" min="1" readonly>
-                                        <button onclick="incrementQuantity2(${cart.productID},${cart.price},${cart.quantity}, '${cart.size_name}')" data-product-id="${cart.productID}">+</button>
+                                        <div class="cart-img-wrapper">
+                                            <a href="${pageContext.request.contextPath}/productDetail?id=${cart.productID}">
+                                                <img src="${picUrlMap[cart.productID]}" alt="${nameProduct[cart.productID]}">
+                                            </a>
+                                        </div>
+
+                                        <div class="cart-info">
+                                            <a href="${pageContext.request.contextPath}/productDetail?id=${cart.productID}" class="product-name">
+                                                ${nameProduct[cart.productID]}
+                                            </a>
+
+                                            <div class="size-wrapper mt-1">
+                                                <span class="size-label">Size:</span>
+                                                <c:set var="sizesOfProduct" value="${productSizeMap[cart.productID]}" />
+                                                <c:choose>
+                                                    <c:when test="${not empty sizesOfProduct}">
+                                                        <select class="size-select"
+                                                                onchange="changeSize(${cart.productID}, '${cart.size_name}', this)"
+                                                                <c:if test="${isMissingProduct or isOutOfStock or isStoppedSelling}">disabled</c:if>>
+                                                            <c:forEach var="sz" items="${sizesOfProduct}">
+                                                                <option value="${sz}" <c:if test="${sz eq cart.size_name}">selected</c:if>>${sz}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="badge bg-light text-dark border">${cart.size_name}</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+
+                                            <c:choose>
+                                                <c:when test="${isMissingProduct}"><div class="cart-warning error">This product is no longer available. Please remove it from your cart.</div></c:when>
+                                                <c:when test="${isStoppedSelling}"><div class="cart-warning error">This product is no longer for sale. Please remove it from your cart.</div></c:when>
+                                                <c:when test="${isOutOfStock}"><div class="cart-warning error">This item is out of stock. Please remove it from your cart.</div></c:when>
+                                                <c:when test="${isInsufficient}"><div class="cart-warning info"> Only ${availableQty} item(s) left in stock. Please reduce your quantity.</div></c:when>
+                                            </c:choose>
+                                        </div>
+
+                                        <div class="col-unit-price">
+                                            ${unitPriceFmt} VND
+                                        </div>
+
+                                        <div class="col-qty">
+                                            <div class="qty-control">
+                                                <button type="button" class="qty-btn"
+                                                        onclick="decrementQuantity(${cart.productID},${priceNow},${cart.quantity}, '${cart.size_name}')"
+                                                        <c:if test="${isMissingProduct or isOutOfStock or isStoppedSelling}">disabled</c:if>>
+                                                            <i class="bi bi-dash"></i>
+                                                        </button>
+
+                                                        <input type="text" class="qty-input"
+                                                               id="quantity${cart.productID}${safeSize}"
+                                                        value="${cart.quantity}" readonly>
+
+                                                <button type="button" class="qty-btn"
+                                                        onclick="incrementQuantity2(${cart.productID},${priceNow},${cart.quantity}, '${cart.size_name}')"
+                                                        <c:if test="${isMissingProduct or isOutOfStock or isStoppedSelling}">disabled</c:if>>
+                                                            <i class="bi bi-plus"></i>
+                                                        </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-total">
+                                                <span class="line-total" id="price2${cart.productID}${safeSize}">${lineCurrentFmt} VND</span>
+                                            <c:if test="${hasPriceChanged}">
+                                                <div class="old-price" id="price1${cart.productID}${safeSize}">${lineOriginalFmt} VND</div>
+                                            </c:if>
+                                        </div>
+
+                                        <div class="col-action">
+                                            <button class="btn-remove"
+                                                    onclick="showDeleteConfirm(${cart.productID}, '${cart.size_name}')"
+                                                    id="btnDel${cart.productID}">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </div>
+
+                                        <input type="hidden" class="price" value="${cart.price}">
+                                        <input type="hidden" class="quantity" value="${cart.quantity}">
+                                        <input type="hidden" class="size" value="${cart.size_name}">
                                     </div>
-
-                                    <!-- Đơn giá hiển thị -->
-                                    <b id="price1${cart.productID}${safeSize}" class="nowrap">${unitPriceFmt}</b>
-                                </div>
-
-                                <div class="col-2">
-                                    <!-- Xoá item -->
-                                    <button class="btn btn-danger" onclick="deleteCartItem(${cart.productID}, '${cart.size_name}')" data-product-id="${cart.productID}">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                    <!-- Giá trị thô phục vụ script nếu cần -->
-                                    <input type="hidden" class="price" value="${cart.price}">
-                                    <input type="hidden" class="quantity" value="${cart.quantity}">
-                                    <input type="hidden" class="size" value="${cart.size_name}">
-                                </div>
+                                </c:forEach>
                             </div>
+                        </div>
 
-                            <!-- Thành tiền dòng -->
-                            <div class="row">
-                                <div class="col-10"><b>Into money:</b></div>
-                                <div class="col-2 text-end nowrap" id="price2${cart.productID}${safeSize}">
-                                    <b class="line-total">${lineTotalFmt}</b>
+                        <div class="col-lg-4">
+                            <div class="summary-card">
+                                <div class="summary-header">Order Summary</div>
+                                <div class="summary-row">
+                                    <span>Subtotal</span>
+                                    <span id="sum" class="fw-bold text-dark">0 VND</span>
                                 </div>
+                                <div class="summary-row total">
+                                    <span>Total</span>
+                                    <span id="grandTotal" class="text-highlight">0 VND</span>
+                                </div>
+
+                                <form action="${pageContext.request.contextPath}/loadPayment" method="get">
+                                    <button class="checkout-btn" <c:if test="${hasCartError}">disabled</c:if>>
+                                            Check Out
+                                        </button>
+                                        <input type="hidden" name="size" value="${size}">
+                                    <input type="hidden" id="subtotalInput" name="total" value="0">
+                                    <input type="hidden" id="discountInput" name="discount" value="0">
+                                    <input type="hidden" id="grandTotalInput" name="grandTotal" value="0">
+                                </form>
+
+                                <c:if test="${hasCartError}">
+                                    <div class="cart-warning error mt-2 text-center">
+                                        Please remove unavailable items.
+                                    </div>
+                                </c:if>
                             </div>
                         </div>
                     </div>
-                </c:forEach>
-            </div>
+                </c:otherwise>
+            </c:choose>
+        </div>
 
-            <!-- Cột thông tin đơn hàng + promo -->
-            <div class="col-md-4 order-info">
-                <div class="info">
-                    <b id="highlight">Order Information</b>
-                    <hr>
-
-                    <!-- Tạm tính -->
-                    <div class="row align-items-center">
-                        <div class="col-7"><b>Subtotal:</b></div>
-                        <div class="col-5 text-end"><h4 class="m-0 nowrap"><b id="sum" class="money">0&nbsp;VND</b></h4></div>
-                    </div>
-
-                    <!-- Phí ship (free nếu đạt ngưỡng) -->
-                    <div class="row align-items-center">
-                        <div class="col-7"><b>Shipping:</b></div>
-                        <div class="col-5 text-end"><h4 class="m-0 nowrap"><b id="shippingValue" class="money">0&nbsp;VND</b></h4></div>
-                    </div>
-
-                    <!-- Nhập/áp dụng mã giảm -->
-                    <div class="mt-3">
-                        <div class="input-group">
-                            <input id="promoInput" class="form-control" type="text"
-                                   inputmode="numeric" pattern="[0-9]*"
-                                   placeholder="Enter promo">
-                            <button class="btn btn-outline-secondary" type="button" onclick="applyPromo()">Apply</button>
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow" style="border-radius: 4px;">
+                    <div class="modal-body text-center p-4">
+                        <div class="mb-3 text-warning"><i class="bi bi-exclamation-circle display-4"></i></div>
+                        <h6 class="mb-3">Do you want to remove this item?</h6>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">No</button>
+                            <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Yes</button>
                         </div>
-                        <small id="promoHint" class="text-muted d-block mt-1">
-                            <span id="badgePromo" class="promo-badge ms-2" style="display:none;"></span>
-                            <span class="promo-remove text-danger" style="display:none;" id="promoRemove" onclick="removePromo()">Remove</span>
-                        </small>
-                        <small id="promoError" class="text-danger d-block mt-1" style="display:none;"></small>
                     </div>
-
-                    <!-- Hàng giảm giá hiển thị khi có promo -->
-                    <div class="row align-items-center mt-2" id="discountRow" style="display:none;">
-                        <div class="col-7"><b>Promo: </b></div>
-                        <div class="col-5 text-end"><h5 class="m-0 nowrap"><b id="discountValue" class="money">0&nbsp;VND</b></h5></div>
-                    </div>
-
-                    <div class="mt-2"></div>
-
-                    <!-- Tổng cộng -->
-                    <div class="row align-items-center">
-                        <div class="col-7"><b>Total:</b></div>
-                        <div class="col-5 text-end"><h4 class="m-0 nowrap"><b id="grandTotal" class="money">0&nbsp;VND</b></h4></div>
-                    </div>
-
-                    <hr>
-                    <ul class="note">
-                        <li>Shipping is free for orders over 200,000 VND.</li>
-                        <li>You can also enter a discount code at the checkout page.</li>
-                    </ul>
-
-                    <!-- Submit sang payment.jsp + truyền hidden các giá trị đã tính -->
-                    <form action="${pageContext.request.contextPath}/payment.jsp" method="get">
-                        <button class="payment">PAYMENT</button>
-                        <input type="hidden" name="size" value="${size}">
-                        <input type="hidden" id="subtotalInput" name="total" value="0">
-                        <input type="hidden" id="shippingInput" name="shipping" value="0">
-                        <input type="hidden" id="discountInput" name="discount" value="0">
-                        <input type="hidden" id="grandTotalInput" name="grandTotal" value="0">
-                        <input type="hidden" id="promoCodeInput" name="promoCode" value="">
-                        <input type="hidden" id="promoIdInput" name="promoId" value="">
-                        <input type="hidden" id="promoTypeInput" name="promoType" value="">
-                        <input type="hidden" id="promoValueInput" name="promoValue" value="">
-                    </form>
-                </div>
-
-                <div class="policy">
-                    <b>Purchase policy:</b>
-                    <p>Currently, we only apply payments for orders with a minimum value of <b>0 VND</b> or more.</p>
                 </div>
             </div>
         </div>
 
-                <footer>
-            <div class="content-footer">
-                <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@dotai.vn & @fired.vn</p>
-            </div>
-
-            <div class="row" id="img-footer">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_1_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_2_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_3_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_4_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_5_img.jpg?v=55"
-                     alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_6_img.jpg?v=55"
-                     alt="">
-            </div>
-
-            <div class="items-footer">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <h4 id="highlight">About Gio</h4>
-                        <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
-                        <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..."
-                             class="bct">
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Contact</h4>
-                        <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
-                        <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                        <p><b>Email:</b> info@gio.vn</p>
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Customer support</h4>
-                        <ul class="CS">
-                            <li><a href="">Search</a></li>
-                            <li><a href="">Introduce</a></li>
-                        </ul>
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Customer care</h4>
-                        <div class="row phone">
-                            <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
-                            <div class="col-9">
-                                <h4 id="highlight">0123.456.789</h4>
-                                <a href="">info@gio.vn</a>
-                            </div>
-                        </div>
-                        <h5 id="highlight">Follow Us</h5>
-                        <div class="contact-item">
-                            <a href="" class="contact-link"><i class="bi bi-facebook contact-icon"></i></a>
-                            <a href="" class="contact-link"><i class="bi bi-instagram contact-icon"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-        </footer>
-
-        <%-- jQuery local + CDN (có thể giữ 1 bản) --%>
         <script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
-        <script src="${pageContext.request.contextPath}/js/jquery.validate.min.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
-                                // --------- HẰNG SỐ VẬN CHUYỂN/PROMO ---------
-                                const SHIPPING_FEE = 20000;                 // phí ship mặc định
-                                const FREE_SHIP_THRESHOLD = 200000;         // ngưỡng freeship
+                                                        // --- UTILS ---
+                                                        function formatVND(amount) {
+                                                            return (amount || 0).toLocaleString('vi-VN') + "\u00A0VND";
+                                                        }
+                                                        function onlyDigits(s) {
+                                                            return (s || '').toString().replace(/[^\d]/g, '');
+                                                        }
+                                                        function toInt(text) {
+                                                            return parseInt(onlyDigits(text), 10) || 0;
+                                                        }
 
-                                // Đọc promo đã áp dụng từ session (nếu có)
-                                const INITIAL_PROMO_PERCENT = parseInt('${sessionScope.promoPercent}', 10) || 0;
-                                const INITIAL_PROMO_ID = parseInt('${sessionScope.promoId}', 10) || 0;
-                                let appliedPromo = {type: 'percent', value: INITIAL_PROMO_PERCENT, id: INITIAL_PROMO_ID};
+                                                        // --- CALCULATION LOGIC ---
+                                                        function calcSubtotalFromDom() {
+                                                            let subtotal = 0;
+                                                            document.querySelectorAll('.cart-item-card').forEach(itemCard => {
+                                                                const lineTotalEl = itemCard.querySelector('.line-total');
+                                                                if (lineTotalEl)
+                                                                    subtotal += toInt(lineTotalEl.textContent);
+                                                            });
+                                                            return subtotal;
+                                                        }
 
-                                // --------- UTIL: format/parse tiền ---------
-                                function formatVND(amount) {
-                                    return (amount || 0).toLocaleString('vi-VN') + "\u00A0VND";
-                                }
-                                function onlyDigits(s) {
-                                    return (s || '').toString().replace(/[^\d]/g, '');
-                                }
-                                function toInt(text) {
-                                    return parseInt(onlyDigits(text), 10) || 0;
-                                }
+                                                        function recalcTotals() {
+                                                            const subtotal = calcSubtotalFromDom();
+                                                            const grand = subtotal; // Logic tính tổng
 
-                                // Tính subtotal từ DOM (cộng tất cả .line-total)
-                                function calcSubtotalFromDom() {
-                                    let subtotal = 0;
-                                    document.querySelectorAll('.line-total').forEach(el => subtotal += toInt(el.textContent));
-                                    return subtotal;
-                                }
+                                                            const sumEl = document.getElementById('sum');
+                                                            const grandEl = document.getElementById('grandTotal');
 
-                                // Khoá/mở ô nhập mã khi giỏ trống/có hàng
-                                function setPromoDisabled(disabled) {
-                                    const i = document.getElementById('promoInput');
-                                    const btn = i?.nextElementSibling;
-                                    if (i)
-                                        i.disabled = !!disabled;
-                                    if (btn)
-                                        btn.disabled = !!disabled;
-                                }
+                                                            if (sumEl)
+                                                                sumEl.innerHTML = formatVND(subtotal);
+                                                            if (grandEl)
+                                                                grandEl.innerHTML = formatVND(grand);
 
-                                // Cập nhật UI khi có/không có promo + set hidden inputs
-                                function updatePromoUI(subtotal) {
-                                    const badge = document.getElementById('badgePromo');
-                                    const rm = document.getElementById('promoRemove');
-                                    const err = document.getElementById('promoError');
-                                    const row = document.getElementById('discountRow');
-                                    const val = document.getElementById('discountValue');
-                                    if (err) {
-                                        err.style.display = 'none';
-                                        err.innerText = '';
-                                    }
+                                                            if (document.getElementById('subtotalInput'))
+                                                                document.getElementById('subtotalInput').value = subtotal;
+                                                            if (document.getElementById('grandTotalInput'))
+                                                                document.getElementById('grandTotalInput').value = grand;
+                                                        }
 
-                                    if (appliedPromo && appliedPromo.type === 'percent' && appliedPromo.value > 0) {
-                                        const discount = Math.round(subtotal * appliedPromo.value / 100.0);
-                                        row.style.display = '';
-                                        val.innerHTML = formatVND(discount);
+                                                        // --- AJAX OPERATIONS (LOGIC GỐC) ---
+                                                        function incrementQuantity2(productID, price, quantity, size_name) {
+                                                            const safe = safeIdPart(size_name);
+                                                            const qtyInput = document.getElementById('quantity' + productID + safe);
+                                                            const newQty = (parseInt(qtyInput.value, 10) || 1) + 1;
 
-                                        if (badge) {
-                                            const idTxt = appliedPromo.id ? ('#' + appliedPromo.id + ' — ') : '';
-                                            badge.style.display = 'inline-block';
-                                            badge.textContent = `Promo`;
-                                        }
-                                        if (rm) {
-                                            rm.style.display = 'inline';
-                                        }
+                                                            $.ajax({
+                                                                url: BASE + '/cartIncrease', method: 'GET',
+                                                                data: {id: productID, price: price, quantity: newQty, size: size_name},
+                                                                success: function (response) {
+                                                                    const values = (response || '').split(',');
+                                                                    const line = parseInt(values[0] || '0', 10);
+                                                                    const temp = parseInt(values[2] || '0', 10);
+                                                                    if (temp === 0) {
+                                                                        qtyInput.value = newQty;
+                                                                        const holder = document.querySelector('#price2' + productID + safe + ' .line-total');
+                                                                        holder.textContent = (isNaN(line) || line <= 0) ? formatVND(price * newQty) : formatVND(line);
+                                                                        recalcTotals();
+                                                                    } else {
+                                                                        alert('Sorry! Max stock reached.');
+                                                                    }
+                                                                },
+                                                                error: function () {
+                                                                    alert('Error updating cart');
+                                                                }
+                                                            });
+                                                        }
 
-                                        // hidden inputs
-                                        document.getElementById('discountInput').value = discount;
-                                        document.getElementById('promoCodeInput').value = appliedPromo.id ? String(appliedPromo.id) : '';
-                                        const pid = document.getElementById('promoIdInput');
-                                        if (pid)
-                                            pid.value = appliedPromo.id ? String(appliedPromo.id) : '';
-                                        document.getElementById('promoTypeInput').value = 'percent';
-                                        document.getElementById('promoValueInput').value = appliedPromo.value;
-                                    } else {
-                                        row.style.display = 'none';
-                                        val.innerHTML = formatVND(0);
-                                        if (badge)
-                                            badge.style.display = 'none';
-                                        if (rm)
-                                            rm.style.display = 'none';
+                                                        function decrementQuantity(productID, price, quantity, size_name) {
+                                                            const safe = safeIdPart(size_name);
+                                                            const qtyInput = document.getElementById('quantity' + productID + safe);
+                                                            const newQty = (parseInt(qtyInput.value, 10) || 1) - 1;
+                                                            if (newQty <= 0)
+                                                                return;
 
-                                        // reset hidden inputs
-                                        document.getElementById('discountInput').value = 0;
-                                        document.getElementById('promoCodeInput').value = '';
-                                        const pid = document.getElementById('promoIdInput');
-                                        if (pid)
-                                            pid.value = '';
-                                        document.getElementById('promoTypeInput').value = '';
-                                        document.getElementById('promoValueInput').value = '';
-                                    }
-                                }
+                                                            $.ajax({
+                                                                url: BASE + '/cartDecrease', method: 'GET',
+                                                                data: {id: productID, price: price, quantity: newQty, size: size_name},
+                                                                success: function (response) {
+                                                                    const values = (response || '').split(',');
+                                                                    const line = parseInt(values[0] || '0', 10);
+                                                                    qtyInput.value = newQty;
+                                                                    const holder = document.querySelector('#price2' + productID + safe + ' .line-total');
+                                                                    holder.textContent = (isNaN(line) || line <= 0) ? formatVND(price * newQty) : formatVND(line);
+                                                                    recalcTotals();
+                                                                },
+                                                                error: function () {
+                                                                    alert('Error updating cart');
+                                                                }
+                                                            });
+                                                        }
 
-                                // Recalculate: subtotal, shipping, discount, grand total + bind về UI & hidden inputs
-                                function recalcTotals() {
-                                    const subtotal = calcSubtotalFromDom();
-                                    const hasItems = subtotal > 0;
-                                    const shipping = !hasItems ? 0 : (subtotal >= FREE_SHIP_THRESHOLD ? 0 : SHIPPING_FEE);
-                                    const discount = (appliedPromo && appliedPromo.type === 'percent')
-                                            ? Math.round(subtotal * (appliedPromo.value || 0) / 100.0) : 0;
-                                    const grand = Math.max(0, subtotal + shipping - discount);
+                                                        function changeSize(productID, oldSize, selectEl) {
+                                                            const newSize = selectEl.value;
+                                                            if (!newSize || newSize === oldSize)
+                                                                return;
 
-                                    document.getElementById('sum').innerHTML = formatVND(subtotal);
-                                    document.getElementById('shippingValue').innerHTML = formatVND(shipping);
-                                    document.getElementById('grandTotal').innerHTML = formatVND(grand);
+                                                            $.ajax({
+                                                                url: BASE + '/cartChangeSize', method: 'GET',
+                                                                data: {id: productID, oldSize: oldSize, newSize: newSize},
+                                                                success: function (response) {
+                                                                    if (!response) {
+                                                                        alert('Failed to change size.');
+                                                                        selectEl.value = oldSize;
+                                                                        return;
+                                                                    }
+                                                                    const parts = response.split(',');
+                                                                    const status = parts[0];
+                                                                    if (status === 'OK') {
+                                                                        location.reload();
+                                                                    } else if (status === 'OUT_OF_STOCK') {
+                                                                        alert('Selected size is out of stock.');
+                                                                        selectEl.value = oldSize;
+                                                                    } else if (status === 'NOT_ENOUGH_STOCK') {
+                                                                        alert('Not enough stock for the selected size.');
+                                                                        selectEl.value = oldSize;
+                                                                    } else {
+                                                                        alert('Failed to change size.');
+                                                                        selectEl.value = oldSize;
+                                                                    }
+                                                                },
+                                                                error: function () {
+                                                                    alert('Error changing size.');
+                                                                    selectEl.value = oldSize;
+                                                                }
+                                                            });
+                                                        }
 
-                                    document.getElementById('subtotalInput').value = subtotal;
-                                    document.getElementById('shippingInput').value = shipping;
-                                    document.getElementById('grandTotalInput').value = grand;
+                                                        // --- DELETE LOGIC ---
+                                                        let deleteTarget = null;
+                                                        function showDeleteConfirm(productID, size_name) {
+                                                            deleteTarget = {id: productID, size: size_name};
+                                                            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                                                            modal.show();
+                                                        }
 
-                                    setPromoDisabled(!hasItems);
-                                    updatePromoUI(subtotal);
-                                }
+                                                        document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                                                            if (!deleteTarget)
+                                                                return;
+                                                            $.ajax({
+                                                                url: BASE + '/cartDelete', method: 'GET',
+                                                                data: {id: deleteTarget.id, size: deleteTarget.size},
+                                                                success: function () {
+                                                                    const safe = safeIdPart(deleteTarget.size);
+                                                                    const row = document.getElementById('user' + deleteTarget.id + safe);
+                                                                    const modalEl = document.getElementById('deleteConfirmModal');
+                                                                    const modal = bootstrap.Modal.getInstance(modalEl);
+                                                                    modal.hide();
+                                                                    if (row) {
+                                                                        row.style.transition = 'all 0.3s ease';
+                                                                        row.style.opacity = '0';
+                                                                        row.style.transform = 'translateX(20px)';
+                                                                        setTimeout(() => {
+                                                                            row.remove();
+                                                                            recalcTotals();
+                                                                            if (document.querySelectorAll('.cart-item-card').length === 0)
+                                                                                location.reload();
+                                                                        }, 300);
+                                                                    }
+                                                                },
+                                                                error: function () {
+                                                                    alert('Delete failed');
+                                                                }
+                                                            });
+                                                        });
 
-                                // Khởi tạo: tính tổng + hiển thị badge promo nếu có sẵn trong session
-                                document.addEventListener('DOMContentLoaded', function () {
-                                    recalcTotals();
-                                    if (INITIAL_PROMO_PERCENT > 0) {
-                                        const badge = document.getElementById('badgePromo');
-                                        const rm = document.getElementById('promoRemove');
-                                        if (badge) {
-                                            const idTxt = INITIAL_PROMO_ID ? ('#' + INITIAL_PROMO_ID + ' — ') : '';
-                                            badge.style.display = 'inline-block';
-                                            badge.textContent = `Promo %`;
-                                        }
-                                        if (rm) {
-                                            rm.style.display = 'inline';
-                                        }
-                                    }
-                                });
-
-                                // Gọi servlet /applyPromo để kiểm tra và lấy % giảm
-                                function applyPromo() {
-                                    const code = (document.getElementById('promoInput').value || '').trim();
-                                    const err = document.getElementById('promoError');
-                                    if (!code) {
-                                        err.innerText = 'Please enter a promo ID.';
-                                        err.style.display = 'block';
-                                        return;
-                                    }
-                                    err.style.display = 'none';
-                                    err.innerText = '';
-
-                                    $.ajax({
-                                        url: BASE + '/applyPromo',
-                                        method: 'POST',
-                                        dataType: 'json',
-                                        data: {code: code},
-                                        success: function (res) {
-                                            if (res && res.ok && res.type === 'percent') {
-                                                appliedPromo = {
-                                                    type: 'percent',
-                                                    value: parseInt(res.value || 0, 10) || 0,
-                                                    id: parseInt(res.promoId || 0, 10) || 0
-                                                };
-                                                recalcTotals(); // cập nhật tổng
-                                            } else {
-                                                err.innerText = (res && res.message) ? res.message : 'Promo is invalid.';
-                                                err.style.display = 'block';
-                                            }
-                                        },
-                                        error: function () {
-                                            err.innerText = 'Cannot apply promo right now.';
-                                            err.style.display = 'block';
-                                        }
-                                    });
-                                }
-
-                                // Bỏ áp dụng mã giảm
-                                function removePromo() {
-                                    appliedPromo = {type: 'percent', value: 0, id: 0};
-                                    document.getElementById('promoInput').value = '';
-                                    recalcTotals();
-                                }
-
-                                // Tăng số lượng: gọi /cartIncrease; response: "lineTotal,...,temp"
-                                function incrementQuantity2(productID, price, quantity, size_name) {
-                                    const safe = safeIdPart(size_name);
-                                    const qty = document.getElementById('quantity' + productID + safe);
-                                    const newQty = (parseInt(qty.value, 10) || 1) + 1;
-
-                                    $.ajax({
-                                        url: BASE + '/cartIncrease',
-                                        method: 'GET',
-                                        data: {id: productID, price: price, quantity: newQty, size: size_name},
-                                        success: function (response) {
-                                            const values = (response || '').split(',');
-                                            const line = parseInt(values[0] || '0', 10);
-                                            const temp = parseInt(values[2] || '0', 10); // 0: ok, khác 0: hết hàng
-                                            if (temp === 0) {
-                                                qty.value = newQty;
-                                                const holder = document.querySelector('#price2' + productID + safe + ' .line-total');
-                                                holder.textContent = (isNaN(line) || line <= 0) ? (price * newQty).toLocaleString('vi-VN')
-                                                        : line.toLocaleString('vi-VN');
-                                                recalcTotals();
-                                            } else {
-                                                alert('sold out!');
-                                            }
-                                        },
-                                        error: function (xhr) {
-                                            alert('Increase failed: ' + (xhr?.status || '') + ' ' + (xhr?.statusText || ''));
-                                        }
-                                    });
-                                }
-
-                                // Giảm số lượng: gọi /cartDecrease; không cho < 1
-                                function decrementQuantity(productID, price, quantity, size_name) {
-                                    const safe = safeIdPart(size_name);
-                                    const qty = document.getElementById('quantity' + productID + safe);
-                                    const newQty = (parseInt(qty.value, 10) || 1) - 1;
-                                    if (newQty <= 0)
-                                        return;
-
-                                    $.ajax({
-                                        url: BASE + '/cartDecrease',
-                                        method: 'GET',
-                                        data: {id: productID, price: price, quantity: newQty, size: size_name},
-                                        success: function (response) {
-                                            const values = (response || '').split(',');
-                                            const line = parseInt(values[0] || '0', 10);
-                                            qty.value = newQty;
-                                            const holder = document.querySelector('#price2' + productID + safe + ' .line-total');
-                                            holder.textContent = (isNaN(line) || line <= 0) ? (price * newQty).toLocaleString('vi-VN')
-                                                    : line.toLocaleString('vi-VN');
-                                            recalcTotals();
-                                        },
-                                        error: function (xhr) {
-                                            alert('Decrease failed: ' + (xhr?.status || '') + ' ' + (xhr?.statusText || ''));
-                                        }
-                                    });
-                                }
-
-                                // Xoá item: gọi /cartDelete; cập nhật đếm, ẩn dòng, set line-total=0 rồi tính lại
-                                function deleteCartItem(productID, size_name) {
-                                    if (!confirm('Are you sure to delete'))
-                                        return;
-                                    const productCount = document.querySelector('#productCount');
-
-                                    $.ajax({
-                                        url: BASE + '/cartDelete',
-                                        method: 'GET',
-                                        data: {id: productID, size: size_name},
-                                        success: function (response) {
-                                            const parts = (response || '').split(',');
-                                            const cnt = parseInt(parts[2] || '0', 10); // tổng số item sau xoá
-                                            if (!isNaN(cnt))
-                                                productCount.textContent = cnt;
-
-                                            const safe = safeIdPart(size_name);
-                                            const row = document.getElementById('user' + productID + safe);
-                                            if (row)
-                                                row.style.display = 'none';
-
-                                            const lineBox = document.querySelector('#price2' + productID + safe + ' .line-total');
-                                            if (lineBox)
-                                                lineBox.textContent = '0';
-
-                                            recalcTotals();
-                                        },
-                                        error: function (xhr) {
-                                            alert('Delete failed: ' + (xhr?.status || '') + ' ' + (xhr?.statusText || ''));
-                                        }
-                                    });
-                                }
+                                                        // --- INIT ---
+                                                        document.addEventListener('DOMContentLoaded', function () {
+                                                            setTimeout(() => {
+                                                                const loader = document.getElementById('page-loader');
+                                                                if (loader) {
+                                                                    loader.style.opacity = 0;
+                                                                    setTimeout(() => loader.remove(), 400);
+                                                                }
+                                                            }, 400);
+                                                            recalcTotals();
+                                                        });
         </script>
     </body>
 </html>

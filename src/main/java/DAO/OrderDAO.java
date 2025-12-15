@@ -10,10 +10,12 @@ import java.util.List;
 
 public class OrderDAO extends DBConnect.DBConnect {
 
-    // ========================= SELECT =========================
+    // ========================= SELECT (LẤY DỮ LIỆU) =========================
+
     public List<Orders> getAllOrders() {
         List<Orders> list = new ArrayList<>();
-        String sql = "SELECT order_id, address, date, status, phone_number, customer_id, staff_id, total FROM orders";
+        // [FIX] Dùng [date] để tránh lỗi keyword
+        String sql = "SELECT order_id, address, [date], status, phone_number, customer_id, staff_id, total FROM orders";
         try (PreparedStatement st = connection.prepareStatement(sql); ResultSet rs = st.executeQuery()) {
             while (rs.next()) {
                 list.add(new Orders(
@@ -35,15 +37,12 @@ public class OrderDAO extends DBConnect.DBConnect {
 
     public List<Orders> getAllOrdersSort() {
         List<Orders> list = new ArrayList<>();
+        // [FIX] Sửa sắp xếp mặc định: Chỉ Order ID giảm dần (Mới nhất lên đầu)
         String sql
-                = "SELECT order_id, address, date, status, phone_number, customer_id, staff_id, total "
+                = "SELECT order_id, address, [date], status, phone_number, customer_id, staff_id, total "
                 + "FROM orders "
-                + "ORDER BY CASE "
-                + "  WHEN status = 'Pending' THEN 1 "
-                + "  WHEN status = 'Delivering' THEN 2 "
-                + "  WHEN status = 'Delivered' THEN 3 "
-                + "  WHEN status = 'Cancelled' THEN 4 "
-                + "  ELSE 5 END, date DESC, order_id DESC";
+                + "ORDER BY order_id DESC"; // <-- Thay đổi ở đây
+        
         try (PreparedStatement st = connection.prepareStatement(sql); ResultSet rs = st.executeQuery()) {
             while (rs.next()) {
                 list.add(new Orders(
@@ -59,6 +58,40 @@ public class OrderDAO extends DBConnect.DBConnect {
             }
         } catch (SQLException e) {
             System.err.println("OrderDAO.getAllOrdersSort: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public List<Orders> searchOrdersById(String orderId) {
+        List<Orders> list = new ArrayList<>();
+        // [UPDATE 3] Xóa case 'Processing'
+        String sql = "SELECT * FROM orders WHERE CAST(order_id AS VARCHAR) LIKE ? "
+                   + "ORDER BY CASE " 
+                   + "  WHEN status = 'Pending' THEN 1 "
+                   // Removed Processing
+                   + "  WHEN status = 'Delivering' THEN 2 "
+                   + "  WHEN status = 'Shipped' THEN 3 " 
+                   + "  WHEN status = 'Delivered' THEN 4 " 
+                   + "  WHEN status = 'Cancelled' THEN 5 "
+                   + "  ELSE 6 END, [date] DESC, order_id DESC";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, "%" + orderId + "%");
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Orders(
+                            rs.getInt("order_id"),
+                            rs.getString("address"),
+                            rs.getDate("date"),
+                            rs.getString("status"),
+                            rs.getString("phone_number"),
+                            rs.getInt("customer_id"),
+                            rs.getInt("staff_id"),
+                            rs.getInt("total")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("OrderDAO.searchOrdersById: " + e.getMessage());
         }
         return list;
     }
@@ -104,8 +137,9 @@ public class OrderDAO extends DBConnect.DBConnect {
 
     public List<Orders> orderUser(int customer_id) {
         List<Orders> list = new ArrayList<>();
-        String sql = "SELECT order_id, address, date, status, phone_number, customer_id, staff_id, total "
-                + "FROM orders WHERE customer_id = ? ORDER BY date DESC, order_id DESC";
+        // [FIX] Dùng [date]
+        String sql = "SELECT order_id, address, [date], status, phone_number, customer_id, staff_id, total "
+                + "FROM orders WHERE customer_id = ? ORDER BY [date] DESC, order_id DESC";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, customer_id);
             try (ResultSet rs = st.executeQuery()) {
@@ -128,15 +162,12 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
 
-    // ========================= INSERT (đặt hàng) =========================
-    /**
-     * Tạo đơn và TRẢ VỀ order_id sinh ra. total là INT (VND). YÊU CẦU:
-     * orders.order_id phải AUTO_INCREMENT.
-     */
-    // signature đổi total -> int, staffId -> Integer để có thể setNull
+    // ========================= INSERT (TẠO ĐƠN HÀNG) =========================
+
     public int insertOrder(String address, Date date, String status, String phoneNumber,
             int customer_id, Integer staffId, int total) {
-        String sql = "INSERT INTO orders(address, date, status, phone_number, customer_id, staff_id, total) "
+        // [FIX] Dùng [date]
+        String sql = "INSERT INTO orders(address, [date], status, phone_number, customer_id, staff_id, total) "
                 + "VALUES(?,?,?,?,?,?,?)";
         try (PreparedStatement st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             st.setString(1, address);
@@ -145,31 +176,25 @@ public class OrderDAO extends DBConnect.DBConnect {
             st.setString(4, (phoneNumber == null ? "" : phoneNumber));
             st.setInt(5, customer_id);
             if (staffId == null || staffId <= 0) {
-                st.setNull(6, java.sql.Types.INTEGER);     // <<< quan trọng
+                st.setNull(6, java.sql.Types.INTEGER);
             } else {
                 st.setInt(6, staffId);
             }
             st.setInt(7, total);
             st.executeUpdate();
-
             try (ResultSet keys = st.getGeneratedKeys()) {
                 if (keys.next()) {
-                    return keys.getInt(1);     // <<< trả về order_id
+                    return keys.getInt(1);
                 }
             }
-            // fallback an toàn theo customer
+            // Fallback nếu không lấy được key tự động
             return getLatestOrderIdByCustomer(customer_id);
-
         } catch (SQLException e) {
             System.err.println("OrderDAO.insertOrder: " + e.getMessage());
             return 0;
         }
     }
 
-    /**
-     * Thêm chi tiết đơn. Ghi rõ tên cột để không phụ thuộc thứ tự cột DB.
-     * Schema: order_detail(order_id, product_id, size_name, quantity)
-     */
     public void insertOrderDetail(int quantity, String size_name, int productID, int orderID) {
         String sql = "INSERT INTO order_detail(order_id, product_id, size_name, quantity) VALUES(?,?,?,?)";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
@@ -183,54 +208,57 @@ public class OrderDAO extends DBConnect.DBConnect {
         }
     }
 
-    /**
-     * Giao dịch: tạo đơn + thêm toàn bộ chi tiết 
-     */
+    // Transaction: Insert Order + Details cùng lúc
     public int insertOrderWithDetails(String address, Date date, String status, String phoneNumber,
             int customer_id, int staff_id, int total,
             List<OrderDetail> details) {
         boolean oldAutoCommit = true;
         try {
             oldAutoCommit = connection.getAutoCommit();
-            connection.setAutoCommit(false);
-
+            connection.setAutoCommit(false); // Bắt đầu transaction
+            
             int orderId = insertOrder(address, date, status, phoneNumber, customer_id, staff_id, total);
             if (orderId <= 0) {
                 connection.rollback();
                 connection.setAutoCommit(oldAutoCommit);
                 return 0;
             }
+            
             if (details != null) {
                 for (OrderDetail d : details) {
                     insertOrderDetail(d.getQuantity(), d.getSize_name(), d.getProductID(), orderId);
                 }
             }
 
-            connection.commit();
+            connection.commit(); // Hoàn tất transaction
             connection.setAutoCommit(oldAutoCommit);
             return orderId;
 
         } catch (SQLException ex) {
             try {
-                connection.rollback();
-            } catch (SQLException ignore) {
-            }
+                connection.rollback(); // Hoàn tác nếu lỗi
+            } catch (SQLException ignore) {}
             System.err.println("OrderDAO.insertOrderWithDetails: " + ex.getMessage());
             try {
                 connection.setAutoCommit(oldAutoCommit);
-            } catch (SQLException ignore) {
-            }
+            } catch (SQLException ignore) {}
             return 0;
         }
     }
+    
 
-    // ========================= UTILS =========================
-    /**
-     * Lấy đơn mới nhất của customer (tránh MAX toàn bảng).
-     */
+    // ========================= UTILITIES =========================
+
     public int getLatestOrderIdByCustomer(int customer_id) {
         String sql = "SELECT order_id FROM orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1";
-        try (PreparedStatement st = connection.prepareStatement(sql)) {
+        // Lưu ý: Nếu DB là SQL Server cũ không hỗ trợ LIMIT, dùng SELECT TOP 1 order_id ...
+        // Nếu dùng SQL Server: "SELECT TOP 1 order_id FROM orders WHERE customer_id = ? ORDER BY order_id DESC"
+        // Code dưới đây dùng LIMIT (MySQL/Postgres/SQL Server mới)
+        
+        // Fix cho SQL Server chuẩn:
+        String sqlServer = "SELECT TOP 1 order_id FROM orders WHERE customer_id = ? ORDER BY order_id DESC";
+        
+        try (PreparedStatement st = connection.prepareStatement(sqlServer)) {
             st.setInt(1, customer_id);
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
@@ -242,14 +270,12 @@ public class OrderDAO extends DBConnect.DBConnect {
         }
         return 0;
     }
-    /**
-     * Lấy danh sách đơn hàng của 1 khách hàng cụ thể.
-     * Dùng trong StaffCustomerController (viewCustomerDetail).
-     */
+
     public List<Orders> getOrdersByCustomerID(int customerID) {
         List<Orders> list = new ArrayList<>();
-        final String sql = "SELECT order_id, address, date, status, phone_number, customer_id, staff_id, total "
-                + "FROM orders WHERE customer_id = ? ORDER BY date DESC";
+        // [FIX] Dùng [date]
+        final String sql = "SELECT order_id, address, [date], status, phone_number, customer_id, staff_id, total "
+                + "FROM orders WHERE customer_id = ? ORDER BY [date] DESC";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, customerID);
             try (ResultSet rs = st.executeQuery()) {
@@ -272,12 +298,9 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
 
-    /**
-     * Giữ lại cho tương thích cũ, KHÔNG khuyến nghị dùng.
-     */
     @Deprecated
     public int getOrderId() {
-        String sql = "SELECT order_id FROM orders ORDER BY order_id DESC LIMIT 1";
+        String sql = "SELECT TOP 1 order_id FROM orders ORDER BY order_id DESC";
         try (PreparedStatement st = connection.prepareStatement(sql); ResultSet rs = st.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt("order_id");
@@ -289,6 +312,7 @@ public class OrderDAO extends DBConnect.DBConnect {
     }
 
     // ========================= UPDATE =========================
+
     public void updateStatus(String status, int order_id) {
         String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -300,13 +324,6 @@ public class OrderDAO extends DBConnect.DBConnect {
         }
     }
 
-    /**
-     * Kiểm tra xem một sản phẩm có tồn tại trong bất kỳ chi tiết đơn hàng nào
-     * không.
-     *
-     * @param productId ID sản phẩm
-     * @return true nếu có, false nếu không
-     */
     public boolean hasDataForProduct(int productId) {
         String sql = "SELECT TOP 1 1 FROM order_detail WHERE product_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
@@ -341,41 +358,38 @@ public class OrderDAO extends DBConnect.DBConnect {
         return list;
     }
     
+    // ========================= ADMIN / SEARCH / FILTER =========================
+
     public List<Orders> getAllOrdersNewestFirst() {
-    List<Orders> list = new ArrayList<>();
-    String sql = "SELECT order_id, address, [date], status, phone_number, customer_id, staff_id, total " +
-                 "FROM orders " +
-                 "ORDER BY [date] DESC, order_id DESC";
-    try (PreparedStatement st = connection.prepareStatement(sql);
-         ResultSet rs = st.executeQuery()) {
-        while (rs.next()) {
-            list.add(new Orders(
-                rs.getInt("order_id"),
-                rs.getString("address"),
-                rs.getDate("date"),
-                rs.getString("status"),
-                rs.getString("phone_number"),
-                rs.getInt("customer_id"),
-                rs.getInt("staff_id"),
-                rs.getInt("total")
-            ));
+        List<Orders> list = new ArrayList<>();
+        // [FIX] Dùng [date]
+        String sql = "SELECT order_id, address, [date], status, phone_number, customer_id, staff_id, total " +
+                     "FROM orders " +
+                     "ORDER BY [date] DESC, order_id DESC";
+        try (PreparedStatement st = connection.prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Orders(
+                    rs.getInt("order_id"),
+                    rs.getString("address"),
+                    rs.getDate("date"),
+                    rs.getString("status"),
+                    rs.getString("phone_number"),
+                    rs.getInt("customer_id"),
+                    rs.getInt("staff_id"),
+                    rs.getInt("total")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("OrderDAO.getAllOrdersNewestFirst: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.err.println("OrderDAO.getAllOrdersNewestFirst: " + e.getMessage());
+        return list;
     }
-    return list;
-}
 
-
-    /**
-     * Lấy danh sách đơn hàng theo ID nhân viên.
-     *
-     * @param staffId ID nhân viên
-     * @return Danh sách Orders
-     */
     public List<Orders> getOrdersByStaffId(int staffId) {
         List<Orders> list = new ArrayList<>();
-        String sql = "SELECT * FROM orders WHERE staff_id = ? ORDER BY date DESC, order_id DESC";
+        // [FIX] Dùng [date]
+        String sql = "SELECT * FROM orders WHERE staff_id = ? ORDER BY [date] DESC, order_id DESC";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, staffId);
             try (ResultSet rs = st.executeQuery()) {
@@ -397,40 +411,79 @@ public class OrderDAO extends DBConnect.DBConnect {
         }
         return list;
     }
-    public List<Orders> searchOrdersById(String orderId) {
-    List<Orders> list = new ArrayList<>();
-    // Dùng LIKE để tìm kiếm gần đúng, ví dụ: "100" sẽ ra "1002", "1003"
-    // Dùng CAST vì order_id là kiểu INT trong CSDL
-    String sql = "SELECT * FROM orders WHERE CAST(order_id AS VARCHAR) LIKE ? "
-               + "ORDER BY CASE " // Giữ nguyên logic sort
-               + "  WHEN status = 'Pending' THEN 1 "
-               + "  WHEN status = 'Processing' THEN 2 " // Thêm Processing
-               + "  WHEN status = 'Delivering' THEN 3 "
-               + "  WHEN status = 'Shipped' THEN 4 " // Thêm Shipped
-               + "  WHEN status = 'Completed' THEN 5 " 
-               + "  WHEN status = 'Cancelled' THEN 6 "
-               + "  ELSE 7 END, date DESC, order_id DESC";
-               
-    try (PreparedStatement st = connection.prepareStatement(sql)) {
-        st.setString(1, "%" + orderId + "%");
-        try (ResultSet rs = st.executeQuery()) {
-            while (rs.next()) {
-                list.add(new Orders(
-                        rs.getInt("order_id"),
-                        rs.getString("address"),
-                        rs.getDate("date"),
-                        rs.getString("status"),
-                        rs.getString("phone_number"),
-                        rs.getInt("customer_id"),
-                        rs.getInt("staff_id"),
-                        rs.getInt("total")
-                ));
+
+  
+
+    public int getTotalOrdersCount() {
+        String sql = "SELECT COUNT(*) FROM orders";
+        try (PreparedStatement st = connection.prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
             }
+        } catch (SQLException e) {
+            System.err.println("OrderDAO.getTotalOrdersCount: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.err.println("OrderDAO.searchOrdersById: " + e.getMessage());
+        return 0;
     }
-    return list;
-}
+
+    public List<Orders> getPaginatedOrders(int pageIndex, int pageSize) {
+        List<Orders> list = new ArrayList<>();
+        // [FIX] Dùng [date]
+        String sql = "SELECT order_id, address, [date], status, phone_number, customer_id, staff_id, total "
+                   + "FROM orders "
+                   + "ORDER BY order_id DESC "
+                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            int offset = (pageIndex - 1) * pageSize;
+            st.setInt(1, offset);
+            st.setInt(2, pageSize);
+
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Orders(
+                            rs.getInt("order_id"),
+                            rs.getString("address"),
+                            rs.getDate("date"),
+                            rs.getString("status"),
+                            rs.getString("phone_number"),
+                            rs.getInt("customer_id"),
+                            rs.getInt("staff_id"),
+                            rs.getInt("total")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("OrderDAO.getPaginatedOrders: " + e.getMessage());
+        }
+        return list;
+    }
     
+    // ========================= CANCEL FLOW (CUSTOMER) =========================
+    /**
+     * Customer tự hủy đơn hàng:
+     * - Chỉ hủy được đơn thuộc về chính customer đó
+     * - Và chỉ khi đơn đang ở trạng thái 'Pending'
+     * - Cập nhật thẳng sang 'Cancelled' (không qua Confirming / Staff)
+     */
+    public boolean cancelOrderByCustomer(int orderId, int customerId) {
+        String sql = "UPDATE orders " +
+                     "SET status = 'Cancelled' " +
+                     "WHERE order_id = ? " +
+                     "  AND customer_id = ? " +
+                     "  AND status = 'Pending'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setInt(2, customerId);
+            int updated = ps.executeUpdate();
+            return updated > 0; // >0 nghĩa là có ít nhất 1 dòng được update
+        } catch (SQLException e) {
+            System.err.println("OrderDAO.cancelOrderByCustomer: " + e.getMessage());
+            return false;
+        }
+    }
+
+
 }

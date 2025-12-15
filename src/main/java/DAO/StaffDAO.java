@@ -241,4 +241,23 @@ public class StaffDAO extends DBConnect.DBConnect {
         }
         return false;
     }
+    /**
+     * Cập nhật thông tin Staff theo ID (được gọi bởi AdminController)
+     */
+    public boolean updateStaffProfile(int id, String email, String address, String phoneNumber, String fullName) {
+        String sql = "UPDATE staff SET email = ?, address = ?, phoneNumber = ?, fullName = ? WHERE staff_id = ?";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, email);
+            st.setString(2, address);
+            st.setString(3, phoneNumber);
+            st.setString(4, fullName);
+            st.setInt(5, id);
+
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            System.err.println("Error StaffDAO.updateStaffProfile: " + e.getMessage());
+            return false;
+        }
+    }
 }

@@ -1,10 +1,10 @@
 package controller;
 
 import DAO.CartDAO;
-import DAO.FeedbackDAO;
+import DAO.FeedBackDAO;
 import DAO.ImportDetailDAO;
 import DAO.OrderDAO;
-import DAO.SizeDAO;
+import DAO.Size_detailDAO;
 import com.google.gson.Gson;
 import entity.Staff;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 @WebServlet(name = "ProductRelatedDataServlet", urlPatterns = {"/admin/productRelatedData"})
-public class ProductRelatedDataServlet extends HttpServlet {
+public class ProductRelatedDataController extends HttpServlet {
 
     private final Gson gson = new Gson();
 
@@ -44,11 +44,11 @@ public class ProductRelatedDataServlet extends HttpServlet {
             int productId = Integer.parseInt(request.getParameter("productId"));
 
             // Gọi tất cả các DAO
-            SizeDAO sizeDAO = new SizeDAO();
+            Size_detailDAO sizeDAO = new Size_detailDAO();
             CartDAO cartDAO = new CartDAO();
             OrderDAO orderDAO = new OrderDAO();
             ImportDetailDAO importDetailDAO = new ImportDetailDAO();
-            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            FeedBackDAO feedbackDAO = new FeedBackDAO();
             
             // Tạo một Map để chứa tất cả các danh sách
             Map<String, Object> relatedData = new HashMap<>();

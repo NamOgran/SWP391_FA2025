@@ -1,62 +1,32 @@
 package entity;
+import java.sql.Timestamp;
 
 public class Feedback {
-    private int feedback_id;
+    private int feedbackId;
+    private int customerId;
+    private int productId;
+    private int orderId; // [MỚI]
+    private int ratePoint;
     private String content;
-    private int rate_point;
-    private int customer_id;
-    private int product_id;
+    private Timestamp createdAt;
+    private String customerName; // [MỚI] Dùng để hiển thị tên người đánh giá
 
-    // Constructors, Getters và Setters
     public Feedback() {}
 
-    public Feedback(int feedback_id, String content, int rate_point, int customer_id, int product_id) {
-        this.feedback_id = feedback_id;
-        this.content = content;
-        this.rate_point = rate_point;
-        this.customer_id = customer_id;
-        this.product_id = product_id;
-    }
-
-    public int getFeedback_id() {
-        return feedback_id;
-    }
-
-    public void setFeedback_id(int feedback_id) {
-        this.feedback_id = feedback_id;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public int getRate_point() {
-        return rate_point;
-    }
-
-    public void setRate_point(int rate_point) {
-        this.rate_point = rate_point;
-    }
-
-    public int getCustomer_id() {
-        return customer_id;
-    }
-
-    public void setCustomer_id(int customer_id) {
-        this.customer_id = customer_id;
-    }
-
-    public int getProduct_id() {
-        return product_id;
-    }
-
-    public void setProduct_id(int product_id) {
-        this.product_id = product_id;
-    }
-    
-
+    public int getFeedbackId() { return feedbackId; }
+    public void setFeedbackId(int feedbackId) { this.feedbackId = feedbackId; }
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
+    public int getProductId() { return productId; }
+    public void setProductId(int productId) { this.productId = productId; }
+    public int getOrderId() { return orderId; }
+    public void setOrderId(int orderId) { this.orderId = orderId; }
+    public int getRatePoint() { return ratePoint; }
+    public void setRatePoint(int ratePoint) { this.ratePoint = ratePoint; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    public Timestamp getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
 }

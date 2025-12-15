@@ -2,7 +2,6 @@ package DAO;
 
 import entity.Cart;
 import entity.Product;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,10 +10,13 @@ import java.util.List;
 
 public class CartDAO extends DBConnect.DBConnect {
 
-    // Lấy toàn bộ item theo customer
     public List<Cart> getAll(int customer_id) {
         List<Cart> list = new ArrayList<>();
-        String sql = "SELECT * FROM cart WHERE customer_id = ?";
+        // [FIX] Giữ nguyên fix bảng size_detail từ trước
+        String sql = "SELECT c.*, s.quantity AS size_detail_qty "
+                + "FROM cart c "
+                + "LEFT JOIN size_detail s ON c.product_id = s.product_id AND c.size_name = s.size_name "
+                + "WHERE c.customer_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, customer_id);
             try (ResultSet rs = st.executeQuery()) {
@@ -24,8 +26,9 @@ public class CartDAO extends DBConnect.DBConnect {
                             rs.getInt("customer_id"),
                             rs.getInt("product_id"),
                             rs.getInt("quantity"),
-                            rs.getFloat("price"), // LUÔN là ĐƠN GIÁ
-                            rs.getString("size_name")
+                            rs.getInt("price"), // [FIX] getInt
+                            rs.getString("size_name"),
+                            rs.getInt("size_detail_qty")
                     );
                     list.add(c);
                 }
@@ -36,12 +39,12 @@ public class CartDAO extends DBConnect.DBConnect {
         return list;
     }
 
-    // Thêm item — price là ĐƠN GIÁ
-    public void insertCart(int quantity, float price, int customer_id, int product_id, String size_name) {
+    // [FIX] price đổi thành int
+    public void insertCart(int quantity, int price, int customer_id, int product_id, String size_name) {
         String sql = "INSERT INTO cart(quantity, price, customer_id, product_id, size_name) VALUES(?,?,?,?,?)";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, quantity);
-            st.setFloat(2, price); // lưu ĐƠN GIÁ
+            st.setInt(2, price); // [FIX] setInt
             st.setInt(3, customer_id);
             st.setInt(4, product_id);
             st.setString(5, size_name);
@@ -51,12 +54,12 @@ public class CartDAO extends DBConnect.DBConnect {
         }
     }
 
-    // Cập nhật — price là ĐƠN GIÁ
-    public void updateCart(int customer_id, int product_id, int quantity, float price, String size_name) {
+    // [FIX] price đổi thành int
+    public void updateCart(int customer_id, int product_id, int quantity, int price, String size_name) {
         String sql = "UPDATE cart SET quantity = ?, price = ? WHERE customer_id = ? AND product_id = ? AND size_name = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, quantity);
-            st.setFloat(2, price); // lưu ĐƠN GIÁ
+            st.setInt(2, price); // [FIX] setInt
             st.setInt(3, customer_id);
             st.setInt(4, product_id);
             st.setString(5, size_name);
@@ -66,7 +69,6 @@ public class CartDAO extends DBConnect.DBConnect {
         }
     }
 
-    // Chỉ đổi số lượng (không động vào đơn giá)
     public void updateQuantityOnly(int customer_id, int product_id, String size_name, int quantity) {
         String sql = "UPDATE cart SET quantity = ? WHERE customer_id = ? AND product_id = ? AND size_name = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
@@ -114,36 +116,8 @@ public class CartDAO extends DBConnect.DBConnect {
         }
     }
 
-    public Product getProductById(int product_id) {
-        String sql = "SELECT * FROM product WHERE product_id = ?";
-        try (PreparedStatement st = connection.prepareStatement(sql)) {
-            st.setInt(1, product_id);
-            try (ResultSet rs = st.executeQuery()) {
-                if (rs.next()) {
-                    // === SỬA ĐỔI Ở ĐÂY ===
-                    // Thêm rs.getBoolean("is_active") vào cuối
-                    return new Product(
-                            rs.getInt("product_id"),
-                            rs.getInt("quantity"),
-                            rs.getInt("price"),
-                            rs.getInt("category_id"),
-                            rs.getInt("promo_id"),
-                            rs.getString("name"),
-                            rs.getString("description"),
-                            rs.getString("pic_url"),
-                            rs.getBoolean("is_active") // <-- Bổ sung trường còn thiếu
-                    );
-                    // === KẾT THÚC SỬA ĐỔI ===
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("CartDAO.getProductById: " + e.getMessage());
-        }
-        return null;
-    }
-
     public Cart getCartById(int customer_id) {
-        String sql = "SELECT * FROM cart WHERE customer_id = ? LIMIT 1";
+        String sql = "SELECT TOP 1 * FROM cart WHERE customer_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, customer_id);
             try (ResultSet rs = st.executeQuery()) {
@@ -153,7 +127,7 @@ public class CartDAO extends DBConnect.DBConnect {
                             rs.getInt("customer_id"),
                             rs.getInt("product_id"),
                             rs.getInt("quantity"),
-                            rs.getFloat("price"),
+                            rs.getInt("price"), // [FIX] getInt
                             rs.getString("size_name")
                     );
                 }
@@ -164,15 +138,14 @@ public class CartDAO extends DBConnect.DBConnect {
         return null;
     }
 
-    // Subtotal = SUM(đơn giá * số lượng)
     public int getCartTotal(int customer_id) {
+        // [FIX] Tính tổng trả về int luôn
         String sql = "SELECT COALESCE(SUM(price * quantity), 0) AS total FROM cart WHERE customer_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, customer_id);
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
-                    double total = rs.getDouble("total");
-                    return (int) Math.round(total);
+                    return rs.getInt("total");
                 }
             }
         } catch (SQLException e) {
@@ -195,31 +168,25 @@ public class CartDAO extends DBConnect.DBConnect {
         }
         return 0;
     }
-    // CartDAO.java
 
-    public Float getUnitPriceInCart(int customerId, int productId, String sizeName) {
-        String sql = "SELECT price FROM cart WHERE customer_id=? AND product_id=? AND size_name=? LIMIT 1";
+    // [FIX] Trả về Integer thay vì Float
+    public Integer getUnitPriceInCart(int customerId, int productId, String sizeName) {
+        String sql = "SELECT TOP 1 price FROM cart WHERE customer_id=? AND product_id=? AND size_name=?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, customerId);
             st.setInt(2, productId);
             st.setString(3, sizeName);
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getFloat("price");  // đây là ĐƠN GIÁ
+                    return rs.getInt("price");
                 }
             }
         } catch (SQLException e) {
             System.err.println("CartDAO.getUnitPriceInCart: " + e.getMessage());
         }
-        return 0f;
+        return 0;
     }
 
-    /**
-     * Kiểm tra xem một sản phẩm có tồn tại trong giỏ hàng của bất kỳ ai không.
-     *
-     * @param productId ID sản phẩm
-     * @return true nếu có, false nếu không
-     */
     public boolean hasDataForProduct(int productId) {
         String sql = "SELECT TOP 1 1 FROM cart WHERE product_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
@@ -245,7 +212,7 @@ public class CartDAO extends DBConnect.DBConnect {
                             rs.getInt("customer_id"),
                             rs.getInt("product_id"),
                             rs.getInt("quantity"),
-                            rs.getFloat("price"),
+                            rs.getInt("price"), // [FIX] getInt
                             rs.getString("size_name")
                     ));
                 }

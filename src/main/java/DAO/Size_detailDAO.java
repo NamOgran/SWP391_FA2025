@@ -4,143 +4,120 @@
  */
 package DAO;
 
-import entity.Size;
+import entity.Size_detail;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException; // Import SQLException
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
- * 
+ * Size_detailDAO - Optimized Resource Management
  */
-public class SizeDAO extends DBConnect.DBConnect {
+public class Size_detailDAO extends DBConnect.DBConnect {
 
-    public List<Size> getAll() {
-        List<Size> list = new ArrayList<>();
-        String sql = "select * from size_detail"; // Tên bảng là size_detail
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            ResultSet rs = st.executeQuery();
+    // Lấy tất cả danh sách size_detail
+    public List<Size_detail> getAll() {
+        List<Size_detail> list = new ArrayList<>();
+        String sql = "select * from size_detail";
+        // [FIX] Dùng try-with-resources để tự động đóng kết nối
+        try (PreparedStatement st = connection.prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            
             while (rs.next()) {
-                // Thứ tự phải khớp với constructor trong entity.Size
-                Size s = new Size(rs.getString("size_name"), rs.getInt("product_id"), rs.getInt("quantity"));
+                Size_detail s = new Size_detail(rs.getString("size_name"), rs.getInt("product_id"), rs.getInt("quantity"));
                 list.add(s);
             }
-        } catch (SQLException e) { // Thay Exception bằng SQLException để bắt lỗi cụ thể hơn
-            System.err.println("Error in DAO.DAOsize.getAll: " + e.getMessage()); // Dùng err cho lỗi
-            e.printStackTrace(); // In stack trace để debug
+        } catch (SQLException e) {
+            System.err.println("Error in Size_detailDAO.getAll: " + e.getMessage());
+            e.printStackTrace();
         }
         return list;
     }
 
+    // Cập nhật số lượng cụ thể
     public void updateQuanSize(int quantity, int product_id, String size_name) {
-        String sql = "update size_detail\n"
-                + "set quantity = ?\n"
-                + "where product_id = ? and size_name = ?";
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
+        String sql = "update size_detail set quantity = ? where product_id = ? and size_name = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, quantity);
             ps.setInt(2, product_id);
             ps.setString(3, size_name);
             ps.executeUpdate();
-            System.out.println("DAO.DAOsize.updateQuanSize: Updated quantity for ProductID: " + product_id + ", Size: " + size_name + " to " + quantity);
-        } catch (SQLException e) { // Thay Exception bằng SQLException
-            System.err.println("Error in DAO.DAOsize.updateQuanSize: " + e.getMessage());
+            System.out.println("Size_detailDAO.updateQuanSize: Updated ProductID: " + product_id + ", Size: " + size_name + " to " + quantity);
+        } catch (SQLException e) {
+            System.err.println("Error in Size_detailDAO.updateQuanSize: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    // Lấy số lượng của 1 size cụ thể
     public int getSizeQuantity(int id, String size_name) {
-        String sql = "select quantity \n"
-                + "from size_detail\n"
-                + "where product_id = ? and size_name = ?";
+        String sql = "select quantity from size_detail where product_id = ? and size_name = ?";
         int quantity = 0;
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, id);
             st.setString(2, size_name);
-            ResultSet rs = st.executeQuery();
-            if (rs.next()) { // Dùng if thay vì while nếu chỉ mong đợi 1 kết quả
-                quantity = rs.getInt("quantity");
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    quantity = rs.getInt("quantity");
+                }
             }
-        } catch (SQLException e) { // Thay Exception bằng SQLException
-            System.err.println("Error in DAO.DAOsize.getSizeQuantity: " + e.getMessage());
+        } catch (SQLException e) {
+            System.err.println("Error in Size_detailDAO.getSizeQuantity: " + e.getMessage());
             e.printStackTrace();
         }
         return quantity;
     }
 
-    // BỔ SUNG PHƯƠNG THỨC NÀY
-    // Phương thức getSizeByProductIdAndName để lấy toàn bộ object Size
-    public Size getSizeByProductIdAndName(int productID, String size_name) {
+    // Lấy object Size_detail đầy đủ
+    public Size_detail getSizeByProductIdAndName(int productID, String size_name) {
         String sql = "SELECT size_name, quantity, product_id FROM size_detail WHERE product_id = ? AND size_name = ?";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, productID);
             st.setString(2, size_name);
-            ResultSet rs = st.executeQuery();
-            if (rs.next()) {
-                // Tạo đối tượng Size với các cột có trong database
-                return new Size(
-                        rs.getString("size_name"),
-                        rs.getInt("product_id"),
-                        rs.getInt("quantity")
-                );
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    return new Size_detail(
+                            rs.getString("size_name"),
+                            rs.getInt("product_id"),
+                            rs.getInt("quantity")
+                    );
+                }
             }
         } catch (SQLException e) {
-            System.err.println("Error in DAO.DAOsize.getSizeByProductIdAndName: " + e.getMessage());
+            System.err.println("Error in Size_detailDAO.getSizeByProductIdAndName: " + e.getMessage());
             e.printStackTrace();
         }
-        return null; // Trả về null nếu không tìm thấy
-    }
-
-    // BỔ SUNG PHƯƠNG THỨC NÀY
-    // Phương thức getTotalQuantityByProductId cho sản phẩm
-    public int getTotalQuantityByProductId(int productID) {
-        String sql = "SELECT SUM(quantity) FROM size_detail WHERE product_id = ?";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, productID);
-            ResultSet rs = st.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1); // Trả về tổng quantity
-            }
-        } catch (SQLException e) {
-            System.err.println("Error in DAO.DAOsize.getTotalQuantityByProductId: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return 0; // Trả về 0 nếu không tìm thấy hoặc có lỗi
+        return null;
     }
 
     /**
      * Kiểm tra xem một sản phẩm có tồn tại trong size_detail không.
-     *
-     * @param productId ID sản phẩm
-     * @return true nếu có, false nếu không
+     * Note: "TOP 1" dùng cho SQL Server. Nếu dùng MySQL hãy đổi thành "LIMIT 1"
      */
     public boolean hasDataForProduct(int productId) {
         String sql = "SELECT TOP 1 1 FROM size_detail WHERE product_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, productId);
             try (ResultSet rs = st.executeQuery()) {
-                return rs.next(); // Trả về true nếu tìm thấy ít nhất 1 dòng
+                return rs.next();
             }
         } catch (SQLException e) {
-            System.err.println("SizeDAO.hasDataForProduct: " + e.getMessage());
-            return true; // An toàn là trên hết, giả sử là CÓ nếu có lỗi
+            System.err.println("Size_detailDAO.hasDataForProduct: " + e.getMessage());
+            return true; // Mặc định trả về true để an toàn (tránh xóa nhầm nếu lỗi DB)
         }
     }
 
-    public List<Size> getSizesByProductId(int productId) {
-        List<Size> list = new ArrayList<>();
+    // Lấy danh sách các size của 1 sản phẩm
+    public List<Size_detail> getSizesByProductId(int productId) {
+        List<Size_detail> list = new ArrayList<>();
         String sql = "SELECT * FROM size_detail WHERE product_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, productId);
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
-                    list.add(new Size(
+                    list.add(new Size_detail(
                             rs.getString("size_name"),
                             rs.getInt("product_id"),
                             rs.getInt("quantity")
@@ -148,42 +125,83 @@ public class SizeDAO extends DBConnect.DBConnect {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("SizeDAO.getSizesByProductId: " + e.getMessage());
+            System.err.println("Size_detailDAO.getSizesByProductId: " + e.getMessage());
         }
         return list;
     }
 
-    // changeQty có thể là âm (-) hoặc dương (+)
-    public void updateStockAfterOrder(int productId, String size_name, int changeQty) {
+    // Cộng hoặc trừ số lượng (dùng cho đặt hàng/nhập hàng)
+    public void updateSize_detailAfterOrder(int productId, String size_name, int changeQty) {
         String sql = "UPDATE size_detail SET quantity = quantity + ? WHERE product_id = ? AND size_name = ?";
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, changeQty);
             ps.setInt(2, productId);
             ps.setString(3, size_name);
             ps.executeUpdate();
-            System.out.println("DAO.DAOsize.updateStockAfterOrder: Stock changed by " + changeQty
+            System.out.println("Size_detailDAO.updateSize_detailAfterOrder: Size_detail changed by " + changeQty
                     + " for ProductID=" + productId + ", Size=" + size_name);
         } catch (SQLException e) {
-            System.err.println("Error in DAO.DAOsize.updateStockAfterOrder: " + e.getMessage());
+            System.err.println("Error in Size_detailDAO.updateSize_detailAfterOrder: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public boolean isInStock(int productId, String size_name) {
+    // Kiểm tra còn hàng không
+    public boolean isInSize_detail(int productId, String size_name) {
         String sql = "SELECT quantity FROM size_detail WHERE product_id = ? AND size_name = ?";
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, productId);
             ps.setString(2, size_name);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("quantity") > 0;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("quantity") > 0;
+                }
             }
         } catch (SQLException e) {
-            System.err.println("Error in DAO.DAOsize.isInStock: " + e.getMessage());
+            System.err.println("Error in Size_detailDAO.isInSize_detail: " + e.getMessage());
             e.printStackTrace();
         }
         return false;
+    }
+
+    // Thêm mới size vào kho
+    public void insert(Size_detail s) {
+        String sql = "INSERT INTO size_detail (size_name, product_id, quantity) VALUES (?, ?, ?)";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, s.getSize_name());
+            st.setInt(2, s.getProduct_id());
+            st.setInt(3, s.getQuantity());
+            st.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error Size_detailDAO.insert: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Lấy tổng số lượng tồn kho của một sản phẩm (cộng dồn các size)
+    public int getTotalQuantityByProductId(int productId) {
+        String sql = "SELECT SUM(quantity) FROM size_detail WHERE product_id = ?";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, productId);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1); 
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error Size_detailDAO.getTotalQuantityByProductId: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    // Xóa tất cả size của một sản phẩm (Hàm quan trọng bạn vừa thêm)
+    public void deleteByProductId(int productId) {
+        String sql = "DELETE FROM size_detail WHERE product_id = ?";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, productId);
+            st.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error Size_detailDAO.deleteByProductId: " + e.getMessage());
+        }
     }
 }

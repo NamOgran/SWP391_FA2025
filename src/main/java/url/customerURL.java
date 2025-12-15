@@ -15,4 +15,5 @@ public class CustomerURL {
     public static final String URL_FORGOT_PASS = "/login/forgot";
     public static final String URL_UPDATE_PASS = "/login/update";
     public static final String URL_VERIFY = "/login/verifyCode";
+    public static final String URL_VERIFY_SIGNUP = "/login/verify-signup";
 }

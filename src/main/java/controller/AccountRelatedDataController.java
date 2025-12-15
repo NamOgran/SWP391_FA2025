@@ -1,7 +1,7 @@
 package controller;
 
 import DAO.CartDAO;
-import DAO.FeedbackDAO;
+import DAO.FeedBackDAO;
 import DAO.ImportDAO;
 import DAO.OrderDAO;
 import com.google.gson.Gson;
@@ -18,7 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 @WebServlet(name = "AccountRelatedDataServlet", urlPatterns = {"/admin/accountRelatedData"})
-public class AccountRelatedDataServlet extends HttpServlet {
+public class AccountRelatedDataController extends HttpServlet {
 
     private final Gson gson = new Gson();
 
@@ -47,7 +47,7 @@ public class AccountRelatedDataServlet extends HttpServlet {
             
             if ("customer".equals(type)) {
                 CartDAO cartDAO = new CartDAO();
-                FeedbackDAO feedbackDAO = new FeedbackDAO();
+                FeedBackDAO feedbackDAO = new FeedBackDAO();
                 OrderDAO orderDAO = new OrderDAO();
                 
                 relatedData.put("carts", cartDAO.getAll(id)); // Tái sử dụng

@@ -1,42 +1,38 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
+/*
+ * File: js/login.js
+ * Updated: Removed reCAPTCHA logic causing "not defined" error
  */
-const loginForm = document.getElementById("loginForm");
 
-// Xóa cookie cũ
-document.cookie = "code=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-document.cookie = "input=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-document.cookie = "email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+document.addEventListener("DOMContentLoaded", function () {
+    const loginForm = document.getElementById("loginForm");
 
-function getURL() {
-    const type = document.getElementById("account").value;
-    let url = "";
+    // 1. Xóa cookie cũ (Giữ nguyên logic của bạn)
+    document.cookie = "code=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    // document.cookie = "input=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"; // Bỏ comment nếu muốn xóa user cũ
+    document.cookie = "email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
-    if (type === "customer") {
-        url = "http://localhost:8080/Project_SWP391_Group4/login/customer";
-    } else if (type === "staff") {
-        url = "http://localhost:8080/Project_SWP391_Group4/login/staff";
+    if (loginForm) {
+        loginForm.addEventListener("submit", function (e) {
+            // Không preventDefault nữa để form tự submit về Server
+            
+            const inputElement = document.getElementById('input');
+            const errorElement = document.getElementById("error");
+
+            // Validate cơ bản (Tùy chọn)
+            if (!inputElement.value.trim()) {
+                e.preventDefault(); // Chặn nếu rỗng
+                if(errorElement) {
+                    errorElement.innerHTML = "Please enter username or email";
+                    errorElement.style.color = "red";
+                    errorElement.style.display = "block";
+                }
+                return;
+            }
+
+            // Lưu cookie input để tiện cho lần sau (nếu cần)
+            document.cookie = "input=" + encodeURIComponent(inputElement.value) + "; path=/";
+            
+            // ĐÃ XÓA: Logic grecaptcha.getResponse()
+        });
     }
-
-    loginForm.action = url;
-}
-
-// Xử lý reCAPTCHA và gửi form
-window.onload = function () {
-    const error = document.getElementById("error");
-
-    loginForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const res = grecaptcha.getResponse();
-        if (res) {
-            const input = document.getElementById('input').value;
-            document.cookie = "input=" + input;
-            loginForm.submit();
-        } else {
-            error.innerHTML = "Please check";
-            error.style.color = "red";
-        }
-    });
-};
+});

@@ -7,9 +7,9 @@ package controller;
 import DAO.CustomerDAO;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-// SỬA LỖI 1: Đổi tên import từ GooglePojo thành GooglePojo
 import entity.GooglePojo;
 import entity.Customer;
+import io.github.cdimascio.dotenv.Dotenv; 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -27,14 +27,24 @@ public class LoginGoogleController extends HttpServlet {
     // Lớp tiện ích để lấy token và thông tin user
     public static class GoogleUtils {
 
-        // Dán Client ID và Client Secret của bạn vào đây
-        private static final String GOOGLE_CLIENT_ID = "374822286993-ui3durfgknmnkvpb6jhllng951hnvmb8.apps.googleusercontent.com";
-        private static final String GOOGLE_CLIENT_SECRET = "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";
-        private static final String GOOGLE_REDIRECT_URI = "http://localhost:8080/Project_SWP391_Group4/google-callback";
+        // Khởi tạo Dotenv để đọc file .env
+        // Lưu ý: File .env phải nằm ở thư mục gốc của Project (Root Directory)
+        private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+
+        // Lấy thông tin từ file .env
+        private static final String GOOGLE_CLIENT_ID = dotenv.get("GOOGLE_CLIENT_ID");
+        private static final String GOOGLE_CLIENT_SECRET = dotenv.get("GOOGLE_CLIENT_SECRET");
+        private static final String GOOGLE_REDIRECT_URI = dotenv.get("GOOGLE_REDIRECT_URI");
+        
         private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
         private static final String GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
         public static String getToken(final String code) throws ClientProtocolException, IOException {
+            // Kiểm tra xem biến môi trường có đọc được không (để debug)
+            if (GOOGLE_CLIENT_ID == null || GOOGLE_CLIENT_SECRET == null) {
+                throw new IOException("Không tìm thấy GOOGLE_CLIENT_ID hoặc SECRET trong file .env");
+            }
+
             String response = Request.Post(GOOGLE_TOKEN_URL)
                     .bodyForm(Form.form()
                             .add("client_id", GOOGLE_CLIENT_ID)
@@ -49,11 +59,9 @@ public class LoginGoogleController extends HttpServlet {
             return jobj.get("access_token").toString().replaceAll("\"", "");
         }
 
-        // SỬA LỖI 1 (tiếp): Đổi kiểu trả về GooglePojo thành GooglePojo
         public static GooglePojo getUserInfo(final String accessToken) throws ClientProtocolException, IOException {
             String link = GOOGLE_USER_INFO_URL + "?access_token=" + accessToken;
             String response = Request.Get(link).execute().returnContent().asString();
-            // Sửa ở đây
             return new Gson().fromJson(response, GooglePojo.class);
         }
     }
@@ -64,72 +72,70 @@ public class LoginGoogleController extends HttpServlet {
         String code = request.getParameter("code");
 
         if (code == null || code.isEmpty()) {
-            request.setAttribute("message", "Google login failed.");
+            request.setAttribute("message", "Google login failed. Code is missing.");
             request.getRequestDispatcher("/login.jsp").forward(request, response);
             return;
         }
 
         try {
             String accessToken = GoogleUtils.getToken(code);
-            // SỬA LỖI 1 (tiếp): Đổi GooglePojo thành GooglePojo
             GooglePojo googleUser = GoogleUtils.getUserInfo(accessToken);
 
             CustomerDAO dao = new CustomerDAO();
             
-            // Luôn kiểm tra bằng Email. Đây là cách đáng tin cậy nhất.
+            // Luôn kiểm tra bằng Email
             boolean userExists = dao.checkEmail(googleUser.getEmail());
 
-            Customer customerAccount; // Biến để lưu tài khoản
+            Customer customerAccount;
 
             if (userExists) {
-                // Nếu email đã tồn tại, lấy thông tin và đăng nhập
+                // Email đã tồn tại -> Lấy thông tin
                 customerAccount = dao.getCustomerByEmailOrUsername(googleUser.getEmail());
                 
-                // (Tùy chọn) Cập nhật google_id nếu tài khoản này trước đây tạo bằng form thường
+                // (Tùy chọn) Cập nhật google_id nếu chưa có
                 if (customerAccount.getGoogle_id() == null || customerAccount.getGoogle_id().isEmpty()) {
-                    String googleId = "gg_" + googleUser.getId();
-                    // Bạn nên tạo một hàm DAO.updateGoogleId(email, googleId)
-                    // Tạm thời bỏ qua để không phức tạp hóa
+                    // Logic cập nhật google_id có thể thêm ở đây
                 }
 
             } else {
-                // Nếu email chưa tồn tại, tạo tài khoản mới
+                // Email chưa tồn tại -> Đăng ký mới
                 String email = googleUser.getEmail();
-                // Tạo username duy nhất, ví dụ: phần trước @
                 String username = email.substring(0, email.indexOf('@')); 
-                String googleId = "gg_" + googleUser.getId(); // ID của Google, vd: "gg_12345..."
-                String randomPassword = CustomerController.getMd5(googleUser.getId()); // Mật khẩu ngẫu nhiên
-                String fullName = googleUser.getName(); // Tên đầy đủ, vd: "Nguyen Hai Nam (K17 CT)"
+                String googleId = "gg_" + googleUser.getId(); 
+                
+                // Lưu ý: Cần chắc chắn class CustomerController có phương thức getMd5 public static
+                // Nếu không, bạn cần import hoặc viết lại hàm md5 ở đây
+                String randomPassword = CustomerController.getMd5(googleUser.getId()); 
+                String fullName = googleUser.getName();
 
-                // === SỬA LỖI 2: SẮP XẾP LẠI THAM SỐ CONSTRUCTOR ===
-                // Thứ tự đúng dựa trên Customer.java (7 tham số): 
-                // (username, email, password, address, phoneNumber, fullName, google_id)
+                // Tạo đối tượng Customer mới
                 Customer newCustomer = new Customer(
                         username,       // 1. username
                         email,          // 2. email
                         randomPassword, // 3. password
-                        "",             // 4. address (Trống)
-                        "",             // 5. phoneNumber (Trống)
+                        "",             // 4. address
+                        "",             // 5. phoneNumber
                         fullName,       // 6. fullName
                         googleId        // 7. google_id
                 );
 
                 dao.signUp(newCustomer);
 
-                // === SỬA LỖI 3: Lấy lại tài khoản từ DB để có customer_id ===
-                // Lấy lại thông tin tài khoản vừa tạo để đảm bảo có customer_id
+                // Lấy lại từ DB để có customer_id
                 customerAccount = dao.getCustomerByEmailOrUsername(email);
             }
 
-            // Đăng nhập (lưu vào session)
+            // Lưu vào session và chuyển hướng
             HttpSession session = request.getSession();
-            // Lưu tài khoản *đã có customer_id* vào session
             session.setAttribute("acc", customerAccount); 
-            response.sendRedirect("productList"); // Chuyển hướng đến trang sản phẩm
+            response.sendRedirect(request.getContextPath()); 
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("message", "An error occurred during Google login.");
+            // In lỗi chi tiết ra để debug nếu file .env không load được
+            System.err.println("Google Login Error: " + e.getMessage());
+            
+            request.setAttribute("message", "Login error: " + e.getMessage());
             request.getRequestDispatcher("/login.jsp").forward(request, response);
         }
     }

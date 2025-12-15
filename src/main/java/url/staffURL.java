@@ -1,13 +1,8 @@
-
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package url;
 
 /**
  *
- * 
+ *
  */
 public class StaffURL {
 
@@ -21,9 +16,11 @@ public class StaffURL {
 
     public static final String URL_ADD_PRODUCT_STAFF = "/staff/product/add";
     public static final String URL_ADD_ACCOUNT_STAFF = "/staff/account/add";
-    public static final String URL_IMPORT_STAFF = "/staff/import";
 
+    public static final String URL_IMPORT_STAFF = "/staff/import";
     public static final String URL_IMPORT_UPDATE_STAFF = "/staff/import/update";
+    public static final String URL_IMPORT_CREATE = "/staff/import/create";
+    public static final String URL_IMPORT_GET_PRODUCTS = "/staff/import/getproducts";
 
     public static final String URL_PROFILE_STAFF = "/staff/profile";
     public static final String URL_UPDATE_PROFILE_STAFF = "/staff/profile/update";
@@ -40,6 +37,10 @@ public class StaffURL {
     public static final String URL_CATEGORY_ADD = "/staff/category/add";
     public static final String URL_CATEGORY_UPDATE = "/staff/category/update";
     public static final String URL_CATEGORY_DELETE = "/staff/category/delete";
-    
-     public static final String URL_ORDER_UPDATE_STAFF = "/staff/order/update";
+
+    public static final String URL_ORDER_UPDATE_STAFF = "/staff/order/update";
+
+    public static final String URL_STAFF_CUSTOMER_LIST   = "/staff/customer";
+    public static final String URL_STAFF_CUSTOMER_SEARCH = "/staff/customer/search";
+    public static final String URL_STAFF_CUSTOMER_DETAIL = "/staff/customer/detail";
 }
