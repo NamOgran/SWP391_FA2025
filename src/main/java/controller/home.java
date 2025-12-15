@@ -1,49 +1,43 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ * File: controller/Home.java
  */
 package controller;
 
+import DAO.CategoryDAO; // [MỚI] Import DAO Category
+import DAO.FeedBackDAO;
+import DAO.ProductDAO;
+import DAO.VoucherDAO;
+import DAO.Size_detailDAO;
+import entity.Category; // [MỚI] Import Entity Category
+import entity.Feedback;
+import entity.Product;
+import entity.Voucher;
+import entity.Size_detail;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.List;
-import DAO.ProductDAO;
-import DAO.PromoDAO;
-import entity.Promo;
-import java.util.HashMap;
-import java.util.Map;
 import static url.ProductURL.URL_PRODUCT_DETAIL;
-import entity.Product;
-import entity.Product;
-import jakarta.servlet.http.Cookie;
 import static url.ProductURL.URL_PRODUCT_LIST;
 
-/**
- *
- * 
- */
 @WebServlet(name = "productList", urlPatterns = {URL_PRODUCT_LIST, URL_PRODUCT_DETAIL})
 public class Home extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    ProductDAO DAOproduct = new ProductDAO();
+    VoucherDAO voucher = new VoucherDAO();
+    Size_detailDAO sizeDAO = new Size_detailDAO();
+    CategoryDAO catDao = new CategoryDAO(); // [MỚI] Khởi tạo CategoryDAO
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try ( PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
+        try (PrintWriter out = response.getWriter()) {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
@@ -56,62 +50,111 @@ public class Home extends HttpServlet {
         }
     }
 
-    ProductDAO DAOproduct = new ProductDAO();
-    PromoDAO promo = new PromoDAO();
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
         String urlPath = request.getServletPath();
-        List<Promo> promoList = promo.getAll();
-        Map<Integer, Integer> promoMap = new HashMap<>();
-        for (Promo promo : promoList) {
-            promoMap.put(promo.getPromoID(), promo.getPromoPercent());
+        
+        // 1. Lấy danh sách khuyến mãi để tính giá giảm
+        List<Voucher> voucherList = voucher.getAll();
+        
+        // [FIX] Map key changed to String for VoucherID
+        Map<String, Integer> voucherMap = new HashMap<>();
+        for (Voucher p : voucherList) {
+            voucherMap.put(p.getVoucherID(), p.getVoucherPercent());
         }
+        
         switch (urlPath) {
             case URL_PRODUCT_DETAIL:
-                List<Product> productList2 = DAOproduct.getAll();
-                int id = Integer.parseInt(request.getParameter("id"));
+                int id = 0;
+                try {
+                    // Lấy ID sản phẩm từ URL
+                    id = Integer.parseInt(request.getParameter("id"));
+                } catch (NumberFormatException e) {
+                    // Nếu ID lỗi, quay về trang chủ
+                    response.sendRedirect("productList");
+                    return;
+                }
+                
+                // 2. Lấy thông tin sản phẩm
                 Product p = DAOproduct.getProductById(id);
-                request.setAttribute("promoMap", promoMap);
+                
+                // === [LOGIC MỚI: BREADCRUMBS] ===
+                // Xác định pageContext dựa trên Category của sản phẩm
+                if (p != null) {
+                    Category cat = catDao.getCategoryById(p.getCategoryID());
+                    String contextString = "";
+                    
+                    if (cat != null) {
+                        String gender = cat.getGender().trim().toLowerCase(); // "male" hoặc "female"
+                        String type = cat.getType().trim().toLowerCase();     // "t-shirt", "dress", "pant", "short"
+
+                        if (gender.equals("male")) {
+                            if (type.contains("t-shirt")) contextString = "male_tshirt";
+                            else if (type.contains("pant")) contextString = "male_pant";
+                            else if (type.contains("short")) contextString = "male_short";
+                            else contextString = "all_male";
+                        } else if (gender.equals("female")) {
+                            if (type.contains("t-shirt")) contextString = "female_tshirt";
+                            else if (type.contains("pant")) contextString = "female_pant";
+                            else if (type.contains("dress")) contextString = "female_dress";
+                            else contextString = "all_female";
+                        }
+                    }
+                    // Gửi biến này sang JSP để <c:choose> trong breadcrumb hoạt động
+                    request.setAttribute("pageContext", contextString); 
+                }
+                // ===================================
+
+                // 3. Lấy danh sách Size_detail và số lượng tồn kho
+                List<Size_detail> sizeList = sizeDAO.getSizesByProductId(id);
+                
+                // 4. Lấy Feedback và tính điểm đánh giá
+                FeedBackDAO feedbackDAO = new FeedBackDAO();
+                List<Feedback> feedbackList = feedbackDAO.getFeedbacksByProductID(id);
+                double averageRating = 0;
+                int reviewCount = feedbackList.size();
+                
+                if (reviewCount > 0) {
+                    int totalStars = 0;
+                    for (Feedback fb : feedbackList) {
+                        totalStars += fb.getRatePoint();
+                    }
+                    averageRating = (double) totalStars / reviewCount;
+                }
+
+                // 5. Đẩy dữ liệu sang JSP
+                request.setAttribute("voucherMap", voucherMap);
                 request.setAttribute("p", p);
+                request.setAttribute("sizeList", sizeList);
+                
+                // Gửi dữ liệu Feedback
+                request.setAttribute("feedbackList", feedbackList);
+                request.setAttribute("averageRating", averageRating);
+                request.setAttribute("reviewCount", reviewCount);
+                
                 request.getRequestDispatcher("productDetail.jsp").forward(request, response);
                 break;
-
+                
             case URL_PRODUCT_LIST:
-                ProductDAO DAOproduct = new ProductDAO();
+                // Lấy 8 sản phẩm ngẫu nhiên cho trang chủ
                 List<Product> productList = DAOproduct.get8RandomProduct();
-                request.setAttribute("promoMap", promoMap);
+                request.setAttribute("voucherMap", voucherMap);
                 request.setAttribute("productList", productList);
                 request.getRequestDispatcher("index.jsp").forward(request, response);
                 break;
-
         }
-
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Home Controller handling Product List and Detail with Feedback and Breadcrumbs";
+    }
 }

@@ -1,7 +1,7 @@
 package controller;
 
 import DAO.CartDAO;
-import DAO.FeedbackDAO;
+import DAO.FeedBackDAO;
 import DAO.ImportDAO;
 import DAO.OrderDAO;
 import com.google.gson.Gson;
@@ -47,7 +47,7 @@ public class AccountRelatedDataServlet extends HttpServlet {
             
             if ("customer".equals(type)) {
                 CartDAO cartDAO = new CartDAO();
-                FeedbackDAO feedbackDAO = new FeedbackDAO();
+                FeedBackDAO feedbackDAO = new FeedBackDAO();
                 OrderDAO orderDAO = new OrderDAO();
                 
                 relatedData.put("carts", cartDAO.getAll(id)); // Tái sử dụng

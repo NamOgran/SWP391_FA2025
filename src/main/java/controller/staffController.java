@@ -1,716 +1,78 @@
-/*
- * File: StaffController.java
- */
 package controller;
 
 import DAO.CategoryDAO;
 import DAO.CustomerDAO;
 import DAO.ImportDAO;
 import DAO.ImportDetailDAO;
+import DAO.OrderDAO;
 import DAO.ProductDAO;
-import DAO.PromoDAO;
-import DAO.SizeDAO;
+import DAO.Size_detailDAO;
 import DAO.StaffDAO;
-import DAO.OrderDAO;              // <-- THÊM
+import DAO.StatsDAO;
+import DAO.StatsDAO.OrderPopupData;
+import DAO.StatsDAO.TopProduct;
+import DAO.VoucherDAO;
 import com.google.gson.Gson;
 import entity.Category;
 import entity.Customer;
 import entity.ImportDetail;
 import entity.Imports;
+import entity.OrderDetail;
+import entity.Orders;
 import entity.Product;
+import entity.Size_detail;
 import entity.Staff;
-import entity.Orders;            // <-- THÊM
-import java.io.IOException;
-import java.io.PrintWriter;
+import entity.Stats;
+import entity.Voucher;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;      // <-- THÊM cho List<Map<...>>
+import org.json.JSONArray;
+import org.json.JSONObject;
 import payLoad.ResponseData;
-import static url.StaffURL.URL_ACCOUNT_MANAGEMENT_STAFF;
-import static url.StaffURL.URL_ADD_ACCOUNT_STAFF;
-import static url.StaffURL.URL_ADD_PRODUCT_STAFF;
-import static url.StaffURL.URL_BOTH_DELETE_STAFF;
-import static url.StaffURL.URL_CATEGORY_ADD;
-import static url.StaffURL.URL_CATEGORY_DELETE;
-import static url.StaffURL.URL_CATEGORY_LIST;
-import static url.StaffURL.URL_CATEGORY_UPDATE;
-import static url.StaffURL.URL_CHANGEPASS_PROFILE_STAFF;
-import static url.StaffURL.URL_CUSTOMER_DELETE_STAFF;
-import static url.StaffURL.URL_IMPORT_STAFF;
-import static url.StaffURL.URL_IMPORT_UPDATE_STAFF;
-import static url.StaffURL.URL_LOGIN_STAFF;
-import static url.StaffURL.URL_PRODUCT_DELETE_STAFF;
-import static url.StaffURL.URL_PRODUCT_MANAGEMENT_STAFF;
-import static url.StaffURL.URL_PROFILE_STAFF;
-import static url.StaffURL.URL_SEARCH_ACCOUNT_STAFF;
-import static url.StaffURL.URL_SEARCH_PRODUCT_STAFF;
-import static url.StaffURL.URL_SORT_PRODUCT_STAFF;
-import static url.StaffURL.URL_STAFF_DELETE_STAFF;
-import static url.StaffURL.URL_UPDATE_ACCOUNT_STAFF;
-import static url.StaffURL.URL_UPDATE_PRODUCT_STAFF;
-import static url.StaffURL.URL_UPDATE_PROFILE_STAFF;
+import static url.StaffURL.*; // Import các hằng số URL
 
-@WebServlet(
-    name = "staffController",
-    urlPatterns = {
-        URL_IMPORT_UPDATE_STAFF,
-        URL_IMPORT_STAFF,
-        URL_CHANGEPASS_PROFILE_STAFF,
-        URL_UPDATE_PROFILE_STAFF,
-        URL_ADD_ACCOUNT_STAFF,
-        URL_UPDATE_ACCOUNT_STAFF,
-        URL_ADD_PRODUCT_STAFF,
-        URL_UPDATE_PRODUCT_STAFF,
-        URL_BOTH_DELETE_STAFF,
-        URL_CUSTOMER_DELETE_STAFF,
-        URL_STAFF_DELETE_STAFF,
-        URL_SEARCH_ACCOUNT_STAFF,
-        URL_ACCOUNT_MANAGEMENT_STAFF,
-        URL_PRODUCT_DELETE_STAFF,
-        URL_PRODUCT_MANAGEMENT_STAFF,
-        URL_SORT_PRODUCT_STAFF,
-        URL_SEARCH_PRODUCT_STAFF,
-        URL_PROFILE_STAFF,
-        URL_CATEGORY_LIST,
-        URL_CATEGORY_ADD,
-        URL_CATEGORY_UPDATE,
-        URL_CATEGORY_DELETE,
-        // === 3 URL CHO CUSTOMER MANAGE (staff.jsp đang gọi) ===
-        "/staff/customer",
-        "/staff/customer/search",
-        "/staff/customer/detail"
-    }
-)
+@WebServlet(name = "StaffController", urlPatterns = {
+    URL_STAFF,                      // "/staff"
+    URL_PRODUCT_MANAGEMENT_STAFF,   // "/staff/product"
+    URL_STAFF_CUSTOMER_LIST,        // "/staff/customer"
+    URL_STAFF_CUSTOMER_DETAIL,      // "/staff/customer/detail"
+    "/staff/order",                 // "/staff/order"
+    URL_ORDER_UPDATE_STAFF,         // "/staff/order/update"
+    URL_IMPORT_STAFF,               // "/staff/import"
+    URL_IMPORT_CREATE,              // "/staff/import/create"
+    "/staff/voucher",               // "/staff/voucher" (Chỉ xem)
+    "/staff/voucher/data",          // "/staff/voucher/data" (Lấy dữ liệu JSON)
+    "/staff/profile",               // "/staff/profile"
+    "/staff/profile/update",        // "/staff/profile/update"
+    "/staff/profile/changepass"     // "/staff/profile/changepass"
+})
+@MultipartConfig
 public class StaffController extends HttpServlet {
 
-    StaffDAO daoStaff = new StaffDAO();
-    CustomerDAO daoCustomer = new CustomerDAO();
-    ProductDAO daoProduct = new ProductDAO();
-    CategoryDAO daoCategory = new CategoryDAO();
-    ImportDetailDAO daoImportDetail = new ImportDetailDAO();
-    ImportDAO daoImport = new ImportDAO();
-    SizeDAO daoSize = new SizeDAO();
-    PromoDAO daoPromo = new PromoDAO();
-    OrderDAO daoOrder = new OrderDAO();    // dùng cho các chỗ cũ của em
-    private Gson gson = new Gson();
-
-    // THÊM: DAO dùng riêng cho các hàm handle* (giữ đúng tên như trong StaffCustomerController)
-    private CustomerDAO customerDAO = new CustomerDAO();
-    private OrderDAO orderDAO = new OrderDAO();
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8");   // giống bên StaffCustomerController
-        String urlPath = request.getServletPath();
-
-        switch (urlPath) {
-            case URL_PRODUCT_MANAGEMENT_STAFF:
-                listProduct(request, response);
-                break;
-            case URL_SORT_PRODUCT_STAFF:
-                sort(request, response);
-                break;
-            case URL_SEARCH_PRODUCT_STAFF:
-                searchProduct(request, response);
-                break;
-            case URL_PROFILE_STAFF:
-                profile(request, response);
-                break;
-            case URL_PRODUCT_DELETE_STAFF:
-                deleteProduct(request, response);
-                break;
-            case URL_ACCOUNT_MANAGEMENT_STAFF:
-                accountList(request, response);
-                break;
-            case URL_SEARCH_ACCOUNT_STAFF:
-                searchAccount(request, response);
-                break;
-            // === DELETE HANDLERS ===
-            case URL_STAFF_DELETE_STAFF:
-                deleteStaff(request, response);
-                break;
-            case URL_CUSTOMER_DELETE_STAFF:
-                deleteCustomer(request, response);
-                break;
-            case URL_BOTH_DELETE_STAFF:
-                deleteBoth(request, response);
-                break;
-            case URL_UPDATE_PRODUCT_STAFF:
-                updateProduct(request, response);
-                break;
-            case URL_ADD_PRODUCT_STAFF:
-                addProduct(request, response);
-                break;
-            case URL_UPDATE_ACCOUNT_STAFF:
-                updateAccount(request, response);
-                break;
-            case URL_ADD_ACCOUNT_STAFF:
-                addStaff(request, response);
-                break;
-            case URL_UPDATE_PROFILE_STAFF:
-                updateProfile(request, response);
-                break;
-            case URL_CHANGEPASS_PROFILE_STAFF:
-                changePassword(request, response);
-                break;
-            case URL_IMPORT_STAFF:
-                importList(request, response);
-                break;
-            case URL_IMPORT_UPDATE_STAFF:
-                updateStatus(request, response);
-                break;
-
-            // category
-            case URL_CATEGORY_LIST:
-                listCategories(request, response);
-                break;
-            case URL_CATEGORY_ADD:
-                addCategory(request, response);
-                break;
-            case URL_CATEGORY_UPDATE:
-                updateCategory(request, response);
-                break;
-            case URL_CATEGORY_DELETE:
-                deleteCategory(request, response);
-                break;
-
-            // === 3 CASE CUSTOMER (DÙNG HÀM handle* từ StaffCustomerController) ===
-            case "/staff/customer":
-                try {
-                    handleListCustomers(request, response);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    writeError(response, "Server error: " + e.getMessage());
-                }
-                break;
-            case "/staff/customer/search":
-                try {
-                    handleSearchCustomers(request, response);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    writeError(response, "Server error: " + e.getMessage());
-                }
-                break;
-            case "/staff/customer/detail":
-                try {
-                    handleCustomerDetail(request, response);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    writeError(response, "Server error: " + e.getMessage());
-                }
-                break;
-        }
-    }
-
-    // Cho chắc: nếu có request GET tới mấy URL này thì cũng xử lý như POST
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        doPost(req, resp);
-    }
-
-    protected void updateStatus(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String id = request.getParameter("id");
-        boolean isSuccess = daoImport.updateStatus(id);
-        List<ImportDetail> listToImport = daoImportDetail.getListToImport(id);
-
-        for (ImportDetail detail : listToImport) {
-            int quantityProduct = daoProduct.getProductQuantity(detail.getProductID());
-            daoProduct.updateQuantity(detail.getProductID(), quantityProduct + detail.getQuantity());
-            int quantitySize = daoSize.getSizeQuantity(detail.getProductID(), detail.getSizeName());
-            daoSize.updateQuanSize(quantitySize + detail.getQuantity(), detail.getProductID(), detail.getSizeName());
-        }
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setDescription("");
-        data.setData("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    // === CÁC HÀM MỚI XỬ LÍ CHO CATEGORY ===
-
-    private void jsonResponse(HttpServletResponse response, boolean isSuccess, String description, Object data) throws IOException {
-        ResponseData responseData = new ResponseData(isSuccess, description, data);
-        String json = gson.toJson(responseData);
-        PrintWriter pw = response.getWriter();
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        pw.print(json);
-        pw.flush();
-    }
-
-    private void listCategories(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        List<Category> list = daoCategory.getAll();
-        jsonResponse(response, true, "Success", list);
-    }
-
-    private void addCategory(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String type = request.getParameter("type");
-        String gender = request.getParameter("gender");
-
-        if (type == null || type.trim().isEmpty() || gender == null || gender.trim().isEmpty()) {
-            jsonResponse(response, false, "Type and Gender are required.", null);
-            return;
-        }
-
-        Category newCategory = new Category(0, type, gender);
-        boolean isSuccess = daoCategory.insert(newCategory);
-
-        if (isSuccess) {
-            jsonResponse(response, true, "Category added successfully.", null);
-        } else {
-            jsonResponse(response, false, "Failed to add category. Type/Gender might already exist.", null);
-        }
-    }
-
-    private void updateCategory(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    // --- HELPER METHODS ---
+    private int parseIntSafe(String value, int defaultValue) {
         try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            String type = request.getParameter("type");
-            String gender = request.getParameter("gender");
-
-            if (type == null || type.trim().isEmpty() || gender == null || gender.trim().isEmpty()) {
-                jsonResponse(response, false, "Type and Gender are required.", null);
-                return;
-            }
-
-            Category category = new Category(id, type, gender);
-            boolean isSuccess = daoCategory.update(category);
-
-            if (isSuccess) {
-                jsonResponse(response, true, "Category updated successfully.", null);
-            } else {
-                jsonResponse(response, false, "Failed to update category. Type/Gender might already exist.", null);
-            }
+            return (value == null || value.trim().isEmpty()) ? defaultValue : Integer.parseInt(value.trim());
         } catch (NumberFormatException e) {
-            jsonResponse(response, false, "Invalid Category ID.", null);
-        }
-    }
-
-    private void deleteCategory(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-
-            boolean isInUse = daoCategory.isCategoryInUse(id);
-
-            if (isInUse) {
-                jsonResponse(response, false, "Cannot delete: This category is being used by one or more products.", null);
-                return;
-            }
-
-            boolean isSuccess = daoCategory.delete(id);
-            if (isSuccess) {
-                jsonResponse(response, true, "Category deleted successfully.", null);
-            } else {
-                jsonResponse(response, false, "Failed to delete category.", null);
-            }
-        } catch (NumberFormatException e) {
-            jsonResponse(response, false, "Invalid Category ID.", null);
-        }
-    }
-    // === KẾT THÚC CÁC HÀM CATEGORY ===
-
-    protected void importList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        List<Imports> list = daoImport.getAllImport();
-        List<ImportDetail> listDetail = daoImportDetail.getAllImportDetail();
-
-        Map<String, Object> combinedData = new HashMap<>();
-        combinedData.put("list", list);
-        combinedData.put("listDetail", listDetail);
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(true);
-        data.setData(combinedData);
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void changePassword(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String currentPassword = request.getParameter("currentPassword");
-        currentPassword = getMd5(currentPassword);
-        String newPassword = request.getParameter("newPassword");
-        newPassword = getMd5(newPassword);
-        String input = request.getParameter("input");
-        boolean isSuccess = false;
-        boolean isCorrect = daoStaff.checkLogin(input, currentPassword);
-        if (isCorrect) {
-            isSuccess = daoStaff.updatePasswordByEmailOrUsername(newPassword, input);
-        }
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setDescription("");
-        data.setData("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void updateProfile(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String username = request.getParameter("username");
-        String email = request.getParameter("email");
-        String address = request.getParameter("address");
-        String phone = request.getParameter("phone");
-        String fullName = request.getParameter("fullName");
-
-        boolean isSuccess = false;
-        isSuccess = daoStaff.updateStaffProfile(username, email, address, phone, fullName);
-        if (isSuccess) {
-            try {
-                jakarta.servlet.http.HttpSession session = request.getSession(false);
-                if (session != null) {
-                    Staff updatedStaff = daoStaff.getStaffByEmailOrUsername(username);
-                    if (updatedStaff != null) {
-                        session.setAttribute("staff", updatedStaff);
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("Lỗi khi cập nhật session sau khi edit profile: " + e.getMessage());
-            }
-        }
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData("");
-        data.setDescription(isSuccess ? "Profile updated" : "Update failed");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void addStaff(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        password = getMd5(password);
-        String email = request.getParameter("email");
-        String fullName = request.getParameter("fullName");
-        String phone = request.getParameter("phone");
-        String address = request.getParameter("address");
-        String role = request.getParameter("role");
-
-        ResponseData data = new ResponseData();
-        boolean isSuccess = false;
-        if (daoCustomer.isUsernameTaken(username)) {
-            data.setIsSuccess(false);
-            data.setDescription("Username already exists. Please choose another one.");
-        } else {
-            Staff s = new Staff(username, email, password, address, phone, fullName, role);
-            isSuccess = daoStaff.signUp(s);
-
-            data.setIsSuccess(isSuccess);
-            if (!isSuccess) {
-                data.setDescription("An error occurred during signup. Email might be taken.");
-            }
-        }
-
-        data.setData("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void updateAccount(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String type = request.getParameter("type");
-        String username = request.getParameter("username");
-        String email = request.getParameter("email");
-        String address = request.getParameter("address");
-        String fullName = request.getParameter("fullName");
-        String phone = request.getParameter("phone");
-        boolean isSuccess = false;
-
-        if ("staff".equals(type)) {
-            isSuccess = daoStaff.updateStaffProfile(username, email, address, phone, fullName);
-        } else if ("customer".equals(type)) {
-            isSuccess = daoCustomer.updateUserProfileByUsername(username, email, address, phone, fullName);
-        }
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData("");
-        data.setDescription(isSuccess ? "Update successful" : "Update failed");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void addProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-        String name = request.getParameter("name");
-        String quantity = request.getParameter("quantity");
-        String promo = request.getParameter("promo");
-
-        daoPromo.addIfNotExist(Integer.parseInt(promo));
-
-        int promoId = daoPromo.getIdPromo(Integer.parseInt(promo));
-
-        String price = request.getParameter("price");
-        String gender = request.getParameter("gender");
-        String type = request.getParameter("type");
-        String des = request.getParameter("des");
-        String url = request.getParameter("url");
-        int categoryID = daoCategory.getIdType(type, gender);
-        url = "/Project_SWP_Group2/images" + url.substring(11, url.length());
-        Product p = new Product(Integer.parseInt(quantity), Integer.parseInt(price), categoryID, promoId, name, des, url);
-        boolean isSuccess = daoProduct.insert(p);
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData("");
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void updateProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String id = request.getParameter("id");
-        Product p = daoProduct.getProductById(Integer.parseInt(id));
-
-        String name = request.getParameter("name");
-        String promo = request.getParameter("promo");
-
-        daoPromo.addIfNotExist(Integer.parseInt(promo));
-        int promo_id = daoPromo.getIdPromo(Integer.parseInt(promo));
-        String price = request.getParameter("price");
-        String description = request.getParameter("description");
-
-        p.setName(name);
-        p.setPromoID(promo_id);
-        p.setPrice(Integer.parseInt(price));
-        p.setDescription(description);
-
-        boolean isSuccess = daoProduct.update(p);
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData("");
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void deleteBoth(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String username = request.getParameter("username");
-        daoStaff.delete(username);
-        daoCustomer.delete(username);
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(true);
-        data.setData("");
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void deleteStaff(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String username = request.getParameter("username");
-        boolean isSuccess = daoStaff.delete(username);
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData("");
-
-        if (!isSuccess) {
-            data.setDescription("Could not delete staff. They may have related data (e.g., orders, imports).");
-        }
-
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void deleteCustomer(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String username = request.getParameter("username");
-        boolean isSuccess = daoCustomer.delete(username);
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData("");
-
-        if (!isSuccess) {
-            data.setDescription("Could not delete customer. They may have related data (e.g., orders, cart, feedback).");
-        }
-
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void searchAccount(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String input = request.getParameter("input");
-        input = "%" + input + "%";
-        List<Staff> list = daoStaff.search(input);
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(true);
-        data.setData(list);
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void accountList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        List<Customer> listCustomer = daoCustomer.getAll();
-        List<Staff> listStaff = daoStaff.getAll();
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(true);
-
-        Map<String, Object> combinedData = new HashMap<>();
-        combinedData.put("customers", listCustomer);
-        combinedData.put("staffs", listStaff);
-        data.setData(combinedData);
-
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void deleteProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String id = request.getParameter("id");
-        boolean isSuccess = daoProduct.delete(Integer.parseInt(id));
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData("");
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void profile(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Cookie[] cookies = request.getCookies();
-        String input = "";
-        for (Cookie cooky : cookies) {
-            if (cooky.getName().equals("input")) {
-                input = cooky.getValue();
-                break;
-            }
-        }
-        Staff c = null;
-        if (!input.equals("")) {
-            c = daoStaff.getStaffByEmailOrUsername(input);
-        } else {
-
-        }
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(true);
-        data.setData(c);
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void searchProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String input = request.getParameter("input");
-        input = "%" + input + "%";
-        List<Product> productList = daoProduct.search(input);
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(true);
-        data.setData(productList);
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void sort(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String option = request.getParameter("option");
-        List<Product> productList = null;
-        if (option.equals("Increase")) {
-            productList = daoProduct.sortIncrease();
-        } else if (option.equals("Decrease")) {
-            productList = daoProduct.sortDecrease();
-        }
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(true);
-        data.setData(productList);
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void listProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-        List<Product> list = daoProduct.getAll();
-        request.setAttribute("productList", list);
-
-        boolean isSuccess = false;
-        if (list != null) {
-            isSuccess = true;
-        }
-
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setData(list);
-        data.setDescription("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-    }
-
-    protected void login(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String input = request.getParameter("input");
-        String password = request.getParameter("password");
-        password = getMd5(password);
-
-        Staff s = daoStaff.getStaffByEmailOrUsernameAndPassword(input, password);
-        if (s != null) {
-            request.getSession().setAttribute("staff", s);
-            if ("admin".equalsIgnoreCase(s.getRole())) {
-                response.sendRedirect(request.getContextPath() + "/admin?tab=dashboard");
-            } else if ("staff".equalsIgnoreCase(s.getRole())) {
-                response.sendRedirect(request.getContextPath() + "/staff.jsp");
-            } else {
-                request.setAttribute("message", "<div id='message' style='color:red'>Role không hợp lệ!</div>");
-                request.getRequestDispatcher("/login.jsp").forward(request, response);
-            }
-
-        } else {
-            request.setAttribute("message", "<div id='message' style='color:red'>Incorrect username or password</div>");
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            return defaultValue;
         }
     }
 
@@ -729,174 +91,635 @@ public class StaffController extends HttpServlet {
         }
     }
 
-    // ================== CÁC HÀM handle* LẤY TỪ StaffCustomerController ==================
+    // --- CONTROLLER METHODS ---
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
 
-    // 1) /staff/customer -> LIST ALL
-    private void handleListCustomers(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+        HttpSession session = request.getSession(false);
+        Staff staff = (session != null) ? (Staff) session.getAttribute("staff") : null;
 
-        // dùng hàm bạn đã có trong DAO
-        List<Customer> customers = customerDAO.getAllCustomers();
-
-        List<Map<String, Object>> data = new ArrayList<>();
-        for (Customer c : customers) {
-            Map<String, Object> m = new HashMap<>();
-            // key phải trùng với JS trong staff.jsp (renderCustomerRows):
-            // cst.customer_id, cst.username, cst.fullName, cst.email, cst.phoneNumber, cst.address
-            m.put("customer_id", c.getCustomer_id());
-            m.put("username", c.getUsername());
-            m.put("fullName", c.getFullName());
-            m.put("email", c.getEmail());
-            m.put("phoneNumber", c.getPhoneNumber());
-            m.put("address", c.getAddress());
-            data.add(m);
+        if (staff == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
         }
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("isSuccess", true);
-        result.put("data", data);
-
-        writeJson(response, result);
-    }
-
-    // 2) /staff/customer/search -> SEARCH
-    private void handleSearchCustomers(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-
-        String input = request.getParameter("input");
-        if (input == null) {
-            input = "";
-        }
-        input = input.trim();
-
-        List<Customer> customers;
-        if (input.isEmpty()) {
-            customers = customerDAO.getAllCustomers();
-        } else {
-            // dùng hàm search(String keyword) bạn đã viết
-            customers = customerDAO.search(input);
-        }
-
-        List<Map<String, Object>> data = new ArrayList<>();
-        for (Customer c : customers) {
-            Map<String, Object> m = new HashMap<>();
-            m.put("customer_id", c.getCustomer_id());
-            m.put("username", c.getUsername());
-            m.put("fullName", c.getFullName());
-            m.put("email", c.getEmail());
-            m.put("phoneNumber", c.getPhoneNumber());
-            m.put("address", c.getAddress());
-            data.add(m);
-        }
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("isSuccess", true);
-        result.put("data", data);
-
-        writeJson(response, result);
-    }
-
-    // 3) /staff/customer/detail -> ORDERS BY CUSTOMER
-    private void handleCustomerDetail(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-
-        String idRaw = request.getParameter("id");
-        int customerId;
-        try {
-            customerId = Integer.parseInt(idRaw);
-        } catch (NumberFormatException e) {
-            writeError(response, "Invalid customer id");
+        if (!"staff".equalsIgnoreCase(staff.getRole())) {
+            if ("admin".equalsIgnoreCase(staff.getRole())) {
+                response.sendRedirect(request.getContextPath() + "/admin");
+            } else {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied. Staff role required.");
+            }
             return;
         }
 
-        // cần có hàm này trong OrderDAO: getOrdersByCustomerID(int customerId)
-        List<Orders> orders = orderDAO.getOrdersByCustomerID(customerId);
+        String urlPath = request.getServletPath();
 
-        List<Map<String, Object>> ordersList = new ArrayList<>();
-        for (Orders o : orders) {
-            Map<String, Object> m = new HashMap<>();
-            m.put("orderID", o.getOrderID());
-            m.put("date", o.getDate());
-            m.put("address", o.getAddress());
-            m.put("phoneNumber", o.getPhoneNumber()); // nếu entity là getPhone_number() thì đổi lại
-            m.put("status", o.getStatus());
-            m.put("total", o.getTotal());
-            ordersList.add(m);
-        }
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("orders", ordersList);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("isSuccess", true);
-        result.put("data", data);
-
-        writeJson(response, result);
-    }
-
-    // ================== UTIL JSON CHO CÁC HÀM handle* ==================
-    private void writeJson(HttpServletResponse response, Object obj) throws IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            out.print(gson.toJson(obj));
-            out.flush();
-        }
-    }
-
-    private void writeError(HttpServletResponse response, String message) throws IOException {
-        Map<String, Object> result = new HashMap<>();
-        result.put("isSuccess", false);
-        result.put("message", message);
-        writeJson(response, result);
-    }
-
-    // ================== THÊM PHẦN CUSTOMER MANAGE CŨ CỦA EM (HIỆN CHƯA DÙNG) ==================
-    // /staff/customer  → trả về list customer (JS: listCustomers())
-    private void listCustomersAjax(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        List<Customer> list = daoCustomer.getAllCustomers();   // đã viết trong CustomerDAO
-        jsonResponse(response, true, "", list);
-    }
-
-    // /staff/customer/search  → search theo name/email/username (JS: searchCustomers)
-    private void searchCustomersAjax(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        String keyword = request.getParameter("input");
-        if (keyword == null) keyword = "";
-        keyword = keyword.trim();
-
-        List<Customer> list;
-        if (keyword.isEmpty()) {
-            list = daoCustomer.getAllCustomers();
-        } else {
-            list = daoCustomer.search(keyword);
-        }
-        jsonResponse(response, true, "", list);
-    }
-
-    // /staff/customer/detail → trả list order của 1 customer (JS: loadCustomerOrders)
-    private void customerOrdersAjax(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        String idStr = request.getParameter("id");
-        int customerId;
-        try {
-            customerId = Integer.parseInt(idStr);
-        } catch (Exception e) {
-            jsonResponse(response, false, "Invalid customer id", null);
+        // 1. Xử lý các request trả về JSON (AJAX GET)
+        if ("/staff/voucher/data".equals(urlPath)) {
+            getVoucherData(request, response);
             return;
+        } 
+
+        // 2. Xử lý điều hướng trang JSP
+        switch (urlPath) {
+            case URL_STAFF:
+                showDashboard(request, response);
+                break;
+
+            case URL_PRODUCT_MANAGEMENT_STAFF:
+                listProduct(request, response);
+                break;
+
+            case URL_STAFF_CUSTOMER_LIST:
+                listCustomers(request, response);
+                break;
+
+            case "/staff/order":
+                listOrders(request, response);
+                break;
+
+            case URL_IMPORT_STAFF:
+                listImports(request, response);
+                break;
+
+            case "/staff/voucher":
+                request.getRequestDispatcher("/staff_Voucher.jsp").forward(request, response);
+                break;
+
+            case "/staff/profile":
+                request.getRequestDispatcher("/staff_Profile.jsp").forward(request, response);
+                break;
+
+            default:
+                showDashboard(request, response);
+                break;
         }
-
-        List<Orders> orders = daoOrder.getOrdersByCustomerID(customerId);
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("orders", orders);
-
-        jsonResponse(response, true, "", data);
     }
 
     @Override
-    public String getServletInfo() {
-        return "Short description";
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        HttpSession session = request.getSession(false);
+        Staff staff = (session != null) ? (Staff) session.getAttribute("staff") : null;
+        
+        if (staff == null || !"staff".equalsIgnoreCase(staff.getRole())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+            return;
+        }
+
+        String urlPath = request.getServletPath();
+        String action = request.getParameter("action"); 
+
+        // Routing
+        if (URL_STAFF_CUSTOMER_DETAIL.equals(urlPath) || "get_customer_orders".equals(action)) {
+            getCustomerOrderHistory(request, response);
+        } 
+        else if (URL_ORDER_UPDATE_STAFF.equals(urlPath) || "update_order_status".equals(action)) {
+            updateOrderStatus(request, response);
+        }
+        else if (URL_IMPORT_CREATE.equals(urlPath) || "create_import".equals(action)) {
+            createImport(request, response, staff.getStaff_id());
+        }
+        else if ("/staff/profile/update".equals(urlPath)) {
+            updateProfile(request, response);
+        }
+        else if ("/staff/profile/changepass".equals(urlPath)) {
+            changePassword(request, response);
+        }
+        else {
+            doGet(request, response);
+        }
     }
 
+    // ============================================================
+    // 1. LOGIC DASHBOARD
+    // ============================================================
+    private void showDashboard(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        StatsDAO statsDAO = new StatsDAO();
+        
+        String fromParam = request.getParameter("fromDate");
+        String toParam = request.getParameter("toDate");
+        LocalDate now = LocalDate.now();
+        LocalDate fromDate, toDate;
+
+        if (fromParam == null || fromParam.isEmpty() || toParam == null || toParam.isEmpty()) {
+            toDate = now;
+            fromDate = now.withDayOfYear(1);
+        } else {
+            try {
+                fromDate = LocalDate.parse(fromParam);
+                toDate = LocalDate.parse(toParam);
+            } catch (Exception e) {
+                toDate = now;
+                fromDate = now.withDayOfYear(1);
+            }
+        }
+        Date sqlFrom = Date.valueOf(fromDate);
+        Date sqlTo = Date.valueOf(toDate);
+
+        // Stats
+        int productsInStock = statsDAO.getAllProductSizeDetail();
+        Stats statsRange = statsDAO.getStatsByDateRange(sqlFrom, sqlTo);
+        int totalOrders = (statsRange != null) ? statsRange.getTotalOrders() : 0;
+
+        // Chart Data
+        Map<String, Integer> orderMap = statsDAO.getOrderStatusCounts(sqlFrom, sqlTo);
+        String[] fixedStatuses = {"Pending", "Preparing", "Delivering", "Delivered", "Cancelled", "Returned"};
+        List<String> labels = new ArrayList<>();
+        List<Integer> data = new ArrayList<>();
+        int totalOrdersChart = 0;
+
+        for (String label : fixedStatuses) {
+            labels.add(label);
+            int count = 0;
+            if (orderMap != null) {
+                if ("Pending".equals(label)) count += orderMap.getOrDefault("Pending", 0);
+                else if ("Preparing".equals(label)) count += orderMap.getOrDefault("Preparing", 0) + orderMap.getOrDefault("Processing", 0) + orderMap.getOrDefault("Confirmed", 0);
+                else if ("Delivering".equals(label)) count += orderMap.getOrDefault("Delivering", 0) + orderMap.getOrDefault("Shipping", 0) + orderMap.getOrDefault("Shipped", 0);
+                else if ("Delivered".equals(label)) count += orderMap.getOrDefault("Delivered", 0) + orderMap.getOrDefault("Completed", 0) + orderMap.getOrDefault("Success", 0);
+                else if ("Cancelled".equals(label)) count += orderMap.getOrDefault("Cancelled", 0) + orderMap.getOrDefault("Cancel", 0);
+                else if ("Returned".equals(label)) count += orderMap.getOrDefault("Returned", 0) + orderMap.getOrDefault("Refunded", 0);
+            }
+            data.add(count);
+            totalOrdersChart += count;
+        }
+
+        List<OrderPopupData> recentOrders = statsDAO.getOrdersForPopup(sqlFrom, sqlTo);
+        List<TopProduct> topProducts = statsDAO.getBestSellers(5);
+
+        request.setAttribute("displayFrom", fromDate.toString());
+        request.setAttribute("displayTo", toDate.toString());
+        request.setAttribute("productsInStock", productsInStock);
+        request.setAttribute("totalOrders", totalOrders);
+
+        Gson gson = new Gson();
+        request.setAttribute("orderStatsLabels", gson.toJson(labels));
+        request.setAttribute("orderStatsData", gson.toJson(data));
+        request.setAttribute("totalOrdersChart", totalOrdersChart);
+        request.setAttribute("recentOrders", recentOrders);
+        request.setAttribute("topProducts", topProducts);
+
+        request.getRequestDispatcher("/staff_Dashboard.jsp").forward(request, response);
+    }
+
+    // ============================================================
+    // 2. LOGIC PRODUCT (READ ONLY)
+    // ============================================================
+    private void listProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ProductDAO productDAO = new ProductDAO();
+        Size_detailDAO size_detailDAO = new Size_detailDAO();
+        CategoryDAO categoryDAO = new CategoryDAO();
+        VoucherDAO voucherDAO = new VoucherDAO();
+
+        String searchName = request.getParameter("search");
+        String sortBy = request.getParameter("sort");
+        String status = request.getParameter("status");
+        int pageIndex = parseIntSafe(request.getParameter("page"), 1);
+        int categoryId = parseIntSafe(request.getParameter("category"), 0);
+        int pageSize = 10;
+        if (status == null || status.isEmpty()) status = "all";
+
+        int totalProducts = productDAO.getTotalProductCount(searchName, categoryId, status);
+        int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
+        List<Product> productList = productDAO.getPaginatedProducts(searchName, sortBy, categoryId, status, pageIndex, pageSize);
+
+        Map<Integer, Map<String, Integer>> productSizeMap = new HashMap<>();
+        for (Product p : productList) {
+            List<Size_detail> sizes = size_detailDAO.getSizesByProductId(p.getId());
+            Map<String, Integer> sizeQty = new HashMap<>();
+            sizeQty.put("S", 0); sizeQty.put("M", 0); sizeQty.put("L", 0);
+            for (Size_detail sz : sizes) {
+                sizeQty.put(sz.getSize_name(), sz.getQuantity());
+            }
+            productSizeMap.put(p.getId(), sizeQty);
+        }
+
+        List<Category> cateList = categoryDAO.getAll();
+        Map<Integer, String> categoryMap = new HashMap<>();
+        for (Category c : cateList) {
+            categoryMap.put(c.getCategory_id(), c.getType() + " (" + c.getGender() + ")");
+        }
+
+        Map<String, String> voucherMap = new HashMap<>();
+        List<Voucher> allVouchers = voucherDAO.getAll();
+        for (Voucher v : allVouchers) {
+            if (v.getVoucherPercent() == 0) voucherMap.put(v.getVoucherID(), "None");
+            else voucherMap.put(v.getVoucherID(), v.getVoucherPercent() + "%");
+        }
+
+        request.setAttribute("list", productList);
+        request.setAttribute("totalProducts", totalProducts);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", pageIndex);
+        request.setAttribute("searchName", searchName);
+        request.setAttribute("sortBy", sortBy);
+        request.setAttribute("selectedCategory", categoryId);
+        request.setAttribute("selectedStatus", status);
+        request.setAttribute("productSizeMap", productSizeMap);
+        request.setAttribute("categoryMap", categoryMap);
+        request.setAttribute("cateList", cateList);
+        request.setAttribute("voucherMap", voucherMap);
+        request.setAttribute("voucherList", allVouchers);
+
+        request.getRequestDispatcher("/staff_Product.jsp").forward(request, response);
+    }
+
+    // ============================================================
+    // 3. LOGIC CUSTOMER (READ ONLY & HISTORY)
+    // ============================================================
+    private void listCustomers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        CustomerDAO customerDAO = new CustomerDAO();
+        List<Customer> allCust = customerDAO.getAll();
+        Collections.sort(allCust, (c1, c2) -> {
+            String s1 = c1.getUsername() != null ? c1.getUsername() : "";
+            String s2 = c2.getUsername() != null ? c2.getUsername() : "";
+            return s1.compareToIgnoreCase(s2);
+        });
+        
+        request.setAttribute("customerList", allCust);
+        request.setAttribute("custTotal", allCust.size());
+        request.getRequestDispatcher("/staff_Customer.jsp").forward(request, response);
+    }
+
+    private void getCustomerOrderHistory(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        ResponseData responseData = new ResponseData();
+        OrderDAO orderDAO = new OrderDAO();
+
+        try {
+            int custId = Integer.parseInt(request.getParameter("id"));
+            List<Orders> orders = orderDAO.getOrdersByCustomerID(custId);
+            List<Map<String, Object>> simpleList = new ArrayList<>();
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            
+            for (Orders o : orders) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("order_id", o.getOrderID());
+                map.put("dateString", (o.getDate() != null) ? sdf.format(o.getDate()) : "");
+                map.put("address", o.getAddress());
+                map.put("status", o.getStatus());
+                map.put("totalString", String.format("%,d VND", (int) o.getTotal()));
+                simpleList.add(map);
+            }
+            responseData.setIsSuccess(true);
+            responseData.setData(simpleList);
+        } catch (Exception e) {
+            responseData.setIsSuccess(false);
+            responseData.setDescription("Error: " + e.getMessage());
+        }
+        out.print(gson.toJson(responseData));
+        out.flush();
+    }
+
+    // ============================================================
+    // 4. LOGIC ORDER (READ & UPDATE STATUS)
+    // ============================================================
+    private void listOrders(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        OrderDAO orderDAO = new OrderDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+        ProductDAO productDAO = new ProductDAO();
+        CategoryDAO categoryDAO = new CategoryDAO();
+        VoucherDAO voucherDAO = new VoucherDAO();
+
+        List<Orders> orderList = orderDAO.getAllOrdersSort();
+        List<OrderDetail> orderDetailList = orderDAO.getAllOrdersDetail();
+
+        // Customer Map
+        Map<Integer, String> customerMap = new HashMap<>();
+        List<Customer> customers = customerDAO.getAll();
+        for (Customer c : customers) {
+            String displayName = (c.getFullName() != null && !c.getFullName().isEmpty()) ? c.getFullName() : c.getUsername();
+            customerMap.put(c.getCustomer_id(), displayName);
+        }
+        request.setAttribute("customerMap", customerMap);
+
+        // Product Info Map
+        Map<Integer, String> productNameMap = new HashMap<>();
+        Map<Integer, Integer> productPriceMap = new HashMap<>();
+        Map<Integer, String> productVoucherMap = new HashMap<>();
+        Map<Integer, String> picUrlMap = new HashMap<>();
+        Map<Integer, String> productCategoryMap = new HashMap<>(); 
+
+        List<Category> categories = categoryDAO.getAll();
+        Map<Integer, String> categoryNames = new HashMap<>();
+        for (Category c : categories) categoryNames.put(c.getCategory_id(), c.getType() + " (" + c.getGender() + ")");
+
+        List<Product> products = productDAO.getAll();
+        for (Product p : products) {
+            productNameMap.put(p.getId(), p.getName());
+            productPriceMap.put(p.getId(), p.getPrice());
+            productVoucherMap.put(p.getId(), p.getVoucherID());
+            picUrlMap.put(p.getId(), p.getPicURL());
+            productCategoryMap.put(p.getId(), categoryNames.getOrDefault(p.getCategoryID(), "Unknown"));
+        }
+        request.setAttribute("productNameMap", productNameMap);
+        request.setAttribute("productPriceMap", productPriceMap);
+        request.setAttribute("productVoucherMap", productVoucherMap);
+        request.setAttribute("picUrlMap", picUrlMap);
+        request.setAttribute("productCategoryMap", productCategoryMap);
+
+        // Voucher Map
+        Map<String, Integer> voucherValMap = new HashMap<>();
+        List<Voucher> vouchers = voucherDAO.getAll();
+        for (Voucher p : vouchers) voucherValMap.put(p.getVoucherID(), p.getVoucherPercent());
+        request.setAttribute("voucherMap", voucherValMap);
+
+        request.setAttribute("totalOrders", orderList.size());
+        request.setAttribute("orderList", orderList);
+        request.setAttribute("orderDetailList", orderDetailList);
+
+        request.getRequestDispatcher("/staff_Order.jsp").forward(request, response);
+    }
+
+    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        ResponseData responseData = new ResponseData();
+        
+        try {
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
+            String newStatus = request.getParameter("status");
+            OrderDAO orderDAO = new OrderDAO();
+            Size_detailDAO size_detailDAO = new Size_detailDAO();
+            
+            orderDAO.updateStatus(newStatus, orderId);
+            
+            // Nếu Delivering -> Trừ kho
+            if ("Delivering".equals(newStatus)) {
+                List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
+                if (details != null) {
+                    for (OrderDetail od : details) {
+                        Size_detail cur = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                        if (cur != null) {
+                            int newQty = cur.getQuantity() - od.getQuantity();
+                            size_detailDAO.updateQuanSize(newQty, od.getProductID(), cur.getSize_name());
+                        }
+                    }
+                }
+            }
+            responseData.setIsSuccess(true);
+            responseData.setDescription("Status updated to " + newStatus);
+        } catch (Exception e) {
+            responseData.setIsSuccess(false);
+            responseData.setDescription("Error: " + e.getMessage());
+        }
+        out.print(gson.toJson(responseData));
+        out.flush();
+    }
+
+    // ============================================================
+    // 5. LOGIC IMPORT (VIEW & CREATE ONLY)
+    // ============================================================
+    private void listImports(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ImportDAO importDAO = new ImportDAO();
+        ImportDetailDAO importDetailDAO = new ImportDetailDAO();
+        ProductDAO productDAO = new ProductDAO();
+        CategoryDAO categoryDAO = new CategoryDAO();
+
+        String importSearch = request.getParameter("import_search");
+        int importPage = parseIntSafe(request.getParameter("import_page"), 1);
+        int importPageSize = 10;
+
+        List<Imports> allImports = importDAO.getAllImport();
+        List<Imports> filteredImports = new ArrayList<>();
+
+        if (importSearch != null && !importSearch.trim().isEmpty()) {
+            String key = importSearch.toLowerCase();
+            for (Imports i : allImports) {
+                if (i.getUsername() != null && i.getUsername().toLowerCase().contains(key)) {
+                    filteredImports.add(i);
+                }
+            }
+        } else {
+            filteredImports = allImports;
+        }
+        
+        Collections.sort(filteredImports, (o1, o2) -> o2.getId() - o1.getId());
+
+        int totalImports = filteredImports.size();
+        int importTotalPages = (int) Math.ceil((double) totalImports / importPageSize);
+        int startImp = (importPage - 1) * importPageSize;
+        int endImp = Math.min(startImp + importPageSize, totalImports);
+        List<Imports> paginatedImports = (startImp < endImp) ? filteredImports.subList(startImp, endImp) : new ArrayList<>();
+
+        Map<Integer, List<ImportDetail>> importDetailMap = new HashMap<>();
+        for (Imports i : paginatedImports) {
+            importDetailMap.put(i.getId(), importDetailDAO.getListToImport(i.getId()));
+        }
+
+        List<Product> products = productDAO.getAll();
+        List<Category> categories = categoryDAO.getAll();
+        
+        Map<Integer, String> catNameMap = new HashMap<>();
+        for (Category c : categories) catNameMap.put(c.getCategory_id(), c.getType() + " (" + c.getGender() + ")");
+
+        Map<Integer, Product> prodMap = new HashMap<>();
+        Map<Integer, String> productCategoryMap = new HashMap<>();
+        for (Product p : products) {
+            prodMap.put(p.getId(), p);
+            productCategoryMap.put(p.getId(), catNameMap.getOrDefault(p.getCategoryID(), "Unknown"));
+        }
+
+        request.setAttribute("importList", paginatedImports);
+        request.setAttribute("totalImports", totalImports);
+        request.setAttribute("importTotalPages", importTotalPages);
+        request.setAttribute("importCurrentPage", importPage);
+        request.setAttribute("importSearch", importSearch);
+        request.setAttribute("importDetailMap", importDetailMap);
+        request.setAttribute("productList", products); 
+        request.setAttribute("prodMap", prodMap);
+        request.setAttribute("productCategoryMap", productCategoryMap);
+
+        request.getRequestDispatcher("/staff_Import.jsp").forward(request, response);
+    }
+
+    private void createImport(HttpServletRequest request, HttpServletResponse response, int staffId) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        ResponseData responseData = new ResponseData();
+        
+        try {
+            String itemsJson = request.getParameter("items");
+            JSONArray jsonArray = new JSONArray(itemsJson);
+            if (jsonArray.length() == 0) {
+                throw new Exception("No items provided");
+            }
+            
+            ImportDAO importDAO = new ImportDAO();
+            ImportDetailDAO detailDAO = new ImportDetailDAO();
+            ProductDAO productDAO = new ProductDAO();
+
+            int totalAmount = 0;
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject item = jsonArray.getJSONObject(i);
+                int pId = Integer.parseInt(item.getString("productId"));
+                int qty = item.getInt("quantity");
+                Product p = productDAO.getProductById(pId);
+                if (p != null) totalAmount += p.getPrice() * qty;
+            }
+
+            Imports newImport = new Imports();
+            newImport.setStaff_id(staffId);
+            newImport.setDate(new Date(System.currentTimeMillis()));
+            newImport.setStatus("Pending");
+            newImport.setTotal(totalAmount);
+
+            int importId = importDAO.insertImportAndGetId(newImport);
+            if (importId > 0) {
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject item = jsonArray.getJSONObject(i);
+                    int pId = Integer.parseInt(item.getString("productId"));
+                    String size = item.getString("size");
+                    int qty = item.getInt("quantity");
+                    
+                    Product p = productDAO.getProductById(pId);
+                    int price = (p != null) ? p.getPrice() : 0;
+
+                    ImportDetail detail = new ImportDetail();
+                    detail.setImportID(importId);
+                    detail.setProductID(pId);
+                    detail.setSizeName(size);
+                    detail.setQuantity(qty);
+                    detail.setPrice(price);
+                    
+                    detailDAO.insertImportDetail(detail);
+                }
+                responseData.setIsSuccess(true);
+            } else {
+                responseData.setIsSuccess(false);
+                responseData.setDescription("Failed to create import record.");
+            }
+        } catch (Exception e) {
+            responseData.setIsSuccess(false);
+            responseData.setDescription("Error: " + e.getMessage());
+        }
+        out.print(gson.toJson(responseData));
+        out.flush();
+    }
+
+    // ============================================================
+    // 6. LOGIC VOUCHER (VIEW ONLY)
+    // ============================================================
+    private void getVoucherData(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        VoucherDAO voucherDAO = new VoucherDAO();
+
+        int page = parseIntSafe(request.getParameter("page"), 1);
+        String search = request.getParameter("search");
+        if (search == null) search = "";
+        int pageSize = 10;
+
+        int totalItems = voucherDAO.getTotalVoucherCount(search);
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        List<Voucher> list = voucherDAO.getPaginatedVouchers(search, page, pageSize);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", list);
+        result.put("totalPages", totalPages);
+        result.put("currentPage", page);
+        result.put("totalItems", totalItems);
+        
+        out.print(gson.toJson(result));
+        out.flush();
+    }
+
+    // ============================================================
+    // 7. LOGIC PROFILE (UPDATE & CHANGE PASS)
+    // ============================================================
+    private void updateProfile(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        ResponseData res = new ResponseData();
+        
+        HttpSession session = request.getSession();
+        Staff currentStaff = (Staff) session.getAttribute("staff");
+        StaffDAO staffDAO = new StaffDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+
+        try {
+            String email = request.getParameter("email");
+            String address = request.getParameter("address");
+            String phone = request.getParameter("phone");
+            String fullName = request.getParameter("fullName");
+            
+            boolean isSuccess = staffDAO.updateStaffProfile(currentStaff.getStaff_id(), email, address, phone, fullName);
+            
+            if (isSuccess) {
+                Staff updatedStaff = staffDAO.getStaffByEmailOrUsername(currentStaff.getUsername());
+                session.setAttribute("staff", updatedStaff);
+                
+                if (customerDAO.isUsernameTaken(currentStaff.getUsername())) {
+                    customerDAO.updateUserProfileByUsername(currentStaff.getUsername(), email, address, phone, fullName);
+                }
+                
+                res.setIsSuccess(true);
+                res.setDescription("Profile updated successfully!");
+            } else {
+                res.setIsSuccess(false);
+                res.setDescription("Update failed. Email/Phone may exist.");
+            }
+        } catch (Exception e) {
+            res.setIsSuccess(false);
+            res.setDescription("Error: " + e.getMessage());
+        }
+        out.print(gson.toJson(res));
+        out.flush();
+    }
+
+    private void changePassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        ResponseData res = new ResponseData();
+        
+        HttpSession session = request.getSession();
+        Staff currentStaff = (Staff) session.getAttribute("staff");
+        StaffDAO staffDAO = new StaffDAO();
+        CustomerDAO customerDAO = new CustomerDAO();
+
+        try {
+            String currentPass = request.getParameter("currentPassword");
+            String newPass = request.getParameter("newPassword");
+            
+            String currentPassHash = getMd5(currentPass);
+            boolean isCorrect = staffDAO.checkLogin(currentStaff.getUsername(), currentPassHash);
+            
+            if (isCorrect) {
+                String newPassHash = getMd5(newPass);
+                boolean isSuccess = staffDAO.updatePasswordByEmailOrUsername(newPassHash, currentStaff.getUsername());
+                
+                if (isSuccess) {
+                    customerDAO.updatePasswordByUsername(newPassHash, currentStaff.getUsername());
+                    currentStaff.setPassword(newPassHash);
+                    session.setAttribute("staff", currentStaff);
+                    
+                    res.setIsSuccess(true);
+                    res.setDescription("Password changed successfully!");
+                } else {
+                    res.setIsSuccess(false);
+                    res.setDescription("Database update failed.");
+                }
+            } else {
+                res.setIsSuccess(false);
+                res.setDescription("Incorrect current password.");
+            }
+        } catch (Exception e) {
+            res.setIsSuccess(false);
+            res.setDescription("Error: " + e.getMessage());
+        }
+        out.print(gson.toJson(res));
+        out.flush();
+    }
 }

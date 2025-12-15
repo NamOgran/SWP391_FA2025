@@ -167,21 +167,20 @@ public boolean isCategoryInUse(int categoryId) {
     }
 
     public int getIdType(String type, String gender) {
-        String sql = "select category_id\n"
-                + "from category\n"
-                + "where [type] =? and gender = ?";
+        // [FIX] Đảm bảo câu query chính xác với tên cột trong DB
+        String sql = "SELECT category_id FROM category WHERE [type] = ? AND gender = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, type);
             st.setString(2, gender);
             ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                int i = rs.getInt("category_id");
-                return i;
+            if (rs.next()) {
+                return rs.getInt("category_id");
             }
         } catch (Exception e) {
+            System.err.println("CategoryDAO.getIdType Error: " + e.getMessage());
         }
-        return 0;
+        return 0; // Trả về 0 nếu không tìm thấy
     }
 
     public static void main(String[] args) {

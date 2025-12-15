@@ -65,7 +65,7 @@ public class LoginGoogleController extends HttpServlet {
 
         if (code == null || code.isEmpty()) {
             request.setAttribute("message", "Google login failed.");
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            request.getRequestDispatcher(request.getContextPath() + "/login.jsp").forward(request, response);
             return;
         }
 
@@ -125,12 +125,12 @@ public class LoginGoogleController extends HttpServlet {
             HttpSession session = request.getSession();
             // Lưu tài khoản *đã có customer_id* vào session
             session.setAttribute("acc", customerAccount); 
-            response.sendRedirect("productList"); // Chuyển hướng đến trang sản phẩm
+            response.sendRedirect(request.getContextPath()); // Chuyển hướng đến trang sản phẩm
 
         } catch (IOException e) {
             e.printStackTrace();
             request.setAttribute("message", "An error occurred during Google login.");
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            request.getRequestDispatcher(request.getContextPath() + "/login.jsp").forward(request, response);
         }
     }
 

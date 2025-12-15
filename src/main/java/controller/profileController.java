@@ -115,21 +115,20 @@ public class ProfileController extends HttpServlet {
 
     }
 
-  
     private void updateProfile(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Lấy dữ liệu từ form
+        // Get data from form
         String fullName = request.getParameter("fullName");
         String address = request.getParameter("address");
         String phoneNumber = request.getParameter("phoneNumber");
         String email = request.getParameter("email");
 
-        // Thực hiện update vào DB
+        // Execute update to DB
         boolean isSuccess = daoCustomer.updateUserProfile(email, address, phoneNumber, fullName);
 
         if (isSuccess) {
-            //  Update thành công 
+            // Update successful 
             HttpSession session = request.getSession(false);
             if (session != null) {
                 Customer updatedCustomer = daoCustomer.getCustomerByEmailOrUsername(email);
@@ -138,21 +137,20 @@ public class ProfileController extends HttpServlet {
                 }
             }
 
-            //Chuyển hướng về profile
+            // Redirect to profile
             response.sendRedirect(request.getContextPath() + "/profile");
 
         } else {
-      
 
-            // Đặt một thông báo lỗi vào request
-            request.setAttribute("errorMessage", "Cập nhật thất bại! Đã có lỗi xảy ra, vui lòng thử lại.");
+            // Set an error message in the request
+            request.setAttribute("errorMessage", "Update failed! An error occurred, please try again.");
 
-            //Lấy lại thông tin (CŨ) từ session để hiển thị lại form         
+            // Retrieve (OLD) info from session to redisplay form          
             HttpSession session = request.getSession(false);
             if (session != null) {
                 Customer c = (Customer) session.getAttribute("acc");
                 if (c != null) {
-                    // Đặt lại các thuộc tính mà profile.jsp cần để hiển thị
+                    // Reset attributes that profile.jsp needs to display
                     request.setAttribute("fullName", c.getFullName());
                     request.setAttribute("email", c.getEmail());
                     request.setAttribute("address", c.getAddress());
@@ -160,11 +158,10 @@ public class ProfileController extends HttpServlet {
                 }
             }
 
-            // Chuyển tiếp (FORWARD) trở lại trang profile.jsp để hiển thị lỗi
-            // (Forward sẽ giữ nguyên các attribute bạn vừa set)
+            // Forward back to profile.jsp to display error
+            // (Forward will keep the attributes you just set)
             request.getRequestDispatcher("profile.jsp").forward(request, response);
 
-         
         }
     }
 
@@ -178,43 +175,41 @@ public class ProfileController extends HttpServlet {
         }
     }
 
-   
+    private void viewProfile(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-private void viewProfile(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
+        // Get current session (do not create new if not exists)
+        HttpSession session = request.getSession(false);
+        Customer loggedInCustomer = null;
 
-    // Lấy session hiện tại (không tạo mới nếu chưa có)
-    HttpSession session = request.getSession(false);
-    Customer loggedInCustomer = null;
+        // Prioritize checking if "acc" object exists in session
+        if (session != null) {
+            loggedInCustomer = (Customer) session.getAttribute("acc"); // Get Customer from session
+            System.out.println("ProfileController: Found user in session: " + (loggedInCustomer != null)); // Log for debug
+        } else {
+            System.out.println("ProfileController: Session not found."); // Log for debug
+        }
 
-    //  Ưu tiên kiểm tra xem có đối tượng "acc" trong session không
-    if (session != null) {
-        loggedInCustomer = (Customer) session.getAttribute("acc"); // Lấy Customer từ session
-        System.out.println("ProfileController: Found user in session: " + (loggedInCustomer != null)); // Log để debug
-    } else {
-        System.out.println("ProfileController: Session not found."); // Log để debug
+        // If user found in session
+        if (loggedInCustomer != null) {
+            // Get necessary info from Customer object in session
+            request.setAttribute("fullName", loggedInCustomer.getFullName());
+            request.setAttribute("email", loggedInCustomer.getEmail());
+            request.setAttribute("address", loggedInCustomer.getAddress());
+            request.setAttribute("phoneNumber", loggedInCustomer.getPhoneNumber());
+
+            // Put "acc" object into request scope
+            // so profile.jsp can use <c:if test="${empty acc.google_id}"> to check
+            request.setAttribute("acc", loggedInCustomer);
+
+            // Forward to profile.jsp
+            request.getRequestDispatcher("profile.jsp").forward(request, response);
+
+        } else {
+            // If no user in session -> Redirect to login page
+            System.out.println("ProfileController: User not in session. Redirecting to login."); // Log for debug
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+        }
     }
-
-    //  Nếu tìm thấy người dùng trong session
-    if (loggedInCustomer != null) {
-        // Lấy thông tin cần thiết từ đối tượng Customer trong session
-        request.setAttribute("fullName", loggedInCustomer.getFullName());
-        request.setAttribute("email", loggedInCustomer.getEmail());
-        request.setAttribute("address", loggedInCustomer.getAddress());
-        request.setAttribute("phoneNumber", loggedInCustomer.getPhoneNumber());
-
-        // Đặt cả đối tượng 'acc' vào request scope
-        // để trang profile.jsp có thể dùng <c:if test="${empty acc.google_id}"> kiểm tra
-        request.setAttribute("acc", loggedInCustomer);
-
-        // Chuyển tiếp (forward) đến trang profile.jsp
-        request.getRequestDispatcher("profile.jsp").forward(request, response);
-
-    } else {
-        //  Nếu không có người dùng trong session -> Chuyển hướng về trang đăng nhập
-        System.out.println("ProfileController: User not in session. Redirecting to login."); // Log để debug
-        response.sendRedirect(request.getContextPath() + "/login.jsp");
-    }
-}
 
 }

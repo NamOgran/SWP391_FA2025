@@ -14,8 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "PromoRelatedDataServlet", urlPatterns = {"/admin/promoRelatedData"})
-public class PromoRelatedDataServlet extends HttpServlet {
+@WebServlet(name = "VoucherRelatedDataServlet", urlPatterns = {"/admin/voucherRelatedData"})
+public class VoucherRelatedDataServlet extends HttpServlet {
     
     private final Gson gson = new Gson();
 
@@ -37,21 +37,27 @@ public class PromoRelatedDataServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            int promoId = Integer.parseInt(request.getParameter("promoId"));
+            // [FIX] Lấy voucherId dạng String (không ép kiểu sang int nữa)
+            String voucherId = request.getParameter("voucherId");
+            
+            if (voucherId == null) {
+                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                 out.print(gson.toJson("Missing Voucher ID"));
+                 return;
+            }
+
             ProductDAO productDAO = new ProductDAO();
             
-            // Lấy danh sách sản phẩm liên quan
-            List<Product> products = productDAO.getProductsByPromoId(promoId); 
+            // [FIX] Gọi hàm getProductsByVoucherId (đã sửa ở bước trước để nhận String)
+            List<Product> products = productDAO.getProductsByVoucherId(voucherId);
             
             // Trả về danh sách (ngay cả khi rỗng)
             out.print(gson.toJson(products));
-            
-        } catch (NumberFormatException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(gson.toJson("Invalid Promo ID"));
+
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print(gson.toJson("Server Error: " + e.getMessage()));
+            e.printStackTrace();
         }
         out.flush();
     }

@@ -163,14 +163,15 @@ public class CustomerDAO extends DBConnect.DBConnect {
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
                 return new Customer(
-                        rs.getInt("customer_id"), 
+                        rs.getInt("customer_id"),
                         rs.getString("username"),
                         rs.getString("email"),
                         rs.getString("password"),
                         rs.getString("address"),
                         rs.getString("phoneNumber"),
                         rs.getString("fullName"),
-                        rs.getString("google_id")
+                        // [FIX] Xử lý null cho google_id an toàn hơn
+                        rs.getString("google_id") == null ? "" : rs.getString("google_id")
                 );
             }
         } catch (SQLException e) {
@@ -338,6 +339,24 @@ public List<Customer> getAllCustomers() {
     return list;
 }
 
-    // === END: NEW isUsernameTaken() METHOD ===
+/**
+     * Cập nhật thông tin Customer theo ID (được gọi bởi AdminController)
+     */
+    public boolean updateCustomerProfile(int id, String email, String address, String phoneNumber, String fullName) {
+        String sql = "UPDATE customer SET email = ?, address = ?, phoneNumber = ?, fullName = ? WHERE customer_id = ?";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, email);
+            st.setString(2, address);
+            st.setString(3, phoneNumber);
+            st.setString(4, fullName);
+            st.setInt(5, id);
+            
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error CustomerDAO.updateCustomerProfile: " + e.getMessage());
+            return false;
+        }
+    }
 
 }

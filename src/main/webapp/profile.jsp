@@ -1,1574 +1,646 @@
-
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
+<%-- [MỚI] IMPORT DAO ĐỂ LẤY DỮ LIỆU ĐƠN HÀNG CHO SIDEBAR --%>
+<%@page import="DAO.OrderDAO"%>
+<%@page import="entity.Orders"%>
+<%@page import="java.util.List"%>
+<%@page import="entity.Customer"%>
+
+<%-- 1. Login Requirement --%>
+<c:if test="${empty sessionScope.acc}">
+    <c:redirect url="${pageContext.request.contextPath}/login.jsp"/>
+</c:if>
+<c:set var="acc" value="${sessionScope.acc}" />
+
+<%
+    // [MỚI] LOGIC TỰ ĐỘNG LẤY DANH SÁCH ĐƠN HÀNG
+    // Giúp Sidebar hiển thị số lượng badge ngay cả khi vào trang Profile trực tiếp
+    if (session.getAttribute("acc") != null) {
+        Customer currentAcc = (Customer) session.getAttribute("acc");
+        OrderDAO orderDAO = new OrderDAO();
+        List<Orders> listOrders = orderDAO.orderUser(currentAcc.getCustomer_id());
+        request.setAttribute("ordersUserList", listOrders);
+    }
+%>
+
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Profile</title>
-
-
-        <link rel="stylesheet" href="./boostrap/bootstrap.min.css"/>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> <!-- bootstrap icon -->
-        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'> <!-- font family -->
-        <link rel="icon" href="/Project_SWP391_Group4/images/LG1.png" type="image/x-icon">
-
-
-        <!-- font-awesome -->
-        <script src="https://kit.fontawesome.com/1bd876819f.js" crossorigin="anonymous"></script>
-
-
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                font-family: 'Quicksand', sans-serif;
-                box-sizing: border-box;
-                color: rgb(151, 143, 137);
-            }
-
-            img {
-                width: 100%;
-            }
-
-            :root {
-                --logo-color: #a0816c;
-                --nav-list-color: #a0816c;
-                --icon-color: #a0816c;
-                --text-color: #a0816c;
-                --bg-color: #a0816c;
-            }
-
-            body::-webkit-scrollbar {
-                width: 0.5em;
-            }
-
-            body::-webkit-scrollbar-track {
-                box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-            }
-
-            body::-webkit-scrollbar-thumb {
-                border-radius: 50px;
-                background-color: var(--bg-color);
-                outline: 1px solid slategrey;
-            }
-
-            nav {
-                height: 70px;
-                justify-content: center;
-                display: flex;
-            }
-
-            .header_title {
-                display: flex;
-                text-align: center;
-                justify-content: center;
-                align-items: center;
-                background-color: #f5f5f5;
-                font-size: 0.8125rem;
-                font-weight: 500;
-                height: 30px;
-            }
-
-            .headerContent {
-                max-width: 1200px;
-                margin: 0 auto;
-            }
-
-            .headerContent,
-            .headerList,
-            .headerTool {
-                display: flex;
-                align-items: center;
-            }
-
-            .headerContent {
-                justify-content: space-around;
-            }
-
-            .logo a {
-                text-decoration: none;
-                color: var(--logo-color);
-                font-size: 1.5em;
-                font-weight: bold;
-            }
-
-            .logo a:hover {
-                color: var(--logo-color);
-            }
-
-            .headerList {
-                margin: 0;
-                list-style-type: none;
-            }
-
-            /* hiệu ứng hover */
-            .headerListItem {
-                transition: font-size 0.3s ease;
-                height: 24px;
-            }
-
-            .headerListItem:hover {
-                font-size: 18px;
-            }
-
-            /* hiệu ứng hover */
-            .headerListItem a {
-                margin: 0 10px;
-                padding: 22px 0;
-                text-decoration: none;
-                color: var(--text-color);
-            }
-
-            .dropdown-icon {
-                margin-left: 2px;
-                font-size: 0.7500em;
-            }
-
-            .dropdownMenu {
-                position: absolute;
-                width: 200px;
-                padding: 0;
-                margin-top: 17px;
-                background-color: #fff;
-                display: none;
-                z-index: 1;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-            }
-
-            .dropdownMenu li {
-                list-style-type: none;
-                margin: 0;
-                border-bottom: 1px solid rgb(235 202 178);
-            }
-
-            .dropdownMenu li a {
-                text-decoration: none;
-                padding: 5px 15px;
-                margin: 0;
-                width: fit-content;
-                display: flex;
-                font-size: 0.9em;
-                width: 100%;
-                color: var(--text-color);
-            }
-
-            .dropdownMenu li:hover {
-                background-color: #f1f1f1
-            }
-
-            .headerListItem:hover .dropdownMenu {
-                display: block;
-            }
-
-            .headerTool a {
-                padding: 5px;
-            }
-
-            .headerToolIcon {
-                width: 45px;
-                justify-content: center;
-                display: flex;
-            }
-
-            .icon {
-                cursor: pointer;
-                font-size: 26px;
-            }
-
-            .searchBox {
-                width: 420px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-            .search-input {
-                position: relative;
-            }
-            .search-input input {
-                width: 100%;
-                border: 1px solid #e7e7e7;
-                background-color: #f6f6f6;
-                height: 44px;
-                padding: 8px 50px 8px 20px;
-                font-size: 1em;
-            }
-            .search-input button {
-                position: absolute;
-                right: 1px;
-                top: 1px;
-                height: 97%;
-                width: 15%;
-                border: none;
-                background-color: #f6f6f6;
-            }
-            .search-input input:focus {
-                outline: none;
-                border-color: var(--bg-color);
-            }
-
-            .infoBox {
-                width: auto;
-                min-width: 260px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-
-            .infoBox-content,
-            .cartBox-content,
-            .searchBox-content {
-                width: 100%;
-                height: 100%;
-                max-height: 100%;
-                overflow: hidden;
-                padding: 9px 20px 20px;
-            }
-
-            .headerToolIcon h2 {
-                font-size: 1.3em;
-                text-align: center;
-                padding-bottom: 9px;
-                color: var(--text-color);
-                border-bottom: 1px solid #e7e7e7;
-            }
-
-            .infoBox-content ul {
-                padding: 0;
-                margin: 0;
-            }
-
-            .infoBox-content ul li {
-                list-style-type: none;
-            }
-
-            .infoBox-content ul li:first-child {
-                color: black;
-                padding-left: 7px;
-            }
-
-            .infoBox-list li a {
-                text-decoration: none;
-                font-size: 14px;
-                color: black;
-                padding: 0;
-            }
-
-            .infoBox-list li a:hover {
-                color: var(--text-color);
-            }
-
-            .bi-dot {
-                color: black;
-            }
-
-            .cartBox {
-                width: 340px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-
-            .noneProduct {
-                padding: 0 0 10px;
-            }
-
-            .shopping-cart-icon {
-                margin: 0 auto 7px;
-                display: block;
-                width: 15%;
-                height: 15%;
-            }
-
-            .product {
-                margin-top: 50px;
-            }
-
-            .cartIcon {
-                justify-content: center;
-                display: flex;
-            }
-
-            .cartIcon i {
-                font-size: 2.5em;
-            }
-
-            .noneProduct p {
-                text-align: center;
-                font-size: 14px;
-                margin: 0;
-            }
-
-            .haveProduct {
-                margin-bottom: 8px;
-                display: none;
-            }
-
-            .bi-x-lg {
-                cursor: pointer;
-            }
-
-            .miniCartImg {
-                padding-left: 0;
-            }
-
-            .miniCartDetail {
-                padding-right: 0;
-                position: relative;
-            }
-
-            .miniCartDetail p {
-                font-size: 0.8em;
-                color: black;
-                font-weight: bold;
-                padding-right: 20px;
-            }
-
-            .miniCartDetail p span {
-                display: block;
-                text-align: left;
-                color: #677279;
-                font-weight: normal;
-                font-size: 12px;
-            }
-
-            .miniCart-quan span {
-                float: left;
-                width: auto;
-                color: black;
-                margin-right: 12px;
-                padding: 6px 12px;
-                text-align: center;
-                line-height: 1;
-                font-weight: normal;
-                font-size: 13px;
-                background: #f7f7f7;
-            }
-
-            .miniCart-price span {
-                color: #677279;
-                float: left;
-                font-weight: 500;
-            }
-
-            .miniCartDetail .deleteBtn {
-                position: absolute;
-                top: 0;
-                right: 0px;
-                line-height: 20px;
-                text-align: center;
-                width: 19px;
-                height: 19px;
-            }
-
-            .miniCartDetail .deleteBtn * {
-                color: black;
-            }
-
-            .sumPrice {
-                border-top: 1px solid #e7e7e7;
-            }
-
-            .sumPrice table {
-                width: 100%;
-            }
-
-            .sumPrice td {
-                width: 50%;
-            }
-
-            .sumPrice .tbTextLeft,
-            .tbTextRight {
-                padding: 10px 0;
-            }
-
-            .sumPrice .tbTextRight,
-            span {
-                text-align: right;
-                color: red;
-                font-weight: bold;
-            }
-
-            .miniCartButton {
-                width: 100%;
-                border-radius: 2px;
-                width: 100%;
-                background-color: var(--bg-color);
-                border: none;
-                color: white;
-                font-size: 13px;
-                height: 30px;
-                font-weight: bold;
-            }
-
-            .cartButton td:first-child {
-                padding-right: 5px;
-            }
-
-            .cartButton td:last-child {
-                padding-left: 5px;
-            }
-
-            .cartButton .btnRight {
-                transition: 0.3s;
-            }
-
-            .cartButton .btnRight:hover {
-                background-color: white;
-                border: 1px solid var(--bg-color);
-                color: var(--text-color);
-                transition: 0.3s;
-            }
-            /* end header */
-            hr {
-                margin-top: 0;
-                margin-bottom: 10px;
-            }
-
-            /* main content */
-            .main {
-                max-width: 1200px;
-                margin: 30px auto 50px;
-            }
-
-            .mainContent {
-                max-width: 100%;
-            }
-
-            .mainHeading {
-                text-align: center;
-                margin-bottom: 30px;
-            }
-
-            .headingContent a {
-                text-decoration: none;
-                color: var(--text-color);
-                font-weight: bold;
-                box-sizing: border-box;
-            }
-
-            .productImg img {
-                width: 100%;
-            }
-
-            .productDetail {
-                padding: 15px 12px 15px;
-                background-color: rgba(255, 255, 255, 0.83);
-                position: relative;
-                transition: 0.3s;
-            }
-
-            .productDetail h3 {
-                font-size: 15px;
-                color: black;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .productDetail p {
-                margin: 0;
-            }
-
-            .price {
-                font-weight: bold;
-                color: black;
-            }
-
-            .productButton {
-                transition: 0.3s;
-                color: white;
-                width: 90%;
-                display: flex;
-                text-align: center;
-                padding: 5px;
-                position: absolute;
-                display: none;
-                transform: translateY(20%);
-                background-color: var(--bg-color);
-                border-radius: 4px;
-                justify-content: center;
-                line-height: 2;
-            }
-            .productDetail:hover .productButton {
-                display: flex;
-            }
-            .productDetail:hover {
-                transform: translateY(-50%);
-            }
-            .productButton *{
-                width: 50%;
-            }
-            .productButton .right{
-                background: white;
-                position: relative;
-                color: white;
-                background: transparent;
-                border-radius: 4px;
-                overflow: hidden;
-                border: none;
-                font-weight: bold;
-            }
-            .addBtn {
-                border: none;
-                background-color: var(--bg-color);
-                border-radius: 4px;
-            }
-            .addBtn span {
-                color: white;
-            }
-            .productButton .right:hover {
-                color:#a0816c;
-            }
-
-            .right span {
-                background-color: white;
-                height: 100%;
-                width: 0;
-                position: absolute;
-                left: 0;
-                bottom: 0;
-                transition: 0.4s;
-                z-index: -1;
-            }
-
-            .productButton .right:hover span {
-                width: 100%;
-            }
-            /* END main content */
-
-            /* footer */
-            footer {
-                background-color: #f5f5f5;
-            }
-
-            .content-footer {
-                text-align: center;
-                padding: 30px;
-            }
-
-            .content-footer h3 {
-                color: #a0816c;
-            }
-
-            .bct {
-                width: 50%;
-            }
-
-            footer p {
-                font-size: 15px;
-            }
-
-            footer a {
-                text-decoration: none;
-                color: rgb(151, 143, 137);
-            }
-
-            .items-footer {
-                margin: 5%;
-            }
-
-            #highlight {
-                color: #a0816c;
-            }
-
-            #img-footer img {
-                padding: 0;
-            }
-
-            #img-footer {
-                margin: 0 auto;
-            }
-
-            .phone {
-                position: relative;
-            }
-
-            .bi-telephone {
-                cursor: pointer;
-                font-size: 3em;
-                /* width: 85px; */
-                /* height: 60px; */
-                /* display: flex; */
-                position: absolute;
-                top: -16%;
-                left: 15px;
-            }
-
-            .contact-item {
-                display: flex;
-            }
-
-            .contact-link {
-                margin-right: 10px;
-                border: 1px solid #a0816c;
-                border-radius: 5px;
-                padding: 5px;
-                width: 35.6px;
-                justify-content: center;
-                display: flex;
-            }
-
-            .contact-link:hover {
-                background-color: var(--bg-color);
-
-                .bi-facebook::before,
-                .bi-instagram::before {
-                    color: white;
-                }
-            }
-
-            /* END footer */
-            @media (max-width: 768px) and (min-width: 601px) {
-                .headerListItem {
-                    font-size: 12px;
-                    height: 18px;
-                }
-                .headerListItem:hover {
-                    font-size: 13px;
-                }
-                .dropdown-icon {
-                    height: 18px;
-                }
-                .productDetail h3 {
-                    height: 50px;
-                }
-                .infoBox {
-                    right:  0;
-                }
-            }
-
-            body{
-                height: 600px;
-                font-family: "Quicksand", sans-serif;
-                margin: 0 10%;
-                color: #444;
-            }
-
-            .flex {
-                display: flex;
-            }
-
-            .content{
-                text-align: center;
-                border-bottom:#a0816c solid 2px;
-                margin: 5% 0;
-            }
-
-            .highlight{
-                color: #a0816c;
-            }
-
-            .info-content{
-                border-bottom:rgb(172, 162, 162) solid 1px;
-                padding: 12px 0;
-            }
-
-            .user-name {
-                background-color: #d9edf7;
-                justify-content: space-between;
-            }
-
-            .user-name h6 {
-                align-items: center;
-                margin: 0;
-                line-height: 2;
-                margin-left: 10px;
-            }
-
-            .dropdown-container {
-                display: none;
-                text-align: center;
-                width: 100%;
-                background-color: #fbfbfb;
-            }
-
-            .dropdown-container .text-field {
-                width: 90%;
-                border: 1px solid #ebebeb;
-                padding-left: 10px;
-            }
-
-            .dropdown-container .input-group .input-icon {
-                width: 35px;
-                height: 34px;
-                line-height: 34px;
-                background-color: #ebebeb;
-                text-align: center;
-            }
-
-            .dropdown-container .input-group {
-                padding: 20px 0 20px 25px;
-            }
-
-            .user-info .edit-info-btn button{
-                color: #a0816c;
-                border: none;
-                background-color: #d9edf7;
-            }
-
-            .update-info-btn {
-                padding-bottom: 20px;
-            }
-
-            .update-info-btn button{
-                font-weight: bold;
-                border: none;
-                height: 40px;
-                padding: 5px 20px;
-                margin: 0 20px;
-                border-radius: 5px;
-            }
-
-            .update-info-btn .update-btn {
-                background-color: #000;
-                color: #fff;
-            }
-
-            .update-info-btn .update-btn:hover {
-                background-color: #a0816c;
-            }
-
-            .update-info-btn .cancel-btn {
-                background-color: rgb(162, 162, 162);
-                color: #000;
-            }
-
-            .update-info-btn .cancel-btn:hover {
-                background-color: rgb(210, 209, 209);
-            }
-
-            .option li a{
-                list-style-type: circle;
-                padding-left: 1rem;
-                text-decoration: none;
-                color: #444;
-            }
-            .option{
-                list-style-type: circle;
-            }
-            .info{
-                padding-left: 0;
-                list-style: none;
-                background-color: #fbfbfb;
-            }
-
-            .info li {
-                margin-left: 10px;
-            }
-
-            * {
-                margin: 0;
-                padding: 0;
-                font-family: 'Quicksand', sans-serif;
-                box-sizing: border-box;
-                color: rgb(151, 143, 137);
-            }
-            img {
-                width: 100%;
-            }
-            :root {
-                --logo-color: #a0816c;
-                --nav-list-color: #a0816c;
-                --icon-color: #a0816c;
-                --text-color: #a0816c;
-                --bg-color: #a0816c;
-            }
-
-            body::-webkit-scrollbar {
-                width: 0.5em;
-            }
-            body::-webkit-scrollbar-track {
-                box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-            }
-            body::-webkit-scrollbar-thumb {
-                border-radius: 50px;
-                background-color: var(--bg-color);
-                outline: 1px solid slategrey;
-            }
-
-            nav {
-                height: 70px;
-                justify-content: center;
-                display: flex;
-            }
-
-            .header_title {
-                display: flex;
-                text-align: center;
-                justify-content: center;
-                align-items: center;
-                background-color: #f5f5f5;
-                font-size: 0.8125rem;
-                font-weight: 500;
-                height: 30px;
-            }
-
-            .headerContent {
-                max-width: 1200px;
-                margin: 0 auto;
-            }
-
-            .headerContent,
-            .headerList,
-            .headerTool {
-                display: flex;
-                align-items: center;
-            }
-
-            .headerContent {
-                justify-content: space-around;
-            }
-
-            .logo a {
-                text-decoration: none;
-                color: var(--logo-color);
-                font-size: 1.5em;
-                font-weight: bold;
-            }
-
-            .logo a:hover {
-                color: var(--logo-color);
-            }
-
-            .headerList {
-                margin: 0;
-                list-style-type: none;
-            }
-
-            /* hiệu ứng hover */
-            .headerListItem {
-                transition: font-size 0.3s ease;
-                height: 24px;
-            }
-
-            .headerListItem:hover {
-                font-size: 18px;
-            }
-
-            /* hiệu ứng hover */
-            .headerListItem a {
-                margin: 0 10px;
-                padding: 22px 0;
-                text-decoration: none;
-                color: var(--text-color);
-            }
-
-            .dropdown-icon {
-                margin-left: 2px;
-                font-size: 	0.7500em;
-            }
-
-            .dropdownMenu {
-                position: absolute;
-                width: 200px;
-                padding: 0;
-                margin-top: 17px;
-                background-color: #fff;
-                display: none;
-                z-index: 1;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-            }
-
-            .dropdownMenu li {
-                list-style-type: none;
-                margin: 0;
-                border-bottom: 1px solid rgb(235 202 178);
-            }
-
-            .dropdownMenu li a {
-                text-decoration: none;
-                padding: 5px 15px;
-                margin: 0;
-                width: fit-content;
-                display: flex;
-                font-size: 0.9em;
-                width: 100%;
-                color: var(--text-color);
-            }
-
-            .dropdownMenu li:hover {
-                background-color: #f1f1f1
-            }
-
-            .headerListItem:hover .dropdownMenu {
-                display: block;
-            }
-
-            .headerTool a {
-                padding: 5px;
-            }
-
-            .headerToolIcon {
-                width: 45px;
-                justify-content: center;
-                display: flex;
-            }
-
-            .icon {
-                cursor: pointer;
-                font-size: 26px;
-            }
-
-            .infoBox {
-                width: auto;
-                min-width: 260px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-            .infoBox-content, .cartBox-content {
-                width: 100%;
-                height: 100%;
-                max-height: 100%;
-                overflow: hidden;
-                padding: 9px 20px 20px;
-            }
-            .headerToolIcon h2 {
-                font-size: 15px;
-                text-align: center;
-                padding-bottom: 9px;
-                color: var(--text-color);
-                border-bottom: 1px solid #e7e7e7;
-            }
-            .infoBox-content ul {
-                padding: 0;
-                margin: 0;
-            }
-            .infoBox-content ul li {
-                list-style-type: none;
-            }
-            .infoBox-content ul li:first-child {
-                color: black;
-                padding-left: 7px;
-            }
-            .infoBox-list li a {
-                text-decoration: none;
-                font-size: 14px;
-                color: black;
-                padding: 0;
-            }
-            .infoBox-list li a:hover {
-                color: var(--text-color);
-            }
-            .bi-dot {
-                color: black;
-            }
-
-            .cartBox {
-                width: 340px;
-                position: absolute;
-                top: 100px;
-                right: 13%;
-                left: auto;
-                z-index: 990;
-                background-color: #fff;
-                box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-                display: none;
-            }
-            .noneProduct {
-                padding: 0 0 10px;
-            }
-            .shopping-cart-icon {
-                margin: 0 auto 7px;
-                display: block;
-                width: 15%;
-                height: 15%;
-            }
-            .cartIcon {
-                justify-content: center;
-                display: flex;
-            }
-            .cartIcon i {
-                font-size: 2.5em;
-            }
-            .noneProduct p {
-                text-align: center;
-                font-size: 14px;
-                margin: 0;
-            }
-
-            .haveProduct {
-                margin-bottom: 8px;
-                display: none;
-            }
-            .bi-x-lg {
-                cursor: pointer;
-            }
-            .miniCartImg {
-                padding-left: 0;
-            }
-            .miniCartDetail {
-                padding-right: 0;
-                position: relative;
-            }
-            .miniCartDetail p {
-                font-size: 0.8em;
-                color: black;
-                font-weight: bold;
-                padding-right: 20px;
-            }
-            .miniCartDetail p span {
-                display: block;
-                text-align: left;
-                color: #677279;
-                font-weight: normal;
-                font-size: 12px;
-            }
-            .miniCart-quan span{
-                float: left;
-                width: auto;
-                color: black;
-                margin-right: 12px;
-                padding: 6px 12px;
-                text-align: center;
-                line-height: 1;
-                font-weight: normal;
-                font-size: 13px;
-                background: #f7f7f7;
-            }
-            .miniCart-price span {
-                color: #677279;
-                float: left;
-                font-weight: 500;
-            }
-            .miniCartDetail .deleteBtn {
-                position: absolute;
-                top: 0;
-                right: 0px;
-                line-height: 20px;
-                text-align: center;
-                width: 19px;
-                height: 19px;
-            }
-            .miniCartDetail .deleteBtn * {
-                color: black;
-            }
-
-            .sumPrice {
-                border-top: 1px solid #e7e7e7;
-            }
-            .sumPrice table {
-                width: 100%;
-            }
-            .sumPrice td {
-                width: 50%;
-            }
-            .sumPrice .tbTextLeft, .tbTextRight {
-                padding: 10px 0;
-            }
-            .sumPrice .tbTextRight, span {
-                text-align: right;
-                color: red;
-                font-weight: bold;
-            }
-            .miniCartButton {
-                width: 100%;
-                border-radius: 2px;
-                width: 100%;
-                background-color: var(--bg-color);
-                border: none;
-                color: white;
-                font-size: 13px;
-                height: 30px;
-                font-weight: bold;
-            }
-            .cartButton td:first-child {
-                padding-right: 5px;
-            }
-            .cartButton td:last-child {
-                padding-left: 5px;
-            }
-            .cartButton .btnRight {
-                transition: 0.3s;
-            }
-            .cartButton .btnRight:hover {
-                background-color: white;
-                border: 1px solid var(--bg-color);
-                color: var(--text-color);
-                transition: 0.3s;
-            }
-
-            hr {
-                margin-top: 0;
-                margin-bottom: 10px;
-            }
-
-            /* main content */
-            .main {
-                max-width: 1200px;
-                margin: 30px auto 50px;
-            }
-
-            .mainContent {
-                max-width: 100%;
-            }
-
-            .mainHeading {
-                text-align: center;
-                margin-bottom: 30px;
-            }
-
-            .headingContent a {
-                text-decoration: none;
-                color: var(--text-color);
-                font-weight: bold;
-                box-sizing: border-box;
-            }
-
-            .productImg img {
-                width: 100%;
-            }
-
-            .productDetail {
-                padding: 15px 12px 15px;
-                background-color: rgba(255, 255, 255, 0.83);
-                position: relative;
-                transition: 0.3s;
-            }
-
-            .productDetail h3 {
-                font-size: 15px;
-                color: black;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .productDetail p {
-                margin: 0;
-            }
-
-            .price {
-                font-weight: bold;
-                color: black;
-            }
-
-            .productButton {
-                transition: 0.3s;
-                color: white;
-                width: 90%;
-                display: flex;
-                text-align: center;
-                padding: 5px;
-                position: absolute;
-                display: none;
-                transform: translateY(20%);
-                background-color: var(--bg-color);
-                border-radius: 4px;
-                justify-content: center;
-                line-height: 2;
-            }
-            .productDetail:hover .productButton {
-                display: flex;
-            }
-            .productDetail:hover {
-                transform: translateY(-50%);
-            }
-            .productButton *{
-                width: 50%;
-            }
-            .productButton .right{
-                background: white;
-                position: relative;
-                color: white;
-                background: transparent;
-                border-radius: 4px;
-                overflow: hidden;
-                border: none;
-                font-weight: bold;
-            }
-            .addBtn {
-                border: none;
-                background-color: var(--bg-color);
-                border-radius: 4px;
-            }
-            .addBtn span {
-                color: white;
-            }
-            .productButton .right:hover {
-                color:#a0816c;
-            }
-
-            .right span {
-                background-color: white;
-                height: 100%;
-                width: 0;
-                position: absolute;
-                left: 0;
-                bottom: 0;
-                transition: 0.4s;
-                z-index: -1;
-            }
-
-            .productButton .right:hover span {
-                width: 100%;
-            }
-            /* END main content */
-
-            /* footer */
-            footer {
-                background-color: #f5f5f5;
-            }
-
-            .content-footer {
-                text-align: center;
-                padding: 30px;
-            }
-
-            .content-footer h3 {
-                color: #a0816c;
-            }
-
-            .bct {
-                width: 50%;
-            }
-
-            footer p {
-                font-size: 15px;
-            }
-
-            footer a {
-                text-decoration: none;
-                color: rgb(151, 143, 137);
-            }
-
-            .items-footer {
-                margin: 5%;
-            }
-
-            #highlight {
-                color: #a0816c;
-            }
-
-            #img-footer img {
-                padding: 0;
-            }
-
-            #img-footer {
-                margin: 0 auto;
-            }
-            .phone {
-                position: relative;
-            }
-            .bi-telephone {
-                cursor: pointer;
-                font-size: 3em;
-                /* width: 85px; */
-                /* height: 60px; */
-                /* display: flex; */
-                position: absolute;
-                top: -16%;
-                left: 15px;
-            }
-
-            .contact-item {
-                display: flex;
-            }
-
-            .contact-link {
-                margin-right: 10px;
-                border: 1px solid #a0816c;
-                border-radius: 5px;
-                padding: 5px;
-                width: 35.6px;
-                justify-content: center;
-                display: flex;
-            }
-
-            .contact-link:hover {
-                background-color: var(--bg-color);
-
-                .bi-facebook::before, .bi-instagram::before{
-                    color: white;
-                }
-            }
-
-            /* END footer */
-
-            @media (max-width: 768px) and (min-width: 601px) {
-                .headerListItem {
-                    font-size: 12px;
-                    height: 18px;
-                }
-                .headerListItem:hover {
-                    font-size: 13px;
-                }
-                .dropdown-icon {
-                    height: 18px;
-                }
-                .productDetail h3 {
-                    height: 50px;
-                }
-                .infoBox {
-                    right:  0;
-                }
-            }
-        </style>
-    </head>
-
-    <body>
-        <!-- header -->
-        <header class="header">
-            <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND </strong></div>
-            <div class="headerContent">
-                <div class="logo"><a href="/Project_SWP391_Group4/productList">GIO</a></div>
-                <nav>
-                    <ul class="headerList">
-                        <li class="headerListItem"><a href="/Project_SWP391_Group4/productList">Home page</a></li>
-                        <li class="headerListItem">
-                            <a href="http://localhost:8080/Project_SWP391_Group4/productList/male">Men's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/male/t_shirt">T-shirt</a></li>
-
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/male/pant">Long pants</a></li>
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/male/short">Shorts</a></li>
-                                <!--<li><a href="">Discount</a></li>-->
-                            </ul>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | GIO</title>
+
+    <%-- Bootstrap CSS --%>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <%-- Bootstrap Icons --%>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <%-- Font Family --%>
+    <link href='https://fonts.googleapis.com/css?family=Quicksand:400,500,600,700&display=swap' rel='stylesheet'>
+    <%-- Font-Awesome --%>
+    <script src="https://kit.fontawesome.com/1bd876819f.js" crossorigin="anonymous"></script>
+
+    <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon">
+
+    <style>
+        :root {
+            --primary-color: #a0816c;
+            --primary-hover: #8c7362;
+            --bg-overlay: rgba(255, 255, 255, 0.95);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --shadow-soft: 0 10px 30px rgba(160, 129, 108, 0.15);
+            --text-main: #5a5a5a;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-image: url("${pageContext.request.contextPath}/images/BG2.jpeg");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* Scrollbar custom */
+        body::-webkit-scrollbar { width: 8px; }
+        body::-webkit-scrollbar-track { background: #f1f1f1; }
+        body::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 4px; }
+
+        .main-content-wrapper {
+            max-width: 1140px;
+            margin: 50px auto;
+            padding: 0 15px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .page-header h2 { font-weight: 700; letter-spacing: 1px; }
+
+        /* === NAVIGATION SIDEBAR (STICKY) === */
+        .account-nav-card {
+            background: var(--bg-overlay);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+            border: var(--glass-border);
+            
+            position: -webkit-sticky;
+            position: sticky;
+            top: 150px;
+            z-index: 90;
+        }
+
+        .account-user-mini {
+            padding: 30px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color), #cbb4a3);
+            color: white;
+        }
+        
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .account-nav {
+            padding: 10px 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .account-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            justify-content: space-between; /* Đẩy badge sang phải */
+        }
+
+        .account-nav-link > div { display: flex; align-items: center; } /* Wrapper text + icon */
+        .account-nav-link i { margin-right: 15px; width: 20px; text-align: center; font-size: 1.1rem; }
+        
+        .account-nav-link:hover {
+            background-color: #fff8f3;
+            color: var(--primary-color);
+            padding-left: 30px;
+        }
+
+        .account-nav-link.active {
+            background-color: #fff8f3;
+            color: var(--primary-color);
+            border-left-color: var(--primary-color);
+        }
+
+        .badge-sidebar {
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+        }
+
+        /* === PROFILE MAIN CONTENT === */
+        .profile-card {
+            background: var(--bg-overlay);
+            border-radius: 15px;
+            box-shadow: var(--shadow-soft);
+            padding: 40px;
+            position: relative;
+            min-height: 500px;
+            border: var(--glass-border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .section-header h4 {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .btn-icon-edit {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.4rem;
+            transition: color 0.3s;
+        }
+        .btn-icon-edit:hover { color: var(--primary-color); }
+
+        /* View Mode Styling */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            transition: transform 0.2s;
+        }
+        .info-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .info-icon {
+            width: 45px;
+            height: 45px;
+            background-color: #f8f5f2;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .info-content small {
+            display: block;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            margin-bottom: 3px;
+        }
+        .info-content span {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        /* Edit Form Styling - Transitions */
+        .edit-form-wrapper {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .edit-form-wrapper.active {
+            max-height: 800px; /* Đủ lớn để chứa form */
+            opacity: 1;
+            margin-top: 20px;
+        }
+
+        /* Bootstrap Floating Labels Customization */
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label {
+            color: var(--primary-color);
+            opacity: 0.8;
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(160, 129, 108, 0.25);
+        }
+        .form-control { border-radius: 8px; border: 1px solid #e0e0e0; }
+
+        /* Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+        .btn-custom-primary {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-custom-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+        .btn-custom-secondary {
+            background-color: #f1f1f1;
+            color: #555;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-custom-secondary:hover { background-color: #e2e2e2; }
+
+        /* Error Messages */
+        label.error { color: #dc3545; font-size: 0.85rem; margin-top: 5px; display: block; }
+        .server-error { color: #dc3545; background: #ffe6e6; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+
+        /* Loading */
+        .loading-overlay {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.9);
+            z-index: 50; border-radius: 15px;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.4s;
+        }
+        .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+        .spinner-border { color: var(--primary-color); width: 3rem; height: 3rem; }
+        /* Back to Top Button */
+        #btn-back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: none;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            z-index: 100;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        #btn-back-to-top:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-5px);
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <%@ include file="header.jsp" %>
+
+    <main class="main-content-wrapper">
+
+        <%-- 
+            1. TÍNH TOÁN SỐ LƯỢNG CHO SIDEBAR 
+            (Sử dụng danh sách ordersUserList được lấy tự động ở đầu trang)
+        --%>
+        <c:set var="countPending" value="0" />
+        <c:set var="countDelivering" value="0" />
+        <c:set var="countDelivered" value="0" />
+        <c:set var="countCancelled" value="0" />
+
+        <c:if test="${not empty requestScope.ordersUserList}">
+            <c:forEach items="${requestScope.ordersUserList}" var="o">
+                <c:if test="${o.status eq 'Pending'}"><c:set var="countPending" value="${countPending + 1}" /></c:if>
+                <c:if test="${o.status eq 'Delivering'}"><c:set var="countDelivering" value="${countDelivering + 1}" /></c:if>
+                <c:if test="${o.status eq 'Delivered' || o.status eq 'Completed'}"><c:set var="countDelivered" value="${countDelivered + 1}" /></c:if>
+                <c:if test="${o.status eq 'Cancelled'}"><c:set var="countCancelled" value="${countCancelled + 1}" /></c:if>
+            </c:forEach>
+        </c:if>
+        
+        <c:set var="totalActive" value="${countPending + countDelivering}" />
+        <c:set var="totalHistory" value="${countDelivered + countCancelled}" />
+
+        <div class="row g-4">
+
+            <%-- === LEFT COLUMN: NAVIGATION (STICKY) === --%>
+            <div class="col-lg-4 col-md-5">
+                <div class="account-nav-card">
+                    <div class="account-user-mini">
+                        <div class="avatar-circle">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <h5 class="mb-1 fw-bold text-white">${acc.username}</h5>
+                        <small class="text-white-50">Member</small>
+                    </div>
+                    <ul class="account-nav">
+                        <li>
+                            <a href="${pageContext.request.contextPath}/profile" class="account-nav-link active">
+                                <div><i class="fa-solid fa-user-circle"></i> My Profile</div>
+                            </a>
                         </li>
-                        <li class="headerListItem">
-                            <a href="http://localhost:8080/Project_SWP391_Group4/productList/female">Women's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/female/t_shirt">T-shirt</a></li>
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/female/pant">Long pants</a></li>
-                                <li><a href="http://localhost:8080/Project_SWP391_Group4/productList/female/dress">Dress</a></li>
-                                <!--<li><a href="">Discount</a></li>-->
+                        
+                        <c:if test="${empty acc.google_id}">
+                            <li>
+                                <a href="${pageContext.request.contextPath}/changePassword.jsp" class="account-nav-link">
+                                    <div><i class="fa-solid fa-key"></i> Change Password</div>
+                                </a>
+                            </li>
+                        </c:if>
 
-                            </ul>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/orderView" class="account-nav-link">
+                                <div><i class="fa-solid fa-box"></i> My Orders</div>
+                                <%-- SIDEBAR COUNT (ACTIVE) --%>
+                                <c:if test="${totalActive > 0}">
+                                    <span class="badge-sidebar">${totalActive}</span>
+                                </c:if>
+                            </a>
                         </li>
-                        <!--<li class="headerListItem"><a href="">Accessory</a></li>-->
-                        <li class="headerListItem">
-                            <a href="/Project_SWP391_Group4/aboutUs.jsp">Information<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="/Project_SWP391_Group4/aboutUs.jsp">About Us</a></li>
-
-                                <li><a href="/Project_SWP391_Group4/contact.jsp">Contact</a></li>
-                               
-                                <li><a href="/Project_SWP391_Group4/policy.jsp">Exchange policy</a></li>
-                               
+                        <li>
+                            <a href="${pageContext.request.contextPath}/orderHistoryView" class="account-nav-link">
+                                <div><i class="fa-solid fa-clock-rotate-left"></i> Order History</div>
+                                <%-- SIDEBAR COUNT (HISTORY) --%>
+                                <c:if test="${totalHistory > 0}">
+                                    <span class="badge-sidebar">${totalHistory}</span>
+                                </c:if>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/cookieHandle" class="account-nav-link text-danger" onclick="return confirm('Do you want to sign out?')">
+                                <div><i class="fa-solid fa-right-from-bracket"></i> Sign Out</div>
+                            </a>
                         </li>
                     </ul>
-                </nav>
-                <div class="headerTool">
-                    <div class="headerToolIcon">
-                        <i class="bi bi-search icon" onclick="toggleBox('box1')"></i>
-                        <div class="searchBox box" id="box1">
-                            <div class="searchBox-content">
-                                <h2>SEARCH</h2>
-                                <div class="search-input">
-                                    <input oninput="searchByName(this)" name="search" type="text" size="20" placeholder="Search for products...">
-                                    <button><i class="bi bi-search"></i></button>
-                                </div>
-                                <div class="search-list">
-                                    <div class="search-list" id="search-ajax">
-                                        <c:forEach items="${requestScope.productList}" var="product">
+                </div>
+            </div>
 
-                                        </c:forEach>
+            <%-- === RIGHT COLUMN: CONTENT === --%>
+            <div class="col-lg-8 col-md-7">
+                <div class="profile-card">
+                    
+                    <%-- Loading Overlay --%>
+                    <div class="loading-overlay" id="loading-overlay">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <%-- Header Section inside Card --%>
+                    <div class="section-header">
+                        <h4>Profile Information</h4>
+                        <button type="button" class="btn-icon-edit" id="btn-toggle-edit" title="Edit Profile">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                    </div>
+
+                    <%-- Server Error Message --%>
+                    <c:if test="${not empty errorMessage}">
+                        <div class="server-error"><i class="fa-solid fa-triangle-exclamation"></i> ${errorMessage}</div>
+                    </c:if>
+
+                    <div id="main-content-area">
+                        
+                        <%-- VIEW MODE: INFO LIST --%>
+                        <div class="info-grid" id="view-mode">
+                            <div class="info-item">
+                                <div class="info-icon"><i class="fa-regular fa-user"></i></div>
+                                <div class="info-content">
+                                    <small>Full Name</small>
+                                    <span data-field="fullName">${fullName}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-icon"><i class="fa-regular fa-envelope"></i></div>
+                                <div class="info-content">
+                                    <small>Email Address</small>
+                                    <span data-field="email">${email}</span>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-icon"><i class="fa-solid fa-phone"></i></div>
+                                <div class="info-content">
+                                    <small>Phone Number</small>
+                                    <span data-field="phoneNumber">${phoneNumber}</span>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-icon"><i class="fa-solid fa-location-dot"></i></div>
+                                <div class="info-content">
+                                    <small>Address</small>
+                                    <span data-field="address">${address}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <%-- EDIT MODE: FORM --%>
+                        <div class="edit-form-wrapper" id="edit-mode">
+                            <form action="${pageContext.request.contextPath}/profile/update" method="GET" id="edit-profile-form">
+                                
+                                <div class="row g-3">
+                                    <%-- Full Name --%>
+                                    <div class="col-md-12">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Full Name" value="${fullName}" required maxlength="100">
+                                            <label for="fullName">Full Name</label>
+                                        </div>
+                                    </div>
+
+                                    <%-- Email (Readonly) --%>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="${email}" readonly style="background-color: #f8f9fa;">
+                                            <label for="email">Email (Readonly)</label>
+                                        </div>
+                                    </div>
+
+                                    <%-- Phone --%>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Phone Number" value="${phoneNumber}" required>
+                                            <label for="phoneNumber">Phone Number</label>
+                                        </div>
+                                    </div>
+
+                                    <%-- Address --%>
+                                    <div class="col-12">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="address" name="address" placeholder="Address" value="${address}" required maxlength="255">
+                                            <label for="address">Address</label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="headerToolIcon">
-                        <a href="http://localhost:8080/Project_SWP391_Group4/profile"><i class="bi bi-person icon"></i></a>
-                        <!-- khi chưa login thì khi nhấp vào sẽ chuyển tới trang login < -->     
-                    </div>
-                    <div class="headerToolIcon">
-                        <a href="/Project_SWP391_Group4/loadCart"><i class="bi bi-cart2 icon" onclick="toggleBox('box3')"></i></a>
 
-                    </div>
-                </div>
-            </div>
-
-            <hr width="100%" , color="#d0a587" />
-        </header>
-        <!-- end header -->
-
-        <div class="content">
-            <h2 id="highlight">Your Account</h2>
-        </div>
-        <div class="row">
-            <div class="col-md-4">
-                <h6 id="highlight"><b>ACCOUNT</b></h6>
-                <ul class="option">
-
-                    <%-- CHỈ HIỂN THỊ KHI NGƯỜI DÙNG KHÔNG PHẢI TÀI KHOẢN GOOGLE --%>
-                    <c:if test="${empty acc.google_id}">
-                        <li><a href="changePassword.jsp">Change password</a></li>
-                        </c:if>
-                        <%-- ✅ THÊM MỚI: 2 link ở trên Sign out --%>
-                    <li><a href="${pageContext.request.contextPath}/orderView">View order</a></li> 
-                    <li><a href="${pageContext.request.contextPath}/orderHistoryView">Order's history</a></li>
-                    <li><a href="cookieHandle">Sign out</a></li>
-                </ul>
-            </div>
-            <div class="col-md-8">
-
-
-                <h5 class="info-content"><b>ACCOUNT INFORMATION</b></h5>
-                <div class="user-info">
-                    <div class="flex user-name">
-                        <h6 class="highlight">${fullName}</h6>
-                        <div class="dropdown">
-                            <div class="edit-info-btn">
-                                <button><i class="fa-regular fa-pen-to-square" id="btn-edit"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <form action="http://localhost:8080/Project_SWP391_Group4/profile/update" method="GET">
-
-                        <div class="dropdown-container">
-                            <div class="input-group"> 
-                                <span class="input-icon">
-                                    <i class="fa-regular fa-user"></i>
-                                </span>
-
-                                <input class="text-field" name="fullName" type="text" value="${fullName}">
-
-                            </div>
-                            <div class="input-group"> 
-                                <span class="input-icon">
-                                    <i class="fa-solid fa-house"></i>
-                                </span>
-
-                                <input class="text-field" name="address" type="text" value="${address}">
-
-                            </div>
-                            <div class="input-group"> 
-                                <span class="input-icon">
-                                    <i class="fa-regular fa-envelope"></i>
-                                </span>
-
-                                <input class="text-field" name="email" type="text" value="${email}" readonly>
-                            </div>
-                            <div class="input-group"> 
-                                <span class="input-icon">
-                                    <i class="fa-solid fa-phone"></i>
-                                </span>
-
-                                <input class="text-field"  type="tel" id="phone" pattern="[0]{1}[0-9]{9}" name="phoneNumber" value="${phoneNumber}">
-
-                            </div>
-                            <%-- Hiển thị thông báo lỗi nếu có --%>
-                            <c:if test="${not empty errorMessage}">
-                                <div style="color: red; margin-top: 10px;">
-                                    ${errorMessage}
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-custom-secondary" id="btn-cancel">Cancel</button>
+                                    <button type="submit" class="btn-custom-primary">Save Changes</button>
                                 </div>
-                            </c:if>
-                            <div class="update-info-btn">
-                                <button type="submit" class="update-btn">Update</button>
-
-                                <button type="reset" class="cancel-btn">Cancel</button>
-                            </div>
-
+                            </form>
                         </div>
-                    </form>
 
-                    <ul class="info">
-                        <li><span class="highlight">Email:</span>${email}</li>
-                        <li><span class="highlight">Country:</span> Vietnam</li>
-                        <li><span class="highlight">Address:</span> ${address}</li>
-                        <li><span class="highlight">Phone Number:</span> ${phoneNumber}</li>
-
-                    </ul>
+                    </div>
                 </div>
-
-
-
             </div>
         </div>
-        <!-- footer -->
-        <footer>
-            <div class="content-footer">
-                <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@gio.vn & @fired.vn</p>
-            </div>
+    </main>
+                                    
+    <button type="button" class="btn" id="btn-back-to-top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
 
+    <%@ include file="footer.jsp" %>
 
+    <%-- SCRIPT --%>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
 
-            <div class="row" id="img-footer">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_1_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_2_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_3_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_4_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_5_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_6_img.jpg?v=55" alt="">
-            </div>
+    <script>
+        $(document).ready(function() {
+            // Elements
+            const $viewMode = $('#view-mode');
+            const $editMode = $('#edit-mode');
+            const $btnToggle = $('#btn-toggle-edit');
+            const $btnCancel = $('#btn-cancel');
+            const $loadingOverlay = $('#loading-overlay');
+            const $form = $('#edit-profile-form');
+            
+            // Initial Data Storage (to revert on Cancel)
+            let initialData = {};
+            $form.find('input').each(function() {
+                initialData[this.name] = $(this).val();
+            });
 
-            <div class="items-footer">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <h4 id="highlight">About gio</h4>
-                        <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
-                        <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..." class="bct">
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Contact</h4>
-                        <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
-                        <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                        <p><b>Email:</b> info@gio.vn</p>
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Customer support</h4>
-                        <ul class="CS">
-                            <li><a href="">Search</a></li>
-                            <li><a href="">Introduce</a></li>
-                        </ul>
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Customer care</h4>
-                        <div class="row phone">
-                            <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
-                            <div class="col-9"> 
-                                <h4 id="highlight">0123.456.789</h4>
-                                <a href="">info@gio.vn</a>
-                            </div>
-                        </div>
-                        <h5 id="highlight">Follow Us</h5>
-                        <div class="contact-item">
-                            <a href="" class="contact-link"><i class="bi bi-facebook contact-icon"></i></a>
-                            <a href="" class="contact-link"><i class="bi bi-instagram contact-icon"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            // Loading Simulation
+            setTimeout(function() {
+                $loadingOverlay.addClass('hidden');
+                setTimeout(() => $loadingOverlay.hide(), 400);
+            }, 500);
 
+            // Validation Setup
+            $.validator.addMethod("vietnamesePhone", function(value, element) {
+                return this.optional(element) || /^0[0-9]{9,10}$/.test(value);
+            }, "Phone number must start with 0 and have 10-11 digits.");
 
-        </footer>
+            $form.validate({
+                errorClass: "error",
+                validClass: "is-valid",
+                errorElement: "label",
+                rules: {
+                    fullName: { required: true, maxlength: 100 },
+                    address: { required: true, maxlength: 255 },
+                    phoneNumber: { required: true, vietnamesePhone: true }
+                },
+                messages: {
+                    fullName: { required: "Please enter your full name." },
+                    address: { required: "Please enter your address." },
+                    phoneNumber: { required: "Please enter your phone number." }
+                },
+                highlight: function(element) {
+                    $(element).addClass("is-invalid").removeClass("is-valid");
+                },
+                unhighlight: function(element) {
+                    $(element).removeClass("is-invalid").addClass("is-valid");
+                }
+            });
 
+            // Functions to Switch Modes
+            function showEdit() {
+                $viewMode.slideUp(300);
+                $editMode.addClass('active');
+                $btnToggle.hide(); // Hide the pen icon when editing
+            }
 
+            function hideEdit() {
+                $editMode.removeClass('active');
+                setTimeout(function(){
+                    $viewMode.slideDown(300);
+                    $btnToggle.fadeIn();
+                }, 300);
+                
+                // Reset Form
+                $form.validate().resetForm();
+                $form.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
+                
+                // Restore values
+                $form.find('input').each(function() {
+                    $(this).val(initialData[this.name]);
+                });
+            }
 
-        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script> <!-- lucide.dev icon -->
-        <script src="js/jquery-3.7.0.min.js"></script>
-        <script src="js/jquery.validate.min.js"></script>
-        <script src="js/profile.js"></script>
-    </body>
+            // Events
+            $btnToggle.on('click', showEdit);
+            $btnCancel.on('click', hideEdit);
 
+            // Logic: If Server returned error, stay in Edit mode
+            <c:if test="${not empty errorMessage}">
+                setTimeout(showEdit, 600); // Wait for loading to finish then show form
+            </c:if>
+        });
+        // --- 2. BACK TO TOP BUTTON ---
+        let mybutton = document.getElementById("btn-back-to-top");
 
+        window.onscroll = function () {
+            scrollFunction();
+        };
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+        }
+
+        mybutton.addEventListener("click", backToTop);
+
+        function backToTop() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+    </script>
+</body>
 </html>

@@ -1,545 +1,494 @@
-
+<%--
+    Document    : index.jsp
+    Updated     : Modern UI + Robust Notification Logic
+--%>
 
 <%@page import="java.text.NumberFormat"%>
 <%@page import="java.text.DecimalFormat"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
-              integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'> <link rel="icon" href="${pageContext.request.contextPath}/images/LG1.png" type="image/x-icon">
+    <link href='https://fonts.googleapis.com/css?family=Quicksand:300,400,500,600,700&display=swap' rel='stylesheet'> 
+    <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon">
 
-        <title>GIO</title>
-        <style>
-            /* === CSS GỐC (GIỮ NGUYÊN) === */
-            * {
-                margin: 0;
-                padding: 0;
-                font-family: 'Quicksand', sans-serif;
-                box-sizing: border-box;
-                color: rgb(151, 143, 137);
-            }
-            img { width: 100%; }
-            :root {
-                --logo-color: #a0816c;
-                --nav-list-color: #a0816c;
-                --icon-color: #a0816c;
-                --text-color: #a0816c;
-                --bg-color: #a0816c;
-            }
-            body::-webkit-scrollbar { width: 0.5em; }
-            body::-webkit-scrollbar-track { box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3); }
-            body::-webkit-scrollbar-thumb {
-                border-radius: 50px;
-                background-color: var(--bg-color);
-                outline: 1px solid slategrey;
-            }
-            nav { height: 70px; justify-content: center; display: flex; }
-            .header_title {
-                display: flex; text-align: center; justify-content: center; align-items: center;
-                background-color: #f5f5f5; font-size: 0.8125rem; font-weight: 500; height: 30px;
-            }
-            .headerContent { max-width: 1200px; margin: 0 auto; }
-            .headerContent, .headerList, .headerTool { display: flex; align-items: center; }
-            .headerContent { justify-content: space-around; }
-            .logo a { text-decoration: none; color: var(--logo-color); font-size: 1.5em; font-weight: bold; }
-            .headerList { margin: 0; list-style-type: none; }
-            .headerListItem { transition: font-size 0.3s ease; height: 24px; }
-            .headerListItem a {
-                margin: 0 10px; padding: 22px 0; text-decoration: none; color: var(--text-color);
-            }
-            .dropdown-icon { margin-left: 2px; font-size: 0.7500em; }
-            .dropdownMenu {
-                position: absolute; width: 200px; padding: 0; margin-top: 17px; background-color: #fff;
-                display: none; z-index: 1; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-            }
-            .dropdownMenu li { list-style-type: none; margin: 0; border-bottom: 1px solid rgb(235 202 178); }
-            .dropdownMenu li a {
-                text-decoration: none; padding: 5px 15px; margin: 0; width: 100%;
-                display: flex; font-size: 0.9em; color: var(--text-color);
-            }
-            .dropdownMenu li:hover { background-color: #f1f1f1; }
-            .headerListItem:hover .dropdownMenu { display: block; }
-            .headerTool a { padding: 5px; }
-            .headerToolIcon { width: 45px; justify-content: center; display: flex; }
-            .icon { cursor: pointer; font-size: 26px; }
-            .searchBox {
-                width: 420px; position: absolute; top: 100px; right: 13%; left: auto; z-index: 990;
-                background-color: #fff; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px; display: none;
-            }
-            .search-input { position: relative; }
-            .search-input input {
-                width: 100%; border: 1px solid #e7e7e7; background-color: #f6f6f6; height: 44px;
-                padding: 8px 50px 8px 20px; font-size: 1em;
-            }
-            .search-input button {
-                position: absolute; right: 1px; top: 1px; height: 42px; width: 15%;
-                border: none; background-color: #f6f6f6;
-            }
-            .search-input input:focus { outline: none; border-color: var(--bg-color); }
-            .cartBox {
-                width: 340px; position: absolute; top: 100px; right: 13%; left: auto; z-index: 990;
-                background-color: #fff; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px; display: none;
-            }
-            .cartIcon { justify-content: center; display: flex; }
-            .cartIcon i { font-size: 2.5em; }
-            hr { margin-top: 0; margin-bottom: 10px; }
+    <title>Home | GIO</title>
+    
+    <style>
+        /* --- 1. GLOBAL VARIABLES & RESET --- */
+        :root {
+            --primary-color: #a0816c;
+            --primary-hover: #8a6d5a;
+            --secondary-color: #2c3e50;
+            --accent-bg: #fdfbf9;
+            --text-dark: #2d2d2d;
+            --text-muted: #6c757d;
+            --price-red: #d0021b; 
             
-            /* === CSS FOOTER GỐC === */
-            footer { background-color: #f5f5f5; }
-            .content-footer { text-align: center; padding: 30px; }
-            .content-footer h3 { color: #a0816c; }
-            .bct { width: 50%; }
-            footer p { font-size: 15px; }
-            footer a { text-decoration: none; color: rgb(151, 143, 137); }
-            #highlight { color: #a0816c; }
-            #img-footer img { padding: 0; }
-            #img-footer { margin: 0 auto; }
-            .phone { position: relative; }
-            .bi-telephone { cursor: pointer; font-size: 3em; position: absolute; top: -16%; left: 15px; }
-            .contact-item { display: flex; }
-            .contact-link {
-                margin-right: 10px; border: 1px solid #a0816c; border-radius: 5px; padding: 5px;
-                width: 35.6px; justify-content: center; display: flex;
-            }
-            .contact-link:hover { background-color: var(--bg-color); }
-            .contact-link:hover .bi-facebook::before,
-            .contact-link:hover .bi-instagram::before { color: white; }
-            .search-info { display: flex; margin: 10px 0; }
-            .title { width: 88%; }
-            .search-img { width: 12%; }
-            .search-info a { padding: 0; }
-            .search-img a img { width: 100%; }
-            .title a { text-decoration: none; color: #cfb997; }
-            .title p { margin: 0; margin-top: 14px; font-size: .8em; }
-            .search-list { max-height: 280px; overflow-y: scroll; scrollbar-width: none; }
-            @media (max-width: 1024px) {
-                .infoBox, .searchBox, .cartBox { right: 0; }
-            }
+            /* Modern Effects */
+            --card-radius: 20px;
+            --card-radius-product: 12px;
+            --btn-radius: 50px;
+            --soft-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+            --hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            --transition-smooth: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
 
-            /* === SỬA LỖI KHOẢNG TRẮNG FOOTER === */
-            .items-footer {
-                margin: 5% 5% 0 5%; /* Ghi đè margin-bottom: 5% thành 0 */
-            }
-            body {
-                margin-bottom: 0;
-                padding-bottom: 0;
-            }
-            footer {
-                margin-bottom: 0;
-                padding-bottom: 0;
-            }
-            /* === KẾT THÚC SỬA LỖI FOOTER === */
+        html { scroll-behavior: smooth; }
 
+        body { 
+            font-family: 'Quicksand', sans-serif; 
+            background-color: #ffffff; 
+            color: var(--text-dark); 
+            overflow-x: hidden; 
+        }
 
-            /* ========================================= */
-            /* ===== STYLE MỚI CHO TRANG INDEX.JSP ===== */
-            /* ========================================= */
-            
-            /* === TASK 2: WRAPPER CHO BANNER CHÍNH === */
-            .main-banner-container {
-                max-width: 1200px;      /* Giới hạn chiều rộng */
-                margin: 20px auto 0 auto; /* Căn giữa và tạo khoảng cách trên */
-                padding: 0 15px;        /* Căn lề 2 bên giống content */
-                box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước */
-            }
-            .main-banner-container img {
-                border-radius: 8px;     /* Bo góc banner */
-                width: 100%;
-                display: block;
-            }
-            
-            .main-content-wrapper {
-                max-width: 1200px;
-                margin: 0 auto; /* Bỏ margin top để banner sát header */
-                padding: 0 15px 50px 15px; /* Thêm padding bottom */
-            }
+        a { text-decoration: none; transition: var(--transition-smooth); }
+        img { max-width: 100%; height: auto; }
 
-            /* === TASK 1: BANNER DANH MỤC (ĐÃ SỬA) === */
-            .category-banner-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr; /* 2 cột */
-                gap: 20px;
-                margin-top: 20px; 
-                margin-bottom: 40px; 
-            }
-            
-            /* Đây là thẻ <a>, giờ là khối chữ nhật */
-            .category-banner-item {
-                position: relative;
-                overflow: hidden;
-                border-radius: 8px;
-                display: block; 
-                text-decoration: none;
-                height: 300px; /* Chiều cao cố định */
-                
-                /* Thuộc tính cho ảnh nền */
-                background-size: cover;
-                background-position: center;
-                transition: transform 0.4s ease;
-            }
-            
-            .category-banner-item:hover {
-                transform: scale(1.03); /* Hiệu ứng hover */
-            }
-            
-            /* Đặt ảnh nền cho từng box */
-            .banner-male {
-                background-image: url('${pageContext.request.contextPath}/images/img-male-tshirt3.jpg'); 
-            }
-            .banner-female {
-                background-image: url('${pageContext.request.contextPath}/images/img-female-tshirt1.jpg'); 
-            }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f9f9f9; }
+        ::-webkit-scrollbar-thumb { background: #dcdcdc; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
 
-            .category-banner-title {
-                position: absolute;
-                bottom: 25px;
-                left: 25px;
-                background: rgba(255, 255, 255, 0.9);
-                color: #333;
-                padding: 10px 20px;
-                border-radius: 5px;
-                font-size: 22px;
-                font-weight: 700;
-                text-decoration: none;
-                transition: all 0.3s ease;
-            }
-            .category-banner-item:hover .category-banner-title {
-                background: var(--bg-color, #a0816c);
-                color: #fff;
-            }
-            @media (max-width: 768px) {
-                .category-banner-grid {
-                    grid-template-columns: 1fr; /* 1 cột trên mobile */
-                }
-                .category-banner-title {
-                    font-size: 18px;
-                }
-            }
-            
-            /* === TASK 3: Tiêu đề "Featured Products" === */
-            .section-title {
-                color: #333;
-                font-weight: 700;
-                font-size: 28px;
-                margin-bottom: 25px;
-                text-align: center; /* Tiêu đề ở giữa */
-            }
+        /* --- 2. RESTORED TOAST NOTIFICATION STYLES (Code Cũ) --- */
+        .toast-alert {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: #fff;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        .toast-alert.hide-toast {
+            animation: slideOutRight 0.5s ease-in forwards;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
 
-            /* Lưới Sản Phẩm (Copy từ productList.jsp) */
-            .product-grid {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr); 
-                gap: 20px; 
-            }
-            @media (max-width: 992px) {
-                .product-grid { grid-template-columns: repeat(3, 1fr); }
-            }
-            @media (max-width: 768px) {
-                .product-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
-            }
-            .product-card {
-                background: #fff;
-                border: 1px solid #f0f0f0; 
-                border-radius: 8px; 
-                overflow: hidden; 
-                transition: box-shadow 0.3s ease;
-                text-align: left;
-            }
-            .product-card:hover { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); }
-            .product-card__image-wrapper { position: relative; overflow: hidden; }
-            .product-card__image {
-                width: 100%;
-                height: 378px; 
-                object-fit: cover;
-                display: block;
-                transition: transform 0.4s ease; 
-            }
-            .product-card:hover .product-card__image { transform: scale(1.05); }
-            .product-card__actions {
-                position: absolute;
-                bottom: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                opacity: 0; 
-                transition: opacity 0.3s ease;
-            }
-            .product-card:hover .product-card__actions { opacity: 1; }
-            .product-card__action-btn {
-                background: var(--bg-color, #a0816c); 
-                color: #fff;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 5px;
-                font-size: 14px;
-                font-weight: 600;
-                text-decoration: none;
-                white-space: nowrap;
-                cursor: pointer;
-            }
-            .product-card__action-btn:hover { background: #8d7360; color: #fff; }
-            .product-card__badge {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                background: #d70000; 
-                color: #fff;
-                padding: 3px 8px;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: 600;
-                z-index: 2;
-            }
-            .product-card__info { padding: 15px; }
-            .product-card__name {
-                font-size: 15px;
-                font-weight: 600; /* Tên sản phẩm in đậm */
-                color: #333; 
-                text-decoration: none;
-                display: block;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis; 
-                margin-bottom: 8px;
-            }
-            .product-card__name:hover { color: var(--text-color, #a0816c); }
-            .product-card__price { display: flex; align-items: center; gap: 8px; }
-            .product-card__sale-price {
-                font-size: 16px;
-                font-weight: 700;
-                color: #d70000; 
-            }
-            .product-card__original-price {
-                font-size: 14px;
-                color: #888; 
-                text-decoration: line-through; 
-            }
-            
-        </style>
-    </head>
+        .toast-alert .toast-message { color: #333; font-weight: 600; font-size: 15px; }
+        .toast-alert .toast-close { cursor: pointer; color: #aaa; margin-left: 15px; font-size: 18px; transition: color 0.2s; }
+        .toast-alert .toast-close:hover { color: #333; }
+        .toast-alert.success { border-left: 5px solid #28a745; }
+        .toast-alert.success i.status-icon { color: #28a745; font-size: 1.4rem; }
 
-    <body>
-        <header class="header">
-            <div class="header_title">Free shipping with orders from&nbsp;<strong>200,000 VND </strong></div>
-            <div class="headerContent">
-                
-                <div class="logo"><a href="${pageContext.request.contextPath}/">GIO</a></div>
-                
-                <nav>
-                    <ul class="headerList">
-                        <li class="headerListItem"><a href="${pageContext.request.contextPath}/">Home Page</a></li>
-                        <li class="headerListItem">
-                            <a href="${pageContext.request.contextPath}/productList/male">Men's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="${pageContext.request.contextPath}/productList/male/t_shirt">T-shirt</a></li>
-                                <li><a href="${pageContext.request.contextPath}/productList/male/pant">Long Pants</a></li>
-                                <li><a href="${pageContext.request.contextPath}/productList/male/short">Shorts</a></li>
-                            </ul>
-                        </li>
-                        <li class="headerListItem">
-                            <a href="${pageContext.request.contextPath}/productList/female">Women's Fashion<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="${pageContext.request.contextPath}/productList/female/t_shirt">T-shirt</a></li>
-                                <li><a href="${pageContext.request.contextPath}/productList/female/pant">Long Pants</a></li>
-                                <li><a href="${pageContext.request.contextPath}/productList/female/dress">Dress</a></li>
-                            </ul>
-                        </li>
-                        <li class="headerListItem">
-                            <a href="${pageContext.request.contextPath}/aboutUs.jsp">Information<i class="bi bi-caret-down dropdown-icon"></i></a>
-                            <ul class="dropdownMenu">
-                                <li><a href="${pageContext.request.contextPath}/aboutUs.jsp">About Us</a></li>
-                                <li><a href="${pageContext.request.contextPath}/contact.jsp">Contact</a></li>
-                               
-                                <li><a href="${pageContext.request.contextPath}/policy.jsp">Exchange Policy</a></li>
-                             
-                            </ul>
-                        </li>
-                    </ul>
-                </nav>
-                
-                <div class="headerTool">
-                    <div class="headerToolIcon">
-                        <i class="bi bi-search icon" onclick="toggleBox('box1')"></i>
-                        <div class="searchBox box" id="box1">
-                            <div class="searchBox-content">
-                                <h2>SEARCH</h2>
-                                <div class="search-input">
-                                    <input oninput="searchByName(this)" name="search" type="text" size="20" placeholder="Search for products...">
-                                    <button><i class="bi bi-search"></i></button>
-                                </div>
-                                <div class="search-list" id="search-ajax">
-                                    <%-- AJAX content will fill this --%>
-                                </div>
-                            </div>
+        /* --- 3. PRELOADER (Minimalist) --- */
+        #page-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #fff; z-index: 99999;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
+        .spinner-box {
+            width: 60px; height: 60px;
+            border: 3px solid rgba(160, 129, 108, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spinner 0.8s linear infinite;
+        }
+        @keyframes spinner { to { transform: rotate(360deg); } }
+
+        /* --- 4. HERO CAROUSEL --- */
+        .hero-section {
+            position: relative; margin: 20px auto 60px;
+            max-width: 1400px; padding: 0 15px;
+        }
+        .hero-rounded {
+            border-radius: var(--card-radius); overflow: hidden;
+            box-shadow: var(--soft-shadow);
+        }
+        .carousel-item { height: 600px; position: relative; }
+        .carousel-item img { 
+            height: 100%; width: 100%; object-fit: cover; 
+            filter: brightness(0.9);
+        }
+        .hero-caption {
+            position: absolute; bottom: 20%; left: 10%; z-index: 10;
+            color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .hero-caption h2 { font-size: 3.5rem; font-weight: 700; margin-bottom: 1rem; }
+        .hero-caption p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; }
+        .btn-hero {
+            background: #fff; color: var(--text-dark);
+            padding: 12px 35px; border-radius: var(--btn-radius);
+            font-weight: 600; border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-hero:hover { background: var(--primary-color); color: #fff; transform: translateY(-3px); }
+
+        @media (max-width: 768px) {
+            .carousel-item { height: 400px; }
+            .hero-caption h2 { font-size: 2rem; }
+        }
+
+        /* --- 5. CATEGORY BANNERS --- */
+        .category-section { margin-bottom: 80px; }
+        .cat-card {
+            position: relative; display: block;
+            height: 350px; border-radius: var(--card-radius);
+            overflow: hidden; box-shadow: var(--soft-shadow);
+        }
+        .cat-card__bg {
+            width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .cat-male .cat-card__bg { background-image: url('${pageContext.request.contextPath}/images/img-male-tshirt3.jpg'); }
+        .cat-female .cat-card__bg { background-image: url('${pageContext.request.contextPath}/images/img-female-tshirt1.jpg'); }
+
+        .cat-card:hover .cat-card__bg { transform: scale(1.1); }
+        .cat-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+            display: flex; align-items: flex-end; padding: 30px;
+        }
+        .cat-content { color: #fff; width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        .cat-title { font-size: 1.8rem; font-weight: 700; margin: 0; }
+        .cat-btn-icon {
+            width: 50px; height: 50px; background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; transition: var(--transition-smooth);
+        }
+        .cat-card:hover .cat-btn-icon { background: #fff; color: var(--primary-color); transform: rotate(-45deg); }
+
+        /* --- 6. PRODUCTS --- */
+        .section-header { text-align: center; margin-bottom: 50px; }
+        .section-subtitle { color: var(--primary-color); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 10px; display: block; }
+        .section-title { font-size: 2.5rem; font-weight: 700; color: var(--secondary-color); position: relative; display: inline-block; }
+        
+        .product-grid { 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; margin-bottom: 80px; 
+        }
+        @media (max-width: 992px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; } }
+
+        .product-card { 
+            background: #fff; border-radius: var(--card-radius-product); 
+            overflow: hidden; transition: all 0.3s ease; position: relative; 
+        }
+        .product-card:hover { box-shadow: var(--hover-shadow); transform: translateY(-5px); }
+        
+        .product-card__image-wrapper { 
+            position: relative; overflow: hidden; 
+            border-radius: var(--card-radius-product); padding-top: 130%; 
+        }
+        .product-card__image { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: cover; transition: transform 0.5s ease; 
+        }
+        .product-card:hover .product-card__image { transform: scale(1.08); }
+
+        .product-card__badge { 
+            position: absolute; top: 15px; left: 15px; 
+            background: #e74c3c; color: #fff; padding: 4px 10px; 
+            border-radius: 20px; font-size: 0.75rem; font-weight: 700; z-index: 2; 
+        }
+        .product-card__actions { 
+            position: absolute; bottom: 15px; left: 0; right: 0; 
+            display: flex; justify-content: center; opacity: 0; 
+            transform: translateY(10px); transition: all 0.3s ease; z-index: 3; 
+        }
+        .product-card:hover .product-card__actions { opacity: 1; transform: translateY(0); }
+        .product-card__action-btn { 
+            background: #fff; color: var(--text-dark); border: none; 
+            padding: 10px 25px; border-radius: 30px; font-size: 0.85rem; font-weight: 700; 
+            text-decoration: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
+            display: flex; align-items: center; gap: 5px; 
+        }
+        .product-card__action-btn:hover { background: var(--primary-color); color: #fff; }
+
+        .product-card__info { padding: 15px 5px; text-align: center; }
+        .product-card__name { 
+            font-size: 1rem; font-weight: 600; color: var(--text-dark); 
+            display: block; white-space: nowrap; overflow: hidden; 
+            text-overflow: ellipsis; margin-bottom: 8px; 
+        }
+        .product-card__name:hover { color: var(--primary-color); }
+        .product-card__price { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .product-card__sale-price { font-size: 1.1rem; font-weight: 700; color: var(--price-red); }
+        .product-card__original-price { font-size: 0.9rem; color: #aaa; text-decoration: line-through; }
+
+        /* Back to Top Button */
+        #btn-back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: none;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            z-index: 100;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        #btn-back-to-top:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="page-loader">
+        <div class="spinner-box"></div>
+    </div>
+    
+    <%-- === LOGIC THÔNG BÁO TÙY CHỈNH (ROBUST VERSION) === --%>
+    <c:if test="${not empty sessionScope.successMessage}">
+        
+        <c:set var="rawMsg" value="${sessionScope.successMessage}" />
+        <%-- Mặc định lấy nguyên văn message từ Controller --%>
+        <c:set var="finalMsg" value="${rawMsg}" />
+        
+        <c:choose>
+            <%-- Case 1: Login (Kiểm tra lỏng lẻo hơn để chắc chắn bắt được) --%>
+            <c:when test="${fn:containsIgnoreCase(rawMsg, 'log in') || fn:containsIgnoreCase(rawMsg, 'login')}">
+                <c:set var="userName" value="${sessionScope.acc.fullName}" />
+                <c:if test="${empty userName}">
+                    <c:set var="userName" value="${sessionScope.acc.username}" />
+                </c:if>
+                <%-- Nếu có username thì chào, không thì hiện msg mặc định --%>
+                <c:if test="${not empty userName}">
+                    <c:set var="finalMsg" value="Welcome back, ${userName}!" />
+                </c:if>
+            </c:when>
+
+            <%-- Case 2: Logout --%>
+            <c:when test="${fn:containsIgnoreCase(rawMsg, 'logout')}">
+                <c:set var="finalMsg" value="You have been logged out." />
+            </c:when>
+        </c:choose>
+
+        <%-- LUÔN HIỂN THỊ NẾU CÓ MESSAGE --%>
+        <div class="toast-alert success" id="toast-alert">
+            <i class="bi bi-check-circle-fill status-icon"></i>
+            <span class="toast-message">${finalMsg}</span>
+            <i class="bi bi-x-lg toast-close" onclick="closeToast()"></i>
+        </div>
+
+        <%-- Xóa message để không hiện lại --%>
+        <c:remove var="successMessage" scope="session" />
+    </c:if>
+
+    <jsp:include page="header.jsp" />
+
+    <main class="main-wrapper container-xxl">
+        
+        <section class="hero-section" data-aos="fade-zoom-in" data-aos-easing="ease-in-back" data-aos-delay="100">
+            <div id="mainBannerCarousel" class="carousel slide hero-rounded" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#mainBannerCarousel" data-bs-slide-to="0" class="active"></button>
+                    <button type="button" data-bs-target="#mainBannerCarousel" data-bs-slide-to="1"></button>
+                    <button type="button" data-bs-target="#mainBannerCarousel" data-bs-slide-to="2"></button>
+                </div>
+                <div class="carousel-inner">
+                    <div class="carousel-item active" data-bs-interval="6000">
+                        <img src="${pageContext.request.contextPath}/images/banner1.jpg" alt="Fashion Collection">
+                        <div class="hero-caption">
+                            <h2 data-aos="fade-up" data-aos-delay="400">New Summer <br>Collection</h2>
+                            <p data-aos="fade-up" data-aos-delay="600">Discover the latest trends in fashion with our exclusive arrivals.</p>
+                            <a href="#categories" class="btn-hero" data-aos="fade-up" data-aos-delay="800">Welcome</a>
                         </div>
                     </div>
-                    <div class="headerToolIcon">
-                        <a href="${pageContext.request.contextPath}/profile"><i class="bi bi-person icon"></i></a>
+                    <div class="carousel-item" data-bs-interval="6000">
+                        <img src="${pageContext.request.contextPath}/images/banner5.jpg" alt="Modern Style">
+                        <div class="hero-caption">
+                            <h2>Elegant <br>Lifestyle</h2>
+                            <p>Refine your style with our premium selection.</p>
+                            <a href="#categories" class="btn-hero">Explore</a>
+                        </div>
                     </div>
-                    <div class="headerToolIcon">
-                        <a href="${pageContext.request.contextPath}/loadCart"><i class="bi bi-cart2 icon" onclick="toggleBox('box3')"></i></a>
+                    <div class="carousel-item" data-bs-interval="6000">
+                        <img src="${pageContext.request.contextPath}/images/banner3.jpg" alt="Urban Trends">
+                        <div class="hero-caption">
+                            
+                        </div>
                     </div>
                 </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#mainBannerCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#mainBannerCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
             </div>
-            
-            <div class="main-banner-container">
-                <img src="${pageContext.request.contextPath}/images/banner.jpg" alt="Main Banner"/>
+        </section>
+
+        <section id="categories" class="category-section">
+            <div class="row g-4">
+                <div class="col-md-6" data-aos="fade-right">
+                    <a href="${pageContext.request.contextPath}/productList/male" class="cat-card cat-male">
+                        <div class="cat-card__bg"></div>
+                        <div class="cat-overlay">
+                            <div class="cat-content">
+                                <h3 class="cat-title">Men's Fashion</h3>
+                                <div class="cat-btn-icon"><i class="bi bi-arrow-right"></i></div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6" data-aos="fade-left">
+                    <a href="${pageContext.request.contextPath}/productList/female" class="cat-card cat-female">
+                        <div class="cat-card__bg"></div>
+                        <div class="cat-overlay">
+                            <div class="cat-content">
+                                <h3 class="cat-title">Women's Fashion</h3>
+                                <div class="cat-btn-icon"><i class="bi bi-arrow-right"></i></div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
-            
-        </header>
-        <main class="main-content-wrapper">
-            
-            <div class="category-banner-grid">
-                <a href="${pageContext.request.contextPath}/productList/male" class="category-banner-item banner-male">
-                    <span class="category-banner-title">Men's Fashion</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/productList/female" class="category-banner-item banner-female">
-                    <span class="category-banner-title">Women's Fashion</span>
-                </a>
+        </section>
+
+        <section id="product">
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-subtitle">Trending Now</span>
+                <h2 class="section-title">Featured Products</h2>
             </div>
 
-            <h2 class="section-title">Featured Products</h2>
-
-            <div class="product-grid" id="product">
-        
-                <c:forEach items="${requestScope.productList}" var="product">
-        
-                    <div class="product-card">
-        
+            <div class="product-grid">
+                <c:forEach items="${requestScope.productList}" var="product" varStatus="status">
+                    <div class="product-card" data-aos="fade-up" data-aos-delay="${status.index * 50}">
                         <div class="product-card__image-wrapper">
-                            <a href="${pageContext.request.contextPath}/productDetail?id=${product.getId()}">
-                                <img class="product-card__image" src="${path}${product.getPicURL()}" alt="${product.getName()}">
-                            </a>
-        
-                            <c:if test="${promoMap[product.promoID] > 0}">
-                                <div class="product-card__badge">-${promoMap[product.promoID]}%</div>
+                            <c:if test="${voucherMap[product.voucherID] > 0}">
+                                <div class="product-card__badge">-${voucherMap[product.voucherID]}%</div>
                             </c:if>
-        
+
+                            <a href="${pageContext.request.contextPath}/productDetail?id=${product.id}">
+                                <img class="product-card__image" src="${product.picURL}" alt="${product.name}">
+                            </a>
+
                             <div class="product-card__actions">
-                                <a href="${pageContext.request.contextPath}/productDetail?id=${product.getId()}" class="product-card__action-btn">
-                                    View Details
+                                <a href="${pageContext.request.contextPath}/productDetail?id=${product.id}" class="product-card__action-btn">
+                                    <i class="bi bi-eye"></i> View Details
                                 </a>
                             </div>
                         </div>
-        
+
                         <div class="product-card__info">
-                            <a href="${pageContext.request.contextPath}/productDetail?id=${product.getId()}" class="product-card__name" title="${product.getName()}">
-                                ${product.getName()}
+                            <a href="${pageContext.request.contextPath}/productDetail?id=${product.id}" class="product-card__name" title="${product.name}">
+                                ${product.name}
                             </a>
-        
-                            <c:set var="formattedPrice">
-                                <fmt:formatNumber type="number" value="${product.getPrice()}" pattern="###,###" />
-                            </c:set>
-                            <c:set var="formattedPrice2">
-                                <fmt:formatNumber type="number" value="${product.price - ((product.price * promoMap[product.promoID])/100)}" pattern="###,###" />
-                            </c:set>
-        
+
+                            <c:set var="formattedPrice"><fmt:formatNumber type="number" value="${product.price}" pattern="###,###" /></c:set>
+                            <c:set var="discountedVal" value="${product.price - ((product.price * voucherMap[product.voucherID])/100)}" />
+                            <c:set var="formattedPrice2"><fmt:formatNumber type="number" value="${discountedVal}" pattern="###,###" /></c:set>
+
                             <div class="product-card__price">
                                 <span class="product-card__sale-price">${formattedPrice2} VND</span>
-                                <c:if test="${promoMap[product.promoID] > 0}">
+                                <c:if test="${voucherMap[product.voucherID] > 0}">
                                     <span class="product-card__original-price">${formattedPrice} VND</span>
                                 </c:if>
                             </div>
                         </div>
-        
                     </div>
-                    </c:forEach>
+                </c:forEach>
             </div>
-            </main>
-        <footer>
-            <div class="content-footer">
-                <h3 id="highlight">Follow us on Instagram</h3>
-                <p>@gio.vn & @fired.vn</p>
-            </div>
+        </section>
 
-            <div class="row" id="img-footer">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_1_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_2_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_3_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_4_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_5_img.jpg?v=55" alt="">
-                <img class="col-md-2" src="https://theme.hstatic.net/1000296747/1000891809/14/gallery_item_6_img.jpg?v=55" alt="">
-            </div>
+    </main>
+                        <button type="button" class="btn" id="btn-back-to-top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
 
-            <div class="items-footer">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <h4 id="highlight">About Gio</h4>
-                        <p>Vintage and basic wardrobe for boys and girls.Vintage and basic wardrobe for boys and girls.</p>
-                        <img src="//theme.hstatic.net/1000296747/1000891809/14/footer_logobct_img.png?v=55" alt="..."
-                             class="bct">
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Contact</h4>
-                        <p><b>Address:</b> 100 Nguyen Van Cu, An Khanh Ward, Ninh Kieu District, City. Can Tho</p>
-                        <p><b>Phone:</b> 0123.456.789 - 0999.999.999</p>
-                        <p><b>Email:</b> info@gio.vn</p>
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Customer Support</h4>
-                        <ul class="CS">
-                            <li><a href="">Search</a></li>
-                            <li><a href="">Introduction</a></li>
-                        </ul>
-                    </div>
-                    <div class="col-sm-3">
-                        <h4 id="highlight">Customer Care</h4>
-                        <div class="row phone">
-                            <div class="col-sm-3"><i class="bi bi-telephone icon"></i></div>
-                            <div class="col-9">
-                                <h4 id="highlight">0123.456.789</h4>
-                                <a href="">info@gio.vn</a>
-                            </div>
-                        </div>
-                        <h5 id="highlight">Follow Us</h5>
-                        <div class="contact-item">
-                            <a href="" class="contact-link"><i class="bi bi-facebook contact-icon"></i></a>
-                            <a href="" class="contact-link"><i class="bi bi-instagram contact-icon"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </footer>
-        <script src="${pageContext.request.contextPath}/js/header.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script type="text/javascript">
-            // JS cho search/header (Giữ nguyên)
-            function doDelete(id) {
-                if (confirm("Do you want to delete this product (" + id + ")?")) {
-                    window.location = "deleteProduct?id=" + id;
-                }
-            }
-            function searchByName(name) {
-                var search = name.value;
-                $.ajax({
-                    url: "${pageContext.request.contextPath}/searchProductByAJAX",
-                    type: "get",
-                    data: { txt: search },
-                    success: function (data) {
-                        var row = document.getElementById("search-ajax");
-                        row.innerHTML = data;
-                    },
-                    error: function (xhr) { }
-                });
-            }
+    <jsp:include page="footer.jsp" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
             
-            function toggleBox(id) {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-                }
+    <script>
+        // Init Animation
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 50
+        });
+
+        // Smart Loader
+        window.addEventListener('load', function () {
+            const loader = document.getElementById('page-loader');
+            if(loader) {
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    loader.style.visibility = 'hidden';
+                }, 200);
             }
-        </script>
+        });
 
-    </body>
+        // --- JS CHO TOAST NOTIFICATION ---
+        function closeToast() {
+            var alert = document.getElementById('toast-alert');
+            if (alert) {
+                // Thêm class chạy animation ẩn đi
+                alert.classList.add('hide-toast');
+                // Chờ animation xong (0.5s) mới ẩn hoàn toàn
+                setTimeout(function() {
+                    alert.style.display = 'none';
+                }, 450);
+            }
+        }
 
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tự động đóng sau 5 giây
+            setTimeout(function() {
+                closeToast();
+            }, 5000);
+        });
+        // --- 2. BACK TO TOP BUTTON ---
+        let mybutton = document.getElementById("btn-back-to-top");
+
+        window.onscroll = function () {
+            scrollFunction();
+        };
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+        }
+
+        mybutton.addEventListener("click", backToTop);
+
+        function backToTop() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+    </script>
+</body>
 </html>

@@ -1,15 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import DAO.ProductDAO;
-import DAO.PromoDAO;
+import DAO.VoucherDAO;
 import entity.Product;
-import entity.Promo;
+import entity.Voucher;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -24,10 +19,6 @@ import static url.MaleProductURL.URL_MALE_PANT;
 import static url.MaleProductURL.URL_MALE_SHORT;
 import static url.MaleProductURL.URL_MALE_TSHIRT;
 
-/**
- *
- * 
- */
 @WebServlet(name = "maleProductController", urlPatterns = {URL_MALE_PRODUCT, URL_MALE_TSHIRT, URL_MALE_SHORT, URL_MALE_PANT})
 public class MaleProductController extends HttpServlet {
 
@@ -38,13 +29,19 @@ public class MaleProductController extends HttpServlet {
             throws ServletException, IOException {
 
         String urlPath = request.getServletPath();
-        PromoDAO promo2 = new PromoDAO();
-        List<Promo> promoList = promo2.getAll();
-        Map<Integer, Integer> promoMap = new HashMap<>();
-        for (Promo promo : promoList) {
-            promoMap.put(promo.getPromoID(), promo.getPromoPercent());
+        
+        // Load Vouchers
+        VoucherDAO voucher2 = new VoucherDAO();
+        List<Voucher> voucherList = voucher2.getAll();
+        
+        // [FIX] Map key changed to String for VoucherID
+        Map<String, Integer> voucherMap = new HashMap<>();
+        for (Voucher voucher : voucherList) {
+            voucherMap.put(voucher.getVoucherID(), voucher.getVoucherPercent());
         }
-        request.setAttribute("promoMap", promoMap);
+        request.setAttribute("voucherMap", voucherMap);
+
+        // Switch based on URL
         switch (urlPath) {
             case URL_MALE_PRODUCT:
                 getMaleProduct(request, response);
@@ -58,7 +55,6 @@ public class MaleProductController extends HttpServlet {
             case URL_MALE_PANT:
                 getPant(request,response);
                 break;
-
         }
     }
 
@@ -66,7 +62,8 @@ public class MaleProductController extends HttpServlet {
             throws ServletException, IOException {
         List<Product> list = DAOproduct.getMaleProductByType("t-shirt");
         request.setAttribute("productList", list);
-        request.setAttribute("path", "../.");
+        // Important: Set context for Breadcrumbs and Sorting
+        request.setAttribute("pageContext", "male_tshirt"); 
         request.getRequestDispatcher("/productList.jsp").forward(request, response);
     }
 
@@ -74,8 +71,7 @@ public class MaleProductController extends HttpServlet {
             throws ServletException, IOException {
         List<Product> list = DAOproduct.getMaleProductByType("pant");
         request.setAttribute("productList", list);
-        request.setAttribute("path", "../.");
-
+        request.setAttribute("pageContext", "male_pant");
         request.getRequestDispatcher("/productList.jsp").forward(request, response);
     }
 
@@ -83,8 +79,7 @@ public class MaleProductController extends HttpServlet {
             throws ServletException, IOException {
         List<Product> list = DAOproduct.getMaleProductByType("short");
         request.setAttribute("productList", list);
-        request.setAttribute("path", "../.");
-
+        request.setAttribute("pageContext", "male_short");
         request.getRequestDispatcher("/productList.jsp").forward(request, response);
     }
 
@@ -92,8 +87,7 @@ public class MaleProductController extends HttpServlet {
             throws ServletException, IOException {
         List<Product> list = DAOproduct.getMaleProduct();
         request.setAttribute("productList", list);
-        request.setAttribute("path", ".");
+        request.setAttribute("pageContext", "all_male");
         request.getRequestDispatcher("/productList.jsp").forward(request, response);
     }
-
 }
