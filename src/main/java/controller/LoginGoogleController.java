@@ -24,14 +24,10 @@ import org.apache.http.client.fluent.Form;
 @WebServlet(name = "LoginGoogleController", urlPatterns = {"/google-callback"})
 public class LoginGoogleController extends HttpServlet {
 
-    // Lớp tiện ích để lấy token và thông tin user
     public static class GoogleUtils {
 
-        // Khởi tạo Dotenv để đọc file .env
-        // Lưu ý: File .env phải nằm ở thư mục gốc của Project (Root Directory)
         private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
-        // Lấy thông tin từ file .env
         private static final String GOOGLE_CLIENT_ID = dotenv.get("GOOGLE_CLIENT_ID");
         private static final String GOOGLE_CLIENT_SECRET = dotenv.get("GOOGLE_CLIENT_SECRET");
         private static final String GOOGLE_REDIRECT_URI = dotenv.get("GOOGLE_REDIRECT_URI");
