@@ -53,7 +53,7 @@ public class CartController extends HttpServlet {
         CartDAO cartDAO = new CartDAO();
         VoucherDAO voucherDAO = new VoucherDAO();
         Size_detailDAO sizeDAO = new Size_detailDAO();
-        
+
         // Common params
         String size = request.getParameter("size");
         int productId = parseIntSafe(request.getParameter("id"), 0);
@@ -67,32 +67,30 @@ public class CartController extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/error.jsp?message=Missing parameters");
                     return;
                 }
+
                 // === CHECK PRODUCT EXIST & ACTIVE ===
-Product product = productDAO.getProductById(productId);
-if (product == null) {
-    // Sản phẩm không tồn tại (bị xoá khỏi DB)
-    response.sendRedirect(request.getContextPath() + "/error.jsp?message=Product not found");
-    return;
-}
-if (!product.isIs_active()) {
-    // Sản phẩm đã bị ngừng kinh doanh
-    request.setAttribute("ms", "<script>alert('This product is no longer available.');</script>");
-    request.setAttribute("p", product); // để productDetail.jsp còn đọc được
-    request.getRequestDispatcher("productDetail.jsp").forward(request, response);
-    return;
-}
-
-
-                // 1. Kiểm tra tồn kho tổng
-                int availableQty = sizeDAO.getSizeQuantity(productId, size);
-                if (availableQty <= 0) {
-                    request.setAttribute("ms", "<script>alert('This product is out of size_detail!');</script>");
-                    request.setAttribute("p", productDAO.getProductById(productId));
+                Product product = productDAO.getProductById(productId);
+                if (product == null) {
+                    response.sendRedirect(request.getContextPath() + "/error.jsp?message=Product not found");
+                    return;
+                }
+                if (!product.isIs_active()) {
+                    request.setAttribute("ms", "<script>alert('This product is no longer available.');</script>");
+                    request.setAttribute("p", product);
                     request.getRequestDispatcher("productDetail.jsp").forward(request, response);
                     return;
                 }
 
-                // 2. Kiểm tra tồn kho chi tiết
+                // 1. Check stock (selected size)
+                int availableQty = sizeDAO.getSizeQuantity(productId, size);
+                if (availableQty <= 0) {
+                    request.setAttribute("ms", "<script>alert('This size is out of stock.');</script>");
+                    request.setAttribute("p", product);
+                    request.getRequestDispatcher("productDetail.jsp").forward(request, response);
+                    return;
+                }
+
+                // 2. Find matched size_detail (current structure)
                 List<Size_detail> sizes = sizeDAO.getAll();
                 Size_detail matched = null;
                 for (Size_detail s : sizes) {
@@ -107,16 +105,17 @@ if (!product.isIs_active()) {
                 }
 
                 if (quantity > matched.getQuantity()) {
-                    request.setAttribute("ms", "<script>alert('Quantity exceeds inventory (" + matched.getQuantity() + ").');</script>");
-                    request.setAttribute("p", productDAO.getProductById(productId));
+                    request.setAttribute("ms",
+                            "<script>alert('Stock for size " + size + " is only " + matched.getQuantity()
+                            + " left. Please reduce the quantity.');</script>");
+                    request.setAttribute("p", product);
                     request.getRequestDispatcher("productDetail.jsp").forward(request, response);
                     return;
                 }
 
-                // [FIX] Tính giá đơn vị (INT)
                 int unitPrice = calcUnitPriceWithVoucher(productDAO, voucherDAO, productId);
 
-                // Kiểm tra giỏ hàng hiện tại
+                // Check current cart
                 List<entity.Cart> current = cartDAO.getAll(customer_id);
                 entity.Cart existed = null;
                 for (entity.Cart c : current) {
@@ -127,17 +126,42 @@ if (!product.isIs_active()) {
                 }
 
                 if (existed != null) {
-                    int newQty = existed.getQuantity() + quantity;
-                    if (newQty > matched.getQuantity()) {
-                        request.setAttribute("ms", "<script>alert('Sold out! Only " + matched.getQuantity() + " items left!');</script>");
-                        request.setAttribute("p", productDAO.getProductById(productId));
+                    int existedQty = existed.getQuantity();
+                    int stockQty = matched.getQuantity();
+
+                    if (existedQty > stockQty) {
+                        request.setAttribute("ms",
+                                "<script>alert('The quantity of size " + size + " currently in your cart (" + existedQty
+                                + ") exceeds the available stock (" + stockQty + "). Please reduce the quantity in your cart.');</script>");
+                        request.setAttribute("p", product);
                         request.getRequestDispatcher("productDetail.jsp").forward(request, response);
                         return;
                     }
-                    // [FIX] Truyền int price
+
+                    int maxAdd = stockQty - existedQty;
+
+                    if (maxAdd <= 0) {
+                        request.setAttribute("ms",
+                                "<script>alert('You already have " + existedQty + " item(s) of size " + size
+                                + " in your cart (maximum allowed by current stock).');</script>");
+                        request.setAttribute("p", product);
+                        request.getRequestDispatcher("productDetail.jsp").forward(request, response);
+                        return;
+                    }
+
+                    if (quantity > maxAdd) {
+                        request.setAttribute("ms",
+                                "<script>alert('You already have " + existedQty + " item(s) of size " + size
+                                + " in your cart. Current stock is " + stockQty + ". You can add at most " + maxAdd + " more.');</script>");
+                        request.setAttribute("p", product);
+                        request.getRequestDispatcher("productDetail.jsp").forward(request, response);
+                        return;
+                    }
+
+                    int newQty = existedQty + quantity;
                     cartDAO.updateCart(customer_id, productId, newQty, unitPrice, size);
+
                 } else {
-                    // [FIX] Truyền int price
                     cartDAO.insertCart(quantity, unitPrice, customer_id, productId, size);
                 }
 
@@ -153,14 +177,14 @@ if (!product.isIs_active()) {
                     response.getWriter().write("0,0,1");
                     return;
                 }
-                
-                    // === CHECK PRODUCT EXIST & ACTIVE ===
-    Product product = productDAO.getProductById(productId);
-    if (product == null || !product.isIs_active()) {
-        // Tạm dùng cùng mã lỗi với "hết hàng" (1) để không phải sửa JS
-        response.getWriter().write("0,0,1");
-        return;
-    }
+
+                // === CHECK PRODUCT EXIST & ACTIVE ===
+                Product product = productDAO.getProductById(productId);
+                if (product == null || !product.isIs_active()) {
+                    // Tạm dùng cùng mã lỗi với "hết hàng" (1) để không phải sửa JS
+                    response.getWriter().write("0,0,1");
+                    return;
+                }
 
                 int size_detail = sizeDAO.getSizeQuantity(productId, size);
                 if (size_detail == 0 || quantity > size_detail) {
@@ -169,12 +193,12 @@ if (!product.isIs_active()) {
                 }
 
                 cartDAO.updateQuantityOnly(customer_id, productId, size, quantity);
-                
+
                 // [FIX] Tính lại tổng tiền với giá INT
                 int unitPrice = calcUnitPriceWithVoucher(productDAO, voucherDAO, productId);
                 int lineTotal = unitPrice * quantity;
                 int sum = cartDAO.getCartTotal(customer_id);
-                
+
                 response.getWriter().write(lineTotal + "," + sum + ",0");
                 break;
             }
@@ -195,12 +219,12 @@ if (!product.isIs_active()) {
                 }
 
                 cartDAO.updateQuantityOnly(customer_id, productId, size, quantity);
-                
+
                 // [FIX] Tính lại tổng tiền với giá INT
                 int unitPrice = calcUnitPriceWithVoucher(productDAO, voucherDAO, productId);
                 int lineTotal = unitPrice * quantity;
                 int sum = cartDAO.getCartTotal(customer_id);
-                
+
                 response.getWriter().write(lineTotal + "," + sum);
                 break;
             }
@@ -222,76 +246,75 @@ if (!product.isIs_active()) {
                 break;
             }
             case URL_CART_CHANGE_SIZE: {
-    response.setContentType("text/plain; charset=UTF-8");
+                response.setContentType("text/plain; charset=UTF-8");
 
-    String oldSize = request.getParameter("oldSize");
-    String newSize = request.getParameter("newSize");
+                String oldSize = request.getParameter("oldSize");
+                String newSize = request.getParameter("newSize");
 
-    if (productId <= 0 ||
-        oldSize == null || oldSize.isBlank() ||
-        newSize == null || newSize.isBlank()) {
-        response.getWriter().write("ERROR");
-        return;
-    }
+                if (productId <= 0
+                        || oldSize == null || oldSize.isBlank()
+                        || newSize == null || newSize.isBlank()) {
+                    response.getWriter().write("ERROR");
+                    return;
+                }
 
-    if (oldSize.equals(newSize)) {
-        response.getWriter().write("OK");
-        return;
-    }
+                if (oldSize.equals(newSize)) {
+                    response.getWriter().write("OK");
+                    return;
+                }
 
-    // kiểm tra tồn kho size mới
-    int newSizeQty = sizeDAO.getSizeQuantity(productId, newSize);
-    if (newSizeQty <= 0) {
-        response.getWriter().write("OUT_OF_STOCK");
-        return;
-    }
+                // kiểm tra tồn kho size mới
+                int newSizeQty = sizeDAO.getSizeQuantity(productId, newSize);
+                if (newSizeQty <= 0) {
+                    response.getWriter().write("OUT_OF_STOCK");
+                    return;
+                }
 
-    // lấy giỏ hàng hiện tại
-    List<entity.Cart> carts = cartDAO.getAll(customer_id);
-    entity.Cart oldItem = null;
-    entity.Cart sameNew = null;
+                // lấy giỏ hàng hiện tại
+                List<entity.Cart> carts = cartDAO.getAll(customer_id);
+                entity.Cart oldItem = null;
+                entity.Cart sameNew = null;
 
-    for (entity.Cart c : carts) {
-        if (c.getProductID() == productId && oldSize.equals(c.getSize_name())) {
-            oldItem = c;
-        }
-        if (c.getProductID() == productId && newSize.equals(c.getSize_name())) {
-            sameNew = c;
-        }
-    }
+                for (entity.Cart c : carts) {
+                    if (c.getProductID() == productId && oldSize.equals(c.getSize_name())) {
+                        oldItem = c;
+                    }
+                    if (c.getProductID() == productId && newSize.equals(c.getSize_name())) {
+                        sameNew = c;
+                    }
+                }
 
-    if (oldItem == null) {
-        response.getWriter().write("ERROR");
-        return;
-    }
+                if (oldItem == null) {
+                    response.getWriter().write("ERROR");
+                    return;
+                }
 
-    int qtyToMove = oldItem.getQuantity();
+                int qtyToMove = oldItem.getQuantity();
 
-    // nếu đã có dòng cùng product + newSize thì gộp quantity
-    if (sameNew != null) {
-        int merged = sameNew.getQuantity() + qtyToMove;
-        if (merged > newSizeQty) {
-            response.getWriter().write("NOT_ENOUGH_STOCK");
-            return;
-        }
+                // nếu đã có dòng cùng product + newSize thì gộp quantity
+                if (sameNew != null) {
+                    int merged = sameNew.getQuantity() + qtyToMove;
+                    if (merged > newSizeQty) {
+                        response.getWriter().write("NOT_ENOUGH_STOCK");
+                        return;
+                    }
 
-        cartDAO.updateQuantityOnly(customer_id, productId, newSize, merged);
-        cartDAO.deleteCartBySize(productId, customer_id, oldSize);
-    } else {
-        if (qtyToMove > newSizeQty) {
-            response.getWriter().write("NOT_ENOUGH_STOCK");
-            return;
-        }
-        // chèn dòng mới với size mới, xoá dòng size cũ
-        cartDAO.insertCart(qtyToMove, oldItem.getPrice(), customer_id, productId, newSize);
-        cartDAO.deleteCartBySize(productId, customer_id, oldSize);
-    }
+                    cartDAO.updateQuantityOnly(customer_id, productId, newSize, merged);
+                    cartDAO.deleteCartBySize(productId, customer_id, oldSize);
+                } else {
+                    if (qtyToMove > newSizeQty) {
+                        response.getWriter().write("NOT_ENOUGH_STOCK");
+                        return;
+                    }
+                    // chèn dòng mới với size mới, xoá dòng size cũ
+                    cartDAO.insertCart(qtyToMove, oldItem.getPrice(), customer_id, productId, newSize);
+                    cartDAO.deleteCartBySize(productId, customer_id, oldSize);
+                }
 
-    int sum = cartDAO.getCartTotal(customer_id);
-    response.getWriter().write("OK," + sum);
-    break;
-}
-
+                int sum = cartDAO.getCartTotal(customer_id);
+                response.getWriter().write("OK," + sum);
+                break;
+            }
 
             case URL_PAYMENT: {
                 response.sendRedirect("loadPayment?size=" + (size == null ? "" : size));
@@ -332,7 +355,7 @@ if (!product.isIs_active()) {
         }
 
         int percent = 0;
-        
+
         // Lấy voucherID từ Product. 
         // Lưu ý: Nếu Product.getVoucherID() vẫn trả về int (ví dụ: 0 là không có voucher), 
         // ta cần dùng String.valueOf() để chuyển nó thành String cho VoucherDAO dùng.
@@ -341,19 +364,19 @@ if (!product.isIs_active()) {
         // Kiểm tra điều kiện voucher hợp lệ với String
         // (Khác null, khác rỗng, và khác "0" - trường hợp mặc định của int cũ)
         if (voucherId != null && !voucherId.isBlank() && !voucherId.equals("0")) {
-            
+
             // Hàm getPercentById bây giờ nhận tham số String
             Integer vPercent = voucherDAO.getPercentById(voucherId);
-            
+
             if (vPercent != null) {
                 percent = vPercent;
             }
         }
-        
+
         // Tính giá sau giảm và làm tròn
         float originalPrice = (float) p.getPrice();
         float discountedPrice = originalPrice - (originalPrice * percent / 100.0f);
-        
+
         return Math.round(discountedPrice);
     }
 }

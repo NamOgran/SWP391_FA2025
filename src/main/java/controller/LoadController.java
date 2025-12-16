@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import DAO.CartDAO;
@@ -11,6 +7,7 @@ import DAO.Size_detailDAO;
 import entity.Size_detail;
 import entity.Customer;
 import entity.Product;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -19,10 +16,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import static url.CartURL.URL_BUYNOW;
 import static url.Load.LOAD_CART;
 import static url.Load.LOAD_PAYMENT;
@@ -49,19 +50,19 @@ public class LoadController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         String urlPath = request.getServletPath();
 
-        // Lấy thông tin khách hàng từ SESSION (ưu tiên)
         HttpSession session = request.getSession();
         Customer loggedInCustomer = (Customer) session.getAttribute("acc");
 
-        // Kiểm tra xem người dùng đã đăng nhập chưa
+        // Require login for everything except Buy Now
         if (loggedInCustomer == null && !urlPath.equals(URL_BUYNOW)) {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
 
-        // Khai báo biến username và customer_id nếu cần
+        // Prepare customer info
         String usernameForCart = "";
         int customerIdForCart = -1;
         String customerAddress = "";
@@ -71,22 +72,23 @@ public class LoadController extends HttpServlet {
             customerIdForCart = loggedInCustomer.getCustomer_id();
             customerAddress = loggedInCustomer.getAddress();
         } else {
-            if (urlPath.equals(URL_BUYNOW)) {
-                // Cho phép logic BuyNow chạy tiếp (check login bên dưới switch case nếu cần)
-            } else {
+            // BuyNow can be handled separately below
+            if (!urlPath.equals(URL_BUYNOW)) {
                 response.sendRedirect(request.getContextPath() + "/login.jsp");
                 return;
             }
         }
 
-        CartDAO cart = new CartDAO();
-        List<entity.Cart> cartList = null;
+        // Load cart (FULL cart list)
+        CartDAO cartDao = new CartDAO();
+        List<entity.Cart> cartList;
         if (customerIdForCart != -1) {
-            cartList = cart.getAll(customerIdForCart);
+            cartList = cartDao.getAll(customerIdForCart);
         } else {
             cartList = new ArrayList<>();
         }
 
+        // Load products + voucher prices
         ProductDAO productDao = new ProductDAO();
         VoucherDAO voucherDao = new VoucherDAO();
         List<Product> productList = productDao.getAll();
@@ -104,18 +106,13 @@ public class LoadController extends HttpServlet {
             nameProduct.put(id, product.getName());
             activeP.put(id, product.isIs_active());
 
-            // ===== GIÁ BÁN HIỆN TẠI (SAU VOUCHER, NẾU CÓ) =====
             int unitPrice = product.getPrice();
-            
-            // [UPDATED] Xử lý Voucher ID dạng String
-            // String.valueOf để an toàn nếu Product vẫn trả về int, hoặc convert int sang String
-            String voucherId = String.valueOf(product.getVoucherID());
 
-            // Kiểm tra voucherId hợp lệ (không null, không rỗng, không phải "0")
-            if (voucherId != null && !voucherId.equals("0") && !voucherId.trim().isEmpty()) {
-                // Truyền String vào DAO
+            String voucherId = String.valueOf(product.getVoucherID());
+            if (voucherId != null && !voucherId.isBlank()
+                    && !voucherId.equals("0") && !voucherId.equals("null")) {
+
                 Integer percentObj = voucherDao.getPercentById(voucherId);
-                
                 if (percentObj != null && percentObj > 0) {
                     int percent = percentObj;
                     float originalPrice = (float) product.getPrice();
@@ -123,31 +120,25 @@ public class LoadController extends HttpServlet {
                     unitPrice = Math.round(discountedPrice);
                 }
             }
-
-            priceP.put(id, unitPrice); // LƯU GIÁ SAU VOUCHER
+            priceP.put(id, unitPrice);
         }
 
-        int sum = 0;
-        int quanP = 0;
-        if (cartList != null) {
-            for (entity.Cart cItem : cartList) {
-                sum += cItem.getPrice() * cItem.getQuantity();
-                quanP++;
-            }
-        }
+        // Sizes available per product (only sizes with qty > 0)
         Size_detailDAO sizeDetailDao = new Size_detailDAO();
         List<Size_detail> sizeDetails = sizeDetailDao.getAll();
-
         for (Size_detail sd : sizeDetails) {
             if (sd.getQuantity() <= 0) {
                 continue;
             }
             int pid = sd.getProduct_id();
-            productSizeMap
-                    .computeIfAbsent(pid, k -> new java.util.ArrayList<>())
-                    .add(sd.getSize_name());
+            productSizeMap.computeIfAbsent(pid, k -> new ArrayList<>()).add(sd.getSize_name());
         }
 
+        // Default totals for FULL cart (used for cart.jsp)
+        int sum = calcSum(cartList);
+        int quanP = (cartList == null) ? 0 : cartList.size();
+
+        // Common attributes
         request.setAttribute("address", customerAddress);
         request.setAttribute("username", usernameForCart);
         request.setAttribute("size", request.getParameter("size"));
@@ -160,22 +151,60 @@ public class LoadController extends HttpServlet {
         request.setAttribute("productSizeMap", productSizeMap);
         request.setAttribute("activeP", activeP);
 
-        System.out.println(request.getParameter("size") + "load");
+        System.out.println(request.getParameter("size") + " load");
 
         switch (urlPath) {
-            case LOAD_CART:
+
+            case LOAD_CART: {
                 request.getRequestDispatcher("cart.jsp").forward(request, response);
-                break;
-            case LOAD_PAYMENT: {
-                if (cartList != null && !cartList.isEmpty()) {
-                    request.getRequestDispatcher("payment.jsp").forward(request, response);
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/loadCart");
-                }
                 break;
             }
 
-            case URL_BUYNOW:
+            case LOAD_PAYMENT: {
+                // If cart is empty -> back to cart
+                if (cartList == null || cartList.isEmpty()) {
+                    response.sendRedirect(request.getContextPath() + "/loadCart");
+                    return;
+                }
+
+                // NEW: receive selected items from cart.jsp
+                // Format: selectedItems=productId::size
+                String[] selectedItems = request.getParameterValues("selectedItems");
+
+                List<entity.Cart> paymentList = cartList; // default: old behavior
+                boolean isSelectionMode = (selectedItems != null && selectedItems.length > 0);
+
+                if (isSelectionMode) {
+                    Set<String> selectedKeys = parseSelectedKeys(selectedItems);
+                    paymentList = filterCartBySelected(cartList, selectedKeys);
+
+                    // No selected items -> back to cart
+                    if (paymentList.isEmpty()) {
+                        response.sendRedirect(request.getContextPath() + "/loadCart");
+                        return;
+                    }
+                }
+
+                // Server-side validation ONLY for items that will be paid
+                // (This ensures "out-of-stock / inactive" is still blocked correctly.)
+                String validationError = validatePaymentItems(paymentList, productDao, sizeDetailDao);
+                if (validationError != null) {
+                    // You can later pass a message via session/query param if you want
+                    // session.setAttribute("PAYMENT_ERROR", validationError);
+                    response.sendRedirect(request.getContextPath() + "/loadCart");
+                    return;
+                }
+
+                // Override attributes for payment page to use ONLY paymentList
+                request.setAttribute("cartList", paymentList);
+                request.setAttribute("sum", calcSum(paymentList));
+                request.setAttribute("quanP", paymentList.size());
+
+                request.getRequestDispatcher("payment.jsp").forward(request, response);
+                break;
+            }
+
+            case URL_BUYNOW: {
                 if (loggedInCustomer != null) {
                     String pic = request.getParameter("picURL");
                     String name = request.getParameter("name");
@@ -197,6 +226,8 @@ public class LoadController extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/login.jsp");
                 }
                 break;
+            }
+
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "URL not recognized");
                 break;
@@ -212,5 +243,96 @@ public class LoadController extends HttpServlet {
     @Override
     public String getServletInfo() {
         return "Short description";
+    }
+
+    // ---------- Helpers (NEW) ----------
+
+    private static int calcSum(List<entity.Cart> list) {
+        int sum = 0;
+        if (list != null) {
+            for (entity.Cart cItem : list) {
+                sum += cItem.getPrice() * cItem.getQuantity();
+            }
+        }
+        return sum;
+    }
+
+    // Convert ["12::M", "12::L"] into a Set for quick lookup
+    private static Set<String> parseSelectedKeys(String[] selectedItems) {
+        Set<String> keys = new HashSet<>();
+        for (String raw : selectedItems) {
+            if (raw == null) continue;
+            String v = raw.trim();
+            if (v.isEmpty()) continue;
+
+            // expected: productId::size
+            int idx = v.indexOf("::");
+            if (idx <= 0 || idx >= v.length() - 2) continue;
+
+            String pidStr = v.substring(0, idx).trim();
+            String size = v.substring(idx + 2).trim();
+
+            if (pidStr.isEmpty() || size.isEmpty()) continue;
+
+            try {
+                int pid = Integer.parseInt(pidStr);
+                if (pid > 0) {
+                    keys.add(pid + "::" + size);
+                }
+            } catch (Exception ignore) {
+            }
+        }
+        return keys;
+    }
+
+    private static List<entity.Cart> filterCartBySelected(List<entity.Cart> cartList, Set<String> selectedKeys) {
+        List<entity.Cart> result = new ArrayList<>();
+        if (cartList == null || selectedKeys == null || selectedKeys.isEmpty()) return result;
+
+        for (entity.Cart c : cartList) {
+            String key = c.getProductID() + "::" + c.getSize_name();
+            if (selectedKeys.contains(key)) {
+                result.add(c);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Return null if OK. Otherwise return a short error string.
+     * Validation is done only for items that will be paid.
+     */
+    private static String validatePaymentItems(List<entity.Cart> paymentList,
+                                              ProductDAO productDao,
+                                              Size_detailDAO sizeDao) {
+        if (paymentList == null || paymentList.isEmpty()) {
+            return "No items selected.";
+        }
+
+        for (entity.Cart item : paymentList) {
+            int pid = item.getProductID();
+            String size = item.getSize_name();
+            int qty = item.getQuantity();
+
+            Product p = productDao.getProductById(pid);
+            if (p == null) {
+                return "A selected product no longer exists.";
+            }
+            if (!p.isIs_active()) {
+                return "A selected product is no longer for sale.";
+            }
+            if (size == null || size.isBlank()) {
+                return "Invalid size in selected item.";
+            }
+
+            int stock = sizeDao.getSizeQuantity(pid, size);
+            if (stock <= 0) {
+                return "A selected item is out of stock.";
+            }
+            if (qty > stock) {
+                return "A selected item exceeds available stock.";
+            }
+        }
+        return null;
     }
 }

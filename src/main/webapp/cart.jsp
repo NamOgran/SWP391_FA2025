@@ -5,855 +5,692 @@
 
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Shopping Cart | GIO</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart | GIO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Quicksand:300,400,500,600,700&display=swap' rel='stylesheet'>
+    <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon">
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <link href='https://fonts.googleapis.com/css?family=Quicksand:300,400,500,600,700&display=swap' rel='stylesheet'>
-        <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon">
+    <script>
+        const BASE = '${pageContext.request.contextPath}';
+    </script>
 
-        <script>
-            const BASE = '${pageContext.request.contextPath}';
-            function safeIdPart(s) {
-                return (s || '').toString().replace(/\W/g, '_');
-            }
-        </script>
+    <style>
+        :root {
+            --primary-color: #a0816c;
+            --primary-dark: #8a6d5a;
+            --primary-light: #fdfbf9;
+            --text-main: #333;
+            --text-light: #888;
+            --bg-body: #f4f4f4;
+            --white: #ffffff;
+            --border-radius: 12px;
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.05);
+            --bar-height: 80px;
+        }
 
-        <style>
-            /* --- VARIABLES --- */
-            :root {
-                --primary-color: #a0816c;
-                --primary-dark: #8a6d5a;
-                --text-main: #333;
-                --text-light: #777;
-                --bg-body: #f5f5f5;
-                --white: #ffffff;
-                --border-color: #e8e8e8;
-            }
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: calc(var(--bar-height) + 20px); 
+            font-size: 15px;
+        }
 
-            body {
-                font-family: 'Quicksand', sans-serif;
-                background-color: var(--bg-body);
-                color: var(--text-main);
-                padding-bottom: 50px;
-                font-size: 14px;
-            }
+        a { text-decoration: none; color: inherit; transition: 0.2s; }
+        
+        #page-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--white);
+            z-index: 99999;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.4s ease-out, visibility 0.4s;
+        }
+        .spinner-custom {
+            width: 50px; height: 50px;
+            border: 3px solid rgba(160, 129, 108, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-            a {
-                text-decoration: none;
-                color: inherit;
-            }
+        .main-container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
 
-            /* --- LOADING --- */
-            #page-loader {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: var(--white);
-                z-index: 99999;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                transition: opacity 0.4s ease-out, visibility 0.4s;
-            }
-            .spinner-custom {
-                width: 50px;
-                height: 50px;
-                border: 3px solid rgba(160, 129, 108, 0.3);
-                border-radius: 50%;
-                border-top-color: var(--primary-color);
-                animation: spin 1s ease-in-out infinite;
-            }
-            @keyframes spin {
-                to {
-                    transform: rotate(360deg);
-                }
-            }
+        .cart-header-row {
+            display: grid;
+            grid-template-columns: 50px 3fr 1fr 1fr 1fr 50px;
+            background: var(--white);
+            padding: 18px 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--text-light);
+            align-items: center;
+            text-align: center;
+        }
+        .header-left { text-align: left; grid-column: span 1; }
+        .header-product { text-align: left; }
 
-            /* --- STEP BAR --- */
-            .checkout-steps {
-                display: flex;
-                justify-content: center;
-                margin: 20px 0 30px 0;
-            }
-            .step-item {
-                display: flex;
-                align-items: center;
-                color: #ccc;
-                font-weight: 600;
-                font-size: 0.95rem;
-            }
-            .step-item.active {
-                color: var(--text-main);
-            }
-            .step-item.active .step-count {
-                background-color: var(--primary-color);
-                border-color: var(--primary-color);
-                color: #fff;
-            }
-            .step-count {
-                width: 28px;
-                height: 28px;
-                border-radius: 50%;
-                border: 2px solid #ccc;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-right: 8px;
-                font-size: 0.85rem;
-            }
-            .step-line {
-                width: 40px;
-                height: 2px;
-                background-color: #e0e0e0;
-                margin: 0 10px;
-            }
+        .cart-item-card {
+            background: var(--white);
+            padding: 25px;
+            margin-bottom: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-soft);
+            display: grid;
+            grid-template-columns: 50px 3fr 1fr 1fr 1fr 50px;
+            align-items: center;
+            transition: transform 0.2s, border-color 0.2s;
+            border: 1px solid transparent;
+            position: relative;
+        }
+        .cart-item-card:hover { transform: translateY(-2px); }
+        .cart-item-card.item-disabled { opacity: 0.5; background: #fafafa; pointer-events: none; }
+        .cart-item-card.item-disabled .col-action, 
+        .cart-item-card.item-disabled .col-check { pointer-events: auto; }
 
-            /* --- LAYOUT --- */
-            .main-container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 0 15px;
-            }
+        .col-check { display: flex; justify-content: center; align-items: center; }
+        .form-check-input {
+            width: 20px; height: 20px;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .form-check-input:focus { box-shadow: 0 0 0 0.25rem rgba(160, 129, 108, 0.25); }
 
-            /* =================================================================
-               GRID LAYOUT SYSTEM (SHOPEE STYLE - CÂN ĐỐI)
-               ================================================================= */
+        .product-flex {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            text-align: left;
+        }
+        .cart-img-wrapper {
+            width: 90px; height: 90px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f9f9f9;
+        }
+        .cart-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .product-details { display: flex; flex-direction: column; gap: 6px; }
+        .product-name {
+            font-weight: 600;
+            font-size: 1.05rem;
+            line-height: 1.4;
+            color: var(--text-main);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .product-name:hover { color: var(--primary-color); }
 
-            /* Định nghĩa cột dùng chung cho Header và Item Row */
-            /* Cột: [Ảnh 100px] [Info Tự giãn] [Đơn giá 120px] [Số lượng 120px] [Thành tiền 120px] [Xóa 50px] */
-            .grid-template {
-                display: grid;
-                grid-template-columns: 100px 1fr 120px 130px 140px 50px;
-                gap: 15px;
-                align-items: center; /* Quan trọng: Căn giữa theo chiều dọc */
-            }
+        .size-group { 
+            display: flex; 
+            align-items: center; 
+            font-size: 0.9rem; 
+            color: var(--text-light); 
+        }
+        .size-select {
+            border: none;
+            background: var(--bg-body);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 5px;
+            outline: none;
+        }
+        .size-select:focus { background: #ececec; }
 
-            /* --- Header Row --- */
-            .cart-header {
-                padding: 15px 20px;
-                background: #fff;
-                border-radius: 3px;
-                box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-                margin-bottom: 12px;
-                color: #888;
-                font-weight: 500;
-                text-align: center;
-                font-size: 0.9rem;
-            }
-            .header-start {
-                text-align: left;
-            }
-            .header-end {
-                text-align: right;
-            }
+        .col-price { text-align: center; color: var(--text-light); }
+        .col-total { text-align: center; font-weight: 700; color: var(--primary-color); font-size: 1.1rem; }
+        
+        .qty-wrapper { display: flex; justify-content: center; }
+        .qty-control {
+            display: flex;
+            align-items: center;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--white);
+        }
+        .qty-btn {
+            width: 32px; height: 32px;
+            border: none; background: #fff;
+            color: var(--text-main);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .qty-btn:hover { background: var(--primary-light); color: var(--primary-color); }
+        .qty-input {
+            width: 40px; height: 32px;
+            border: none; text-align: center;
+            font-weight: 600; color: var(--text-main);
+            background: #fff; pointer-events: none;
+        }
 
-            /* --- Cart Item Card --- */
+        .btn-remove {
+            border: none; background: transparent;
+            color: #999; font-size: 1.2rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-remove:hover { color: #dc3545; transform: scale(1.1); }
+
+        .cart-warning-row { grid-column: 2 / -1; margin-top: 10px; font-size: 0.85rem; font-weight: 500; text-align: left; }
+        .warning-text { color: #dc3545; display: flex; align-items: center; gap: 5px; }
+        .warning-text.info { color: #e58e26; }
+
+        /* --- STICKY BOTTOM BAR --- */
+        .sticky-footer {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            background: var(--white);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+            z-index: 1000;
+            padding: 0;
+            height: var(--bar-height);
+            display: flex; align-items: center;
+        }
+        .footer-content {
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .footer-left { display: flex; align-items: center; gap: 15px; }
+        .footer-right { display: flex; align-items: center; gap: 30px; }
+        
+        .select-all-label { cursor: pointer; user-select: none; font-weight: 500; color: var(--text-main); }
+        
+        .total-label { font-size: 1rem; color: var(--text-main); margin-right: 10px; }
+        .total-price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
+        
+        .btn-checkout {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 0 40px;
+            height: 45px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: 0.3s;
+        }
+        .btn-checkout:hover:not(:disabled) { background-color: var(--primary-dark); box-shadow: 0 4px 15px rgba(160, 129, 108, 0.4); }
+        .btn-checkout:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .empty-cart-box {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 60px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-soft);
+        }
+        .empty-icon { font-size: 4rem; color: #eee; margin-bottom: 20px; }
+        .btn-continue {
+            display: inline-block; padding: 12px 35px;
+            background: var(--text-main); color: white;
+            border-radius: 8px; font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-continue:hover { background: #000; }
+
+        @media (max-width: 768px) {
+            .cart-header-row { display: none; }
             .cart-item-card {
-                background: var(--white);
-                padding: 20px;
-                margin-bottom: 12px;
-                box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-                border-radius: 3px;
-                border: 1px solid transparent;
-                transition: all 0.2s;
+                display: flex; flex-wrap: wrap; gap: 15px;
+                position: relative; padding: 20px;
             }
-            .cart-item-card:hover {
-                border-color: rgba(160, 129, 108, 0.3);
-            }
-            .cart-item-card.item-disabled {
-                opacity: 0.6;
-                background-color: #fafafa;
-            }
+            .col-check { width: auto; position: absolute; top: 20px; left: 15px; z-index: 2; }
+            .product-flex { width: 100%; padding-left: 30px; }
+            .col-price { display: none; } 
+            .qty-wrapper { width: auto; margin-left: auto; }
+            .col-total { width: 100%; text-align: right; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+            .col-total::before { content: "Total:"; color: #888; font-size: 0.9rem; font-weight: 500; }
+            .col-action { position: absolute; top: 15px; right: 15px; }
+            
+            .footer-content { flex-direction: column; height: auto; padding: 15px; gap: 15px; align-items: stretch; }
+            .sticky-footer { height: auto; }
+            .footer-left { justify-content: space-between; }
+            .footer-right { justify-content: space-between; width: 100%; gap: 0; }
+            .total-price { font-size: 1.3rem; }
+            .btn-checkout { flex: 1; margin-left: 15px; }
+        }
+    </style>
+</head>
 
-            /* 1. Image */
-            .cart-img-wrapper {
-                width: 80px;
-                height: 80px;
-                flex-shrink: 0;
-                border: 1px solid #e1e1e1;
-                background: #f9f9f9;
-            }
-            .cart-img-wrapper img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
+<body>
+    <div id="page-loader"><div class="spinner-custom"></div></div>
 
-            /* 2. Info (Name + Size) */
-            .cart-info {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                text-align: left;
-            }
-            .product-name {
-                font-size: 1rem;
-                font-weight: 600;
-                color: rgba(0,0,0,.87);
-                line-height: 1.4;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-                text-decoration: none;
-            }
-            .product-name:hover {
-                color: var(--primary-color);
-            }
+    <%@ include file="header.jsp" %>
 
-            /* Size Dropdown (Nằm dưới tên) */
-            .size-wrapper {
-                display: flex;
-                align-items: center;
-            }
-            .size-label {
-                font-size: 0.8rem;
-                color: #999;
-                margin-right: 5px;
-            }
-            .size-select {
-                padding: 2px 8px;
-                border: 1px solid #ddd;
-                border-radius: 2px;
-                background-color: #fff;
-                font-size: 0.8rem;
-                color: #555;
-                cursor: pointer;
-                outline: none;
-            }
-            .size-select:focus {
-                border-color: var(--primary-color);
-            }
+    <div class="main-container">
+        <h3 class="mb-4" style="font-weight: 700;">Shopping Cart</h3>
 
-            /* 3. Unit Price */
-            .col-unit-price {
-                text-align: center;
-                color: #666;
-                font-size: 0.95rem;
-            }
+        <c:choose>
+            <c:when test="${empty requestScope.cartList}">
+                <div class="empty-cart-box" data-aos="fade-up">
+                    <i class="bi bi-cart-x empty-icon"></i>
+                    <h3>Your cart is empty</h3>
+                    <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet.</p>
+                    <a href="${pageContext.request.contextPath}/" class="btn-continue">Start Shopping</a>
+                </div>
+            </c:when>
 
-            /* 4. Quantity (Căn giữa ô) */
-            .col-qty {
-                display: flex;
-                justify-content: center;
-            }
-            .qty-control {
-                display: flex;
-                align-items: center;
-                border: 1px solid #ddd;
-                border-radius: 2px;
-            }
-            .qty-btn {
-                width: 30px;
-                height: 30px;
-                border: none;
-                background: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: 0.2s;
-                color: #333;
-            }
-            .qty-btn:hover:not(:disabled) {
-                background: #f8f8f8;
-                color: var(--primary-color);
-            }
-            .qty-btn:first-child {
-                border-right: 1px solid #ddd;
-            }
-            .qty-btn:last-child {
-                border-left: 1px solid #ddd;
-            }
-
-            .qty-input {
-                width: 45px;
-                height: 30px;
-                border: none;
-                text-align: center;
-                font-weight: 500;
-                color: var(--text-main);
-                font-size: 0.95rem;
-                background: #fff;
-                pointer-events: none;
-            }
-
-            /* 5. Total Price */
-            .col-total {
-                text-align: right;
-            }
-            .line-total {
-                font-size: 1rem;
-                font-weight: 700;
-                color: var(--primary-color);
-                display: block;
-            }
-            .old-price {
-                font-size: 0.85rem;
-                color: #999;
-                text-decoration: line-through;
-            }
-
-            /* 6. Action */
-            .col-action {
-                text-align: center;
-            }
-            .btn-remove {
-                border: none;
-                background: transparent;
-                color: #333;
-                font-size: 1.1rem;
-                cursor: pointer;
-                transition: 0.2s;
-            }
-            .btn-remove:hover {
-                color: #dc3545;
-            }
-
-            /* Warnings */
-            .cart-warning {
-                font-size: 0.75rem;
-                margin-top: 4px;
-                font-weight: 500;
-            }
-            .cart-warning.error {
-                color: #dc3545;
-            }
-            .cart-warning.info {
-                color: #fd7e14;
-            }
-
-            /* --- ORDER SUMMARY (Sticky Right) --- */
-            .summary-card {
-                background: var(--white);
-                border-radius: 3px;
-                padding: 20px;
-                box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-                position: sticky;
-                top: 80px;
-            }
-            .summary-header {
-                font-size: 1.1rem;
-                font-weight: 700;
-                margin-bottom: 20px;
-                padding-bottom: 15px;
-                border-bottom: 1px dashed #ddd;
-            }
-            .summary-row {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 12px;
-                font-size: 0.95rem;
-                color: #666;
-            }
-            .summary-row.total {
-                border-top: 1px dashed #ddd;
-                padding-top: 15px;
-                margin-top: 15px;
-                color: var(--text-main);
-                font-weight: 700;
-                font-size: 1.2rem;
-                align-items: center;
-            }
-            .text-highlight {
-                color: var(--primary-color) !important;
-                font-size: 1.4rem;
-            }
-
-            .checkout-btn {
-                width: 100%;
-                padding: 12px;
-                margin-top: 20px;
-                background-color: var(--primary-color);
-                color: white;
-                border: none;
-                border-radius: 2px;
-                font-weight: 600;
-                font-size: 1rem;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                transition: all 0.2s;
-            }
-            .checkout-btn:hover:not(:disabled) {
-                background-color: var(--primary-dark);
-                opacity: 0.9;
-            }
-            .checkout-btn:disabled {
-                background-color: #ccc;
-                cursor: not-allowed;
-            }
-
-            /* --- EMPTY STATE --- */
-            .empty-cart-box {
-                background: white;
-                border-radius: 3px;
-                padding: 60px 20px;
-                text-align: center;
-                box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-            }
-            .empty-icon {
-                font-size: 4rem;
-                color: #ddd;
-                margin-bottom: 15px;
-            }
-            .btn-continue {
-                display: inline-block;
-                padding: 10px 30px;
-                background: var(--text-main);
-                color: white;
-                border-radius: 2px;
-                font-weight: 600;
-                margin-top: 15px;
-                transition: 0.3s;
-            }
-            .btn-continue:hover {
-                background: #000;
-                color: white;
-            }
-
-            /* --- RESPONSIVE MOBILE --- */
-            @media (max-width: 768px) {
-                .cart-header {
-                    display: none;
-                }
-
-                .cart-item-card {
-                    display: block;
-                    position: relative;
-                    padding: 15px;
-                }
-
-                .grid-template {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 0;
-                }
-
-                /* Layout Mobile */
-                .cart-img-wrapper {
-                    width: 80px;
-                    height: 80px;
-                    margin-right: 15px;
-                    margin-bottom: 10px;
-                }
-                .cart-info {
-                    width: calc(100% - 100px);
-                    margin-bottom: 10px;
-                }
-                .col-unit-price {
-                    display: none;
-                } /* Ẩn đơn giá trên mobile */
-
-                .col-qty {
-                    width: auto;
-                    margin-right: auto;
-                }
-                .col-total {
-                    width: auto;
-                    margin-left: auto;
-                    text-align: right;
-                }
-
-                .col-action {
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                }
-
-                .checkout-steps {
-                    display: none;
-                }
-            }
-        </style>
-    </head>
-
-    <body>
-        <div id="page-loader"><div class="spinner-custom"></div></div>
-
-        <%@ include file="header.jsp" %>
-
-        <div class="main-container">
-
-            <c:choose>
-                <%-- EMPTY CART --%>
-                <c:when test="${empty requestScope.cartList}">
-                    <div class="empty-cart-box mt-4" data-aos="fade-up">
-                        <i class="bi bi-cart-x empty-icon"></i>
-                        <h3>Your cart is empty</h3>
-                        <p class="text-muted">Looks like you haven't added anything to your cart yet.</p>
-                        <a href="${pageContext.request.contextPath}/" class="btn-continue">Start Shopping</a>
+            <c:otherwise>
+                <div class="cart-header-row d-none d-md-grid">
+                    <div class="col-check">
+                        <input class="form-check-input" type="checkbox" id="selectAllTop" title="Select all">
                     </div>
-                </c:when>
+                    <div class="header-product">Product</div>
+                    <div>Unit Price</div>
+                    <div>Quantity</div>
+                    <div>Total</div>
+                    <div></div>
+                </div>
 
-                <%-- HAS ITEMS --%>
-                <c:otherwise>
-                    <div class="checkout-steps">
-                        <div class="step-item active"><span class="step-count">1</span> Shopping Cart</div>
-                        <div class="step-line"></div>
-                        <div class="step-item"><span class="step-count">2</span> Checkout</div>
-                        <div class="step-line"></div>
-                        <div class="step-item"><span class="step-count">3</span> Order Complete</div>
-                    </div>
+                <div class="cart-list">
+                    <c:forEach items="${requestScope.cartList}" var="cart">
+                        <c:set var="availableQty" value="${cart.stockQuantity}" />
+                        <c:set var="isMissing" value="${empty nameProduct[cart.productID]}" />
+                        <c:set var="isOutOfStock" value="${availableQty le 0}" />
+                        <c:set var="isStopped" value="${activeP[cart.productID] != null and not activeP[cart.productID]}" />
+                        <c:set var="isInsufficient" value="${availableQty lt cart.quantity}" />
+                        <c:set var="hasError" value="${isMissing or isOutOfStock or isStopped}" />
 
-                    <div class="row g-4">
-                        <div class="col-lg-8">
+                        <c:set var="priceNow" value="${priceP[cart.productID]}" />
+                        <c:if test="${empty priceNow}"><c:set var="priceNow" value="${cart.price}" /></c:if>
 
-                            <div class="cart-header grid-template d-none d-md-grid">
-                                <div class="header-start" style="grid-column: span 2;">Product</div>
-                                <div>Unit Price</div>
-                                <div>Quantity</div>
-                                <div class="header-end">Total Price</div>
-                                <div><i class="bi bi-trash3"></i></div>
+                        <c:set var="lineTotal" value="${priceNow * cart.quantity}" />
+
+                        <div class="cart-item-card ${hasError ? 'item-disabled' : ''}" 
+                             data-id="${cart.productID}" 
+                             data-row-id="${cart.productID}">
+
+                            <div class="col-check">
+                                <input class="form-check-input item-check" 
+                                       type="checkbox" 
+                                       data-id="${cart.productID}" 
+                                       data-size="${cart.size_name}"
+                                       data-price="${priceNow}"
+                                       data-stock="${availableQty}"
+                                       data-locked="${hasError}"
+                                       data-auto-recheck="${isInsufficient}"
+                                       <c:if test="${hasError}">disabled</c:if>
+                                       <c:if test="${not hasError}">checked</c:if>>
                             </div>
 
-                            <c:set var="hasCartError" value="false" />
-                            <div class="cart-items-column">
-                                <c:forEach items="${requestScope.cartList}" var="cart">
-
-                                    <c:set var="availableQty" value="${cart.stockQuantity}" />
-                                    <c:set var="isMissingProduct" value="${empty nameProduct[cart.productID]}" />
-                                    <c:set var="isOutOfStock" value="${availableQty le 0}" />
-                                    <c:set var="isStoppedSelling" value="${activeP[cart.productID] != null and not activeP[cart.productID]}" />
-                                    <c:set var="isInsufficient" value="${availableQty lt cart.quantity}" />
-                                    <c:if test="${isMissingProduct or isOutOfStock or isInsufficient or isStoppedSelling}">
-                                        <c:set var="hasCartError" value="true" />
-                                    </c:if>
-
-                                    <c:set var="priceAtAdd" value="${cart.price}" />
-                                    <c:set var="priceNow" value="${priceP[cart.productID]}" />
-                                    <c:if test="${empty priceNow}"><c:set var="priceNow" value="${priceAtAdd}" /></c:if>
-                                    <c:set var="hasPriceChanged" value="${not empty priceNow and priceNow ne priceAtAdd}" />
-                                    <c:set var="safeSize" value="${fn:replace(fn:replace(cart.size_name, ' ', '_'), '-', '_')}" />
-                                    <c:set var="lineCurrent" value="${priceNow * cart.quantity}" />
-                                    <fmt:formatNumber var="lineCurrentFmt" type="number" value="${lineCurrent}" pattern="###,###" />
-                                    <c:set var="lineOriginal" value="${priceAtAdd * cart.quantity}" />
-                                    <fmt:formatNumber var="lineOriginalFmt" type="number" value="${lineOriginal}" pattern="###,###" />
-                                    <fmt:formatNumber var="unitPriceFmt" type="number" value="${priceNow}" pattern="###,###" />
-
-                                    <div class="cart-item-card grid-template ${isMissingProduct or isOutOfStock or isStoppedSelling ? 'item-disabled' : ''}" 
-                                         id='user${cart.productID}${safeSize}'>
-
-                                        <div class="cart-img-wrapper">
-                                            <a href="${pageContext.request.contextPath}/productDetail?id=${cart.productID}">
-                                                <img src="${picUrlMap[cart.productID]}" alt="${nameProduct[cart.productID]}">
-                                            </a>
-                                        </div>
-
-                                        <div class="cart-info">
-                                            <a href="${pageContext.request.contextPath}/productDetail?id=${cart.productID}" class="product-name">
-                                                ${nameProduct[cart.productID]}
-                                            </a>
-
-                                            <div class="size-wrapper mt-1">
-                                                <span class="size-label">Size:</span>
-                                                <c:set var="sizesOfProduct" value="${productSizeMap[cart.productID]}" />
-                                                <c:choose>
-                                                    <c:when test="${not empty sizesOfProduct}">
-                                                        <select class="size-select"
-                                                                onchange="changeSize(${cart.productID}, '${cart.size_name}', this)"
-                                                                <c:if test="${isMissingProduct or isOutOfStock or isStoppedSelling}">disabled</c:if>>
-                                                            <c:forEach var="sz" items="${sizesOfProduct}">
-                                                                <option value="${sz}" <c:if test="${sz eq cart.size_name}">selected</c:if>>${sz}</option>
-                                                            </c:forEach>
-                                                        </select>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="badge bg-light text-dark border">${cart.size_name}</span>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-
-                                            <c:choose>
-                                                <c:when test="${isMissingProduct}"><div class="cart-warning error">This product is no longer available. Please remove it from your cart.</div></c:when>
-                                                <c:when test="${isStoppedSelling}"><div class="cart-warning error">This product is no longer for sale. Please remove it from your cart.</div></c:when>
-                                                <c:when test="${isOutOfStock}"><div class="cart-warning error">This item is out of stock. Please remove it from your cart.</div></c:when>
-                                                <c:when test="${isInsufficient}"><div class="cart-warning info"> Only ${availableQty} item(s) left in stock. Please reduce your quantity.</div></c:when>
-                                            </c:choose>
-                                        </div>
-
-                                        <div class="col-unit-price">
-                                            ${unitPriceFmt} VND
-                                        </div>
-
-                                        <div class="col-qty">
-                                            <div class="qty-control">
-                                                <button type="button" class="qty-btn"
-                                                        onclick="decrementQuantity(${cart.productID},${priceNow},${cart.quantity}, '${cart.size_name}')"
-                                                        <c:if test="${isMissingProduct or isOutOfStock or isStoppedSelling}">disabled</c:if>>
-                                                            <i class="bi bi-dash"></i>
-                                                        </button>
-
-                                                        <input type="text" class="qty-input"
-                                                               id="quantity${cart.productID}${safeSize}"
-                                                        value="${cart.quantity}" readonly>
-
-                                                <button type="button" class="qty-btn"
-                                                        onclick="incrementQuantity2(${cart.productID},${priceNow},${cart.quantity}, '${cart.size_name}')"
-                                                        <c:if test="${isMissingProduct or isOutOfStock or isStoppedSelling}">disabled</c:if>>
-                                                            <i class="bi bi-plus"></i>
-                                                        </button>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-total">
-                                                <span class="line-total" id="price2${cart.productID}${safeSize}">${lineCurrentFmt} VND</span>
-                                            <c:if test="${hasPriceChanged}">
-                                                <div class="old-price" id="price1${cart.productID}${safeSize}">${lineOriginalFmt} VND</div>
-                                            </c:if>
-                                        </div>
-
-                                        <div class="col-action">
-                                            <button class="btn-remove"
-                                                    onclick="showDeleteConfirm(${cart.productID}, '${cart.size_name}')"
-                                                    id="btnDel${cart.productID}">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        </div>
-
-                                        <input type="hidden" class="price" value="${cart.price}">
-                                        <input type="hidden" class="quantity" value="${cart.quantity}">
-                                        <input type="hidden" class="size" value="${cart.size_name}">
-                                    </div>
-                                </c:forEach>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-4">
-                            <div class="summary-card">
-                                <div class="summary-header">Order Summary</div>
-                                <div class="summary-row">
-                                    <span>Subtotal</span>
-                                    <span id="sum" class="fw-bold text-dark">0 VND</span>
+                            <div class="product-flex">
+                                <div class="cart-img-wrapper">
+                                    <a href="${pageContext.request.contextPath}/productDetail?id=${cart.productID}">
+                                        <img src="${picUrlMap[cart.productID]}" alt="${nameProduct[cart.productID]}">
+                                    </a>
                                 </div>
-                                <div class="summary-row total">
-                                    <span>Total</span>
-                                    <span id="grandTotal" class="text-highlight">0 VND</span>
-                                </div>
-
-                                <form action="${pageContext.request.contextPath}/loadPayment" method="get">
-                                    <button class="checkout-btn" <c:if test="${hasCartError}">disabled</c:if>>
-                                            Check Out
-                                        </button>
-                                        <input type="hidden" name="size" value="${size}">
-                                    <input type="hidden" id="subtotalInput" name="total" value="0">
-                                    <input type="hidden" id="discountInput" name="discount" value="0">
-                                    <input type="hidden" id="grandTotalInput" name="grandTotal" value="0">
-                                </form>
-
-                                <c:if test="${hasCartError}">
-                                    <div class="cart-warning error mt-2 text-center">
-                                        Please remove unavailable items.
+                                <div class="product-details">
+                                    <a href="${pageContext.request.contextPath}/productDetail?id=${cart.productID}" class="product-name">
+                                        ${nameProduct[cart.productID]}
+                                    </a>
+                                    
+                                    <div class="size-group">
+                                        <span>Size: </span>
+                                        <c:set var="sizesOfProduct" value="${productSizeMap[cart.productID]}" />
+                                        <c:choose>
+                                            <c:when test="${not empty sizesOfProduct}">
+                                                <select class="size-select action-change-size" <c:if test="${hasError}">disabled</c:if>>
+                                                    <c:forEach var="sz" items="${sizesOfProduct}">
+                                                        <option value="${sz}" <c:if test="${sz eq cart.size_name}">selected</c:if>>${sz}</option>
+                                                    </c:forEach>
+                                                </select>
+                                                <input type="hidden" class="old-size-val" value="${cart.size_name}">
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="ms-1 fw-bold">${cart.size_name}</span>
+                                                <input type="hidden" class="old-size-val" value="${cart.size_name}">
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
-                                </c:if>
+                                </div>
                             </div>
+
+                            <div class="col-price">
+                                <fmt:formatNumber value="${priceNow}" pattern="###,###" /> VND
+                            </div>
+
+                            <div class="qty-wrapper">
+                                <div class="qty-control">
+                                    <button type="button" class="qty-btn btn-decrease" <c:if test="${hasError}">disabled</c:if>>
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="text" class="qty-input" value="${cart.quantity}" readonly>
+                                    <button type="button" class="qty-btn btn-increase" <c:if test="${hasError}">disabled</c:if>>
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-total">
+                                <span class="line-total-display"><fmt:formatNumber value="${lineTotal}" pattern="###,###" /></span> VND
+                            </div>
+
+                            <div class="col-action">
+                                <button class="btn-remove action-delete">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+
+                            <c:if test="${hasError or isInsufficient}">
+                                <div class="cart-warning-row">
+                                    <c:choose>
+                                        <c:when test="${isMissing or isStopped}">
+                                            <div class="warning-text"><i class="bi bi-x-circle-fill"></i> Product unavailable. Please remove.</div>
+                                        </c:when>
+                                        <c:when test="${isOutOfStock}">
+                                            <div class="warning-text"><i class="bi bi-x-circle-fill"></i> Out of stock.</div>
+                                        </c:when>
+                                        <c:when test="${isInsufficient}">
+                                            <div class="warning-text info warn-insufficient">
+                                                <i class="bi bi-exclamation-circle-fill"></i> Only ${availableQty} left. Please reduce quantity.
+                                            </div>
+                                        </c:when>
+                                    </c:choose>
+                                </div>
+                            </c:if>
+                        </div>
+                    </c:forEach>
+                </div>
+
+                <div class="sticky-footer">
+                    <div class="footer-content">
+                        <div class="footer-left">
+                            <div class="d-flex align-items-center">
+                                <input class="form-check-input me-2" type="checkbox" id="selectAllBottom">
+                                <label for="selectAllBottom" class="select-all-label">Select All (<span id="countSelected">0</span>)</label>
+                            </div>
+                            <button class="btn btn-link text-danger text-decoration-none p-0 ms-3" id="deleteSelectedBtn" style="font-size: 0.95rem; display:none;">Delete</button>
+                        </div>
+
+                        <div class="footer-right">
+                            <div class="d-flex align-items-baseline">
+                                <span class="total-label">Total Payment:</span>
+                                <span class="total-price" id="grandTotalDisplay">0 VND</span>
+                            </div>
+                            
+                            <form id="checkoutForm" action="${pageContext.request.contextPath}/loadPayment" method="get">
+                                <input type="hidden" id="grandTotalInput" name="grandTotal" value="0">
+                                <button type="submit" class="btn-checkout" id="checkoutBtn" disabled>Checkout</button>
+                            </form>
                         </div>
                     </div>
-                </c:otherwise>
-            </c:choose>
-        </div>
+                </div>
 
-        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content border-0 shadow" style="border-radius: 4px;">
-                    <div class="modal-body text-center p-4">
-                        <div class="mb-3 text-warning"><i class="bi bi-exclamation-circle display-4"></i></div>
-                        <h6 class="mb-3">Do you want to remove this item?</h6>
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">No</button>
-                            <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Yes</button>
-                        </div>
+            </c:otherwise>
+        </c:choose>
+    </div>
+
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow" style="border-radius: 12px;">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3 text-warning"><i class="bi bi-exclamation-circle display-4"></i></div>
+                    <h6 class="mb-4">Remove this item from cart?</h6>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">No</button>
+                        <button type="button" class="btn btn-danger px-4 rounded-pill" id="confirmDeleteBtn">Yes</button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-        <script>
-                                                        // --- UTILS ---
-                                                        function formatVND(amount) {
-                                                            return (amount || 0).toLocaleString('vi-VN') + "\u00A0VND";
-                                                        }
-                                                        function onlyDigits(s) {
-                                                            return (s || '').toString().replace(/[^\d]/g, '');
-                                                        }
-                                                        function toInt(text) {
-                                                            return parseInt(onlyDigits(text), 10) || 0;
-                                                        }
+    <script>
+        function formatVND(amount) { 
+            return (amount || 0).toLocaleString('vi-VN') + " VND"; 
+        }
 
-                                                        // --- CALCULATION LOGIC ---
-                                                        function calcSubtotalFromDom() {
-                                                            let subtotal = 0;
-                                                            document.querySelectorAll('.cart-item-card').forEach(itemCard => {
-                                                                const lineTotalEl = itemCard.querySelector('.line-total');
-                                                                if (lineTotalEl)
-                                                                    subtotal += toInt(lineTotalEl.textContent);
-                                                            });
-                                                            return subtotal;
-                                                        }
+        // --- Core Logic using Event Delegation ---
 
-                                                        function recalcTotals() {
-                                                            const subtotal = calcSubtotalFromDom();
-                                                            const grand = subtotal; // Logic tính tổng
+        $(document).ready(function() {
+            // Remove Loader
+            setTimeout(() => { $('#page-loader').fadeOut(); }, 400);
 
-                                                            const sumEl = document.getElementById('sum');
-                                                            const grandEl = document.getElementById('grandTotal');
+            // Sync Checkboxes
+            const allChecks = $('.item-check');
+            const masterTop = $('#selectAllTop');
+            const masterBot = $('#selectAllBottom');
 
-                                                            if (sumEl)
-                                                                sumEl.innerHTML = formatVND(subtotal);
-                                                            if (grandEl)
-                                                                grandEl.innerHTML = formatVND(grand);
+            function syncMasters(checked) {
+                masterTop.prop('checked', checked);
+                masterBot.prop('checked', checked);
+            }
 
-                                                            if (document.getElementById('subtotalInput'))
-                                                                document.getElementById('subtotalInput').value = subtotal;
-                                                            if (document.getElementById('grandTotalInput'))
-                                                                document.getElementById('grandTotalInput').value = grand;
-                                                        }
+            function updateSummary() {
+                let total = 0;
+                let count = 0;
 
-                                                        // --- AJAX OPERATIONS (LOGIC GỐC) ---
-                                                        function incrementQuantity2(productID, price, quantity, size_name) {
-                                                            const safe = safeIdPart(size_name);
-                                                            const qtyInput = document.getElementById('quantity' + productID + safe);
-                                                            const newQty = (parseInt(qtyInput.value, 10) || 1) + 1;
+                $('.item-check:checked').each(function() {
+                    const row = $(this).closest('.cart-item-card');
+                    const qty = parseInt(row.find('.qty-input').val()) || 0;
+                    const price = parseInt($(this).data('price')) || 0;
+                    total += (qty * price);
+                    count++;
+                });
 
-                                                            $.ajax({
-                                                                url: BASE + '/cartIncrease', method: 'GET',
-                                                                data: {id: productID, price: price, quantity: newQty, size: size_name},
-                                                                success: function (response) {
-                                                                    const values = (response || '').split(',');
-                                                                    const line = parseInt(values[0] || '0', 10);
-                                                                    const temp = parseInt(values[2] || '0', 10);
-                                                                    if (temp === 0) {
-                                                                        qtyInput.value = newQty;
-                                                                        const holder = document.querySelector('#price2' + productID + safe + ' .line-total');
-                                                                        holder.textContent = (isNaN(line) || line <= 0) ? formatVND(price * newQty) : formatVND(line);
-                                                                        recalcTotals();
-                                                                    } else {
-                                                                        alert('Sorry! Max stock reached.');
-                                                                    }
-                                                                },
-                                                                error: function () {
-                                                                    alert('Error updating cart');
-                                                                }
-                                                            });
-                                                        }
+                $('#grandTotalDisplay').text(formatVND(total));
+                $('#grandTotalInput').val(total);
+                $('#countSelected').text(count);
+                $('#checkoutBtn').prop('disabled', count === 0);
 
-                                                        function decrementQuantity(productID, price, quantity, size_name) {
-                                                            const safe = safeIdPart(size_name);
-                                                            const qtyInput = document.getElementById('quantity' + productID + safe);
-                                                            const newQty = (parseInt(qtyInput.value, 10) || 1) - 1;
-                                                            if (newQty <= 0)
-                                                                return;
+                // Update Master Checkbox State
+                const totalEnabled = $('.item-check:not(:disabled)').length;
+                const totalChecked = $('.item-check:checked').length;
+                
+                if (totalEnabled > 0 && totalEnabled === totalChecked) {
+                    syncMasters(true);
+                    masterTop.prop('indeterminate', false);
+                    masterBot.prop('indeterminate', false);
+                } else {
+                    syncMasters(false);
+                    if (totalChecked > 0) {
+                        masterTop.prop('indeterminate', true);
+                        masterBot.prop('indeterminate', true);
+                    } else {
+                        masterTop.prop('indeterminate', false);
+                        masterBot.prop('indeterminate', false);
+                    }
+                }
+            }
 
-                                                            $.ajax({
-                                                                url: BASE + '/cartDecrease', method: 'GET',
-                                                                data: {id: productID, price: price, quantity: newQty, size: size_name},
-                                                                success: function (response) {
-                                                                    const values = (response || '').split(',');
-                                                                    const line = parseInt(values[0] || '0', 10);
-                                                                    qtyInput.value = newQty;
-                                                                    const holder = document.querySelector('#price2' + productID + safe + ' .line-total');
-                                                                    holder.textContent = (isNaN(line) || line <= 0) ? formatVND(price * newQty) : formatVND(line);
-                                                                    recalcTotals();
-                                                                },
-                                                                error: function () {
-                                                                    alert('Error updating cart');
-                                                                }
-                                                            });
-                                                        }
+            // Checkbox Events
+            $('#selectAllTop, #selectAllBottom').on('change', function() {
+                const isChecked = $(this).prop('checked');
+                syncMasters(isChecked);
+                $('.item-check:not(:disabled)').prop('checked', isChecked);
+                updateSummary();
+            });
 
-                                                        function changeSize(productID, oldSize, selectEl) {
-                                                            const newSize = selectEl.value;
-                                                            if (!newSize || newSize === oldSize)
-                                                                return;
+            $('.item-check').on('change', updateSummary);
 
-                                                            $.ajax({
-                                                                url: BASE + '/cartChangeSize', method: 'GET',
-                                                                data: {id: productID, oldSize: oldSize, newSize: newSize},
-                                                                success: function (response) {
-                                                                    if (!response) {
-                                                                        alert('Failed to change size.');
-                                                                        selectEl.value = oldSize;
-                                                                        return;
-                                                                    }
-                                                                    const parts = response.split(',');
-                                                                    const status = parts[0];
-                                                                    if (status === 'OK') {
-                                                                        location.reload();
-                                                                    } else if (status === 'OUT_OF_STOCK') {
-                                                                        alert('Selected size is out of stock.');
-                                                                        selectEl.value = oldSize;
-                                                                    } else if (status === 'NOT_ENOUGH_STOCK') {
-                                                                        alert('Not enough stock for the selected size.');
-                                                                        selectEl.value = oldSize;
-                                                                    } else {
-                                                                        alert('Failed to change size.');
-                                                                        selectEl.value = oldSize;
-                                                                    }
-                                                                },
-                                                                error: function () {
-                                                                    alert('Error changing size.');
-                                                                    selectEl.value = oldSize;
-                                                                }
-                                                            });
-                                                        }
+            // Quantity Increase
+            $(document).on('click', '.btn-increase', function() {
+                const row = $(this).closest('.cart-item-card');
+                const qtyInput = row.find('.qty-input');
+                const checkbox = row.find('.item-check');
+                
+                const currentQty = parseInt(qtyInput.val()) || 1;
+                const newQty = currentQty + 1;
+                const pid = row.data('id');
+                const price = checkbox.data('price');
+                const size = checkbox.data('size'); // Get dynamic size from checkbox
 
-                                                        // --- DELETE LOGIC ---
-                                                        let deleteTarget = null;
-                                                        function showDeleteConfirm(productID, size_name) {
-                                                            deleteTarget = {id: productID, size: size_name};
-                                                            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-                                                            modal.show();
-                                                        }
+                $.ajax({
+                    url: BASE + '/cartIncrease', method: 'GET',
+                    data: {id: pid, price: price, quantity: newQty, size: size},
+                    success: function(resp) {
+                        const parts = (resp || '').split(',');
+                        // Check logic based on your backend response. 
+                        // Assuming parts[2] == 0 means OK (no error code)
+                        const errCode = parseInt(parts[2] || '0'); 
+                        
+                        if (errCode === 0) {
+                            qtyInput.val(newQty);
+                            const lineTotal = newQty * price;
+                            row.find('.line-total-display').text(lineTotal.toLocaleString('vi-VN'));
+                            updateSummary();
+                        } else {
+                            alert('Stock limit reached for this item.');
+                        }
+                    }
+                });
+            });
 
-                                                        document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-                                                            if (!deleteTarget)
-                                                                return;
-                                                            $.ajax({
-                                                                url: BASE + '/cartDelete', method: 'GET',
-                                                                data: {id: deleteTarget.id, size: deleteTarget.size},
-                                                                success: function () {
-                                                                    const safe = safeIdPart(deleteTarget.size);
-                                                                    const row = document.getElementById('user' + deleteTarget.id + safe);
-                                                                    const modalEl = document.getElementById('deleteConfirmModal');
-                                                                    const modal = bootstrap.Modal.getInstance(modalEl);
-                                                                    modal.hide();
-                                                                    if (row) {
-                                                                        row.style.transition = 'all 0.3s ease';
-                                                                        row.style.opacity = '0';
-                                                                        row.style.transform = 'translateX(20px)';
-                                                                        setTimeout(() => {
-                                                                            row.remove();
-                                                                            recalcTotals();
-                                                                            if (document.querySelectorAll('.cart-item-card').length === 0)
-                                                                                location.reload();
-                                                                        }, 300);
-                                                                    }
-                                                                },
-                                                                error: function () {
-                                                                    alert('Delete failed');
-                                                                }
-                                                            });
-                                                        });
+            // Quantity Decrease
+            $(document).on('click', '.btn-decrease', function() {
+                const row = $(this).closest('.cart-item-card');
+                const qtyInput = row.find('.qty-input');
+                const checkbox = row.find('.item-check');
 
-                                                        // --- INIT ---
-                                                        document.addEventListener('DOMContentLoaded', function () {
-                                                            setTimeout(() => {
-                                                                const loader = document.getElementById('page-loader');
-                                                                if (loader) {
-                                                                    loader.style.opacity = 0;
-                                                                    setTimeout(() => loader.remove(), 400);
-                                                                }
-                                                            }, 400);
-                                                            recalcTotals();
-                                                        });
-        </script>
-    </body>
+                const currentQty = parseInt(qtyInput.val()) || 1;
+                if (currentQty <= 1) return;
+
+                const newQty = currentQty - 1;
+                const pid = row.data('id');
+                const price = checkbox.data('price');
+                const size = checkbox.data('size');
+
+                $.ajax({
+                    url: BASE + '/cartDecrease', method: 'GET',
+                    data: {id: pid, price: price, quantity: newQty, size: size},
+                    success: function(resp) {
+                        qtyInput.val(newQty);
+                        const lineTotal = newQty * price;
+                        row.find('.line-total-display').text(lineTotal.toLocaleString('vi-VN'));
+                        updateSummary();
+                    }
+                });
+            });
+
+            // Change Size (NO RELOAD)
+            $(document).on('change', '.action-change-size', function() {
+                const selectEl = $(this);
+                const row = selectEl.closest('.cart-item-card');
+                const oldSizeInput = row.find('.old-size-val');
+                const checkbox = row.find('.item-check');
+
+                const pid = row.data('id');
+                const oldSize = oldSizeInput.val();
+                const newSize = selectEl.val();
+
+                if (newSize === oldSize) return;
+
+                $.ajax({
+                    url: BASE + '/cartChangeSize', method: 'GET',
+                    data: {id: pid, oldSize: oldSize, newSize: newSize},
+                    success: function(response) {
+                        // Assuming response format: "OK" or "OK,..." 
+                        if (response && response.includes('OK')) {
+                            // Update DOM values without reload
+                            oldSizeInput.val(newSize);
+                            checkbox.data('size', newSize); // Critical: Update data-size for other buttons
+                            checkbox.attr('data-size', newSize);
+                            
+                            // Note: If price changes by size, backend needs to send new price.
+                            // Currently assuming price stays same or waiting for refresh.
+                        } else {
+                            alert('Cannot switch to this size (Out of stock or error).');
+                            selectEl.val(oldSize); // Revert
+                        }
+                    },
+                    error: function() {
+                        alert('Error connecting to server.');
+                        selectEl.val(oldSize);
+                    }
+                });
+            });
+
+            // Delete Handling
+            let deleteTarget = null;
+            $(document).on('click', '.action-delete', function() {
+                const row = $(this).closest('.cart-item-card');
+                const checkbox = row.find('.item-check');
+                deleteTarget = {
+                    el: row,
+                    id: row.data('id'),
+                    size: checkbox.data('size') // Get current dynamic size
+                };
+                new bootstrap.Modal('#deleteConfirmModal').show();
+            });
+
+            $('#confirmDeleteBtn').click(function() {
+                if (!deleteTarget) return;
+
+                $.ajax({
+                    url: BASE + '/cartDelete', method: 'GET',
+                    data: {id: deleteTarget.id, size: deleteTarget.size},
+                    success: function() {
+                        const modal = bootstrap.Modal.getInstance('#deleteConfirmModal');
+                        modal.hide();
+
+                        deleteTarget.el.css({ opacity: 0, transform: 'scale(0.95)' });
+                        setTimeout(() => {
+                            deleteTarget.el.remove();
+                            updateSummary();
+                            if ($('.cart-item-card').length === 0) location.reload();
+                        }, 300);
+                    }
+                });
+            });
+
+            // Form Submit Intercept
+            $('#checkoutForm').on('submit', function(e) {
+                const checked = $('.item-check:checked');
+                if (checked.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Clear old inputs
+                $(this).find('input[name="selectedItems"]').remove();
+
+                // Add selected items
+                checked.each(function() {
+                    const id = $(this).data('id');
+                    const size = $(this).data('size'); // Uses updated size
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'selectedItems',
+                        value: id + '::' + size
+                    }).appendTo('#checkoutForm');
+                });
+            });
+
+            // Initial calc
+            updateSummary();
+        });
+    </script>
+</body>
 </html>

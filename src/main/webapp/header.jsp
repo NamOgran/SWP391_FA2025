@@ -561,10 +561,6 @@
                                 <li>
                                     <a href="${pageContext.request.contextPath}/orderHistoryView">
                                         <div><i class="bi bi-clock-history"></i> History</div>
-                                        <%-- DROP DOWN BADGE (HISTORY) --%>
-                                        <c:if test="${headerTotalHistory > 0}">
-                                            <span class="badge-dropdown">${headerTotalHistory}</span>
-                                        </c:if>
                                     </a>
                                 </li>
                                 <li class="menu-divider"></li>

@@ -335,9 +335,7 @@
                         <li>
                             <a href="${pageContext.request.contextPath}/orderHistoryView" class="account-nav-link active">
                                 <div><i class="fa-solid fa-clock-rotate-left"></i> Order History</div>
-                                <c:if test="${totalHistory > 0}">
-                                    <span class="badge-sidebar">${totalHistory}</span>
-                                </c:if>
+                                
                             </a>
                         </li>
                         <li>

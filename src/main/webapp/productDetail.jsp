@@ -398,6 +398,10 @@
 
     <body>
         <%@ include file="header.jsp" %>
+        <c:if test="${not empty ms}">
+    ${ms}
+</c:if>
+
 
         <main class="product-detail-wrapper">
             
@@ -916,22 +920,26 @@
                             return res.text(); 
                         })
                         .then(text => { 
-                            // Khôi phục nút bấm
-                            this.innerHTML = originalText;
-                            this.disabled = false;
+    this.innerHTML = originalText;
+    this.disabled = false;
 
-                            if (text === null) return; // Đã redirect (login)
+    if (text === null) return;
 
-                            // Kiểm tra nội dung trả về từ Controller
-                            if (text.trim() === "OK") {
-                                 showPopup("Added to cart successfully!", "success"); // Hiện popup xanh
-                                 setQty(1);
-                            } else if (text.includes("Login")) {
-                                 window.location.href = loginUrl; 
-                            } else {
-                                 showPopup("Added to cart successfully!"); // Fallback
-                            }
-                        })
+    const t = (text || "").trim();
+
+    if (t === "OK") {
+        showPopup("Added to cart successfully!", "success");
+        setQty(1);
+        return;
+    }
+
+    let msg = "Cannot add to cart. Please check stock and quantity in your cart.";
+    const m = t.match(/alert\(['"](.+?)['"]\)/);
+    if (m && m[1]) msg = m[1];
+
+    showPopup(msg, "error");
+})
+
                         .catch(err => {
                             console.error(err);
                             this.innerHTML = originalText;
@@ -967,5 +975,6 @@
             document.documentElement.scrollTop = 0;
         }
         </script>
+        
     </body>
 </html>
