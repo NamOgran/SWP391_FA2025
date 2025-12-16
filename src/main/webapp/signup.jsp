@@ -1,6 +1,6 @@
 <%-- 
     Document    : signup.jsp
-    Updated     : Removed reCAPTCHA & Layout Rearranged
+    Updated     : Validation Rules Updated per Requirements
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -14,9 +14,7 @@
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
         <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-
         <link href='https://fonts.googleapis.com/css?family=Quicksand:300,400,500,600,700&display=swap' rel='stylesheet'>
         <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon">
 
@@ -123,12 +121,18 @@
 
             /* === VALIDATION ERROR STYLES === */
             label.error {
-                color: #dc3545; /* Màu đỏ */
+                color: #dc3545;
                 font-size: 0.85rem;
                 margin-top: 5px;
                 margin-left: 5px;
                 display: block;
                 font-weight: 600;
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
+                height: auto;
+                width: 100%;
+                line-height: 1.2;
             }
 
             .form-floating label.error {
@@ -136,14 +140,6 @@
                 transform: none;
                 opacity: 1;
                 padding-top: 5px;
-
-                /* --- CÁC DÒNG SỬA LỖI 3 CHẤM --- */
-                white-space: normal;       /* Cho phép xuống dòng */
-                overflow: visible;         /* Hiển thị toàn bộ nội dung, không cắt */
-                text-overflow: clip;       /* Bỏ dấu 3 chấm */
-                height: auto;              /* Chiều cao tự động dãn theo nội dung */
-                width: 100%;               /* Chiếm hết chiều ngang */
-                line-height: 1.2;          /* Giãn dòng một chút cho dễ đọc nếu tin nhắn dài */
             }
             .form-control.error {
                 border-color: #dc3545;
@@ -161,7 +157,6 @@
                 font-size: 1rem;
                 transition: all 0.3s ease;
                 box-shadow: 0 4px 15px rgba(160, 129, 108, 0.2);
-                /* Tăng margin-top lên một chút để bù lại khoảng trống của ReCaptcha nếu muốn, hiện tại để 20px cho thoáng */
                 margin-top: 20px;
             }
             .btn-primary-custom:hover {
@@ -193,8 +188,6 @@
                 box-shadow: 0 4px 10px rgba(160, 129, 108, 0.3);
             }
 
-            /* ĐÃ XÓA CSS RECAPTCHA WRAPPER */
-
             /* === TOAST NOTIFICATION === */
             .toast-alert {
                 position: fixed;
@@ -213,24 +206,12 @@
                 max-width: 350px;
             }
             @keyframes slideInRight {
-                from {
-                    transform: translateX(120%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
+                from { transform: translateX(120%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
             }
             @keyframes slideOutRight {
-                from {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-                to {
-                    opacity: 0;
-                    transform: translateX(120%);
-                }
+                from { opacity: 1; transform: translateX(0); }
+                to { opacity: 0; transform: translateX(120%); }
             }
             .toast-alert.hide-toast {
                 animation: slideOutRight 0.5s ease-in forwards;
@@ -291,7 +272,6 @@
                         </div>
                         <h3 class="fw-bold mb-2">Sign Up Successful!</h3>
                         <p class="text-muted mb-4">Your account has been created successfully.<br>Welcome to GIO Shop.</p>
-
                         <a href="${pageContext.request.contextPath}/login.jsp" class="btn btn-primary-custom w-100">
                             OK, Go to Login
                         </a>
@@ -321,50 +301,60 @@
                         <p class="page-subtitle">Fill in the details below to become a member.</p>
 
                         <form action="${pageContext.request.contextPath}/login/signup" method="POST" id="signUp-form">
-
                             <div class="row g-3">
+                                
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="username" name="username" placeholder="Username" value="${inputUsername}">
+                                        <input type="text" class="form-control" id="username" name="username" placeholder="Username" 
+                                               minlength="6" maxlength="20" value="${inputUsername}">
                                         <label for="username"><i class="bi bi-person"></i> Username</label>
                                     </div>
                                 </div>
+
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Full Name" value="${inputFullName}">
+                                        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Full Name" 
+                                               minlength="2" maxlength="100" style="text-transform: capitalize;" value="${inputFullName}">
                                         <label for="fullName"><i class="bi bi-card-text"></i> Full Name</label>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" 
+                                               minlength="8" maxlength="24">
                                         <label for="password"><i class="bi bi-lock"></i> Password</label>
                                     </div>
                                 </div>
+                                
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="password" class="form-control" id="rePassword" name="rePassword" placeholder="Confirm Password">
+                                        <input type="password" class="form-control" id="rePassword" name="rePassword" placeholder="Confirm Password" 
+                                               minlength="8" maxlength="24">
                                         <label for="rePassword"><i class="bi bi-check2-circle"></i> Confirm Password</label>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="email" class="form-control" id="email" name="email" placeholder="Email" value="${inputEmail}">
+                                        <input type="email" class="form-control" id="email" name="email" placeholder="Email" 
+                                               maxlength="50" value="${inputEmail}">
                                         <label for="email"><i class="bi bi-envelope"></i> Email</label>
                                     </div>
                                 </div>
+                                
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Phone" value="${inputPhone}">
+                                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Phone" 
+                                               maxlength="10" value="${inputPhone}">
                                         <label for="phoneNumber"><i class="bi bi-telephone"></i> Phone</label>
                                     </div>
                                 </div>
 
                                 <div class="col-12">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="address" name="address" placeholder="Address" value="${inputAddress}">
+                                        <input type="text" class="form-control" id="address" name="address" placeholder="Address" 
+                                               maxlength="255" value="${inputAddress}">
                                         <label for="address"><i class="bi bi-geo-alt"></i> Address</label>
                                     </div>
                                 </div>
@@ -384,164 +374,180 @@
         <script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
         <script src="${pageContext.request.contextPath}/js/jquery.validate.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-        <script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
-<script src="${pageContext.request.contextPath}/js/jquery.validate.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        <script type="text/javascript">
+            // Init Animation
+            AOS.init();
 
-<script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
-<script src="${pageContext.request.contextPath}/js/jquery.validate.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+            // Toast Logic
+            function closeToast() {
+                var alert = document.getElementById('toast-alert');
+                if (alert) {
+                    alert.classList.add('hide-toast');
+                    alert.addEventListener('animationend', function() {
+                        alert.style.display = 'none';
+                    });
+                }
+            }
 
-<script type="text/javascript">
-    // Init Animation
-    AOS.init();
+            // Hàm viết hoa chữ cái đầu mỗi từ (Hỗ trợ tiếng Việt)
+            function toTitleCase(str) {
+                return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
+                    return l.toUpperCase();
+                });
+            }
 
-    // Toast Logic
-    function closeToast() {
-        var alert = document.getElementById('toast-alert');
-        if (alert) {
-            alert.classList.add('hide-toast');
-            alert.addEventListener('animationend', function() {
-                alert.style.display = 'none';
+            $(document).ready(function() {
+                // Auto close toast
+                setTimeout(function() { closeToast(); }, 5000);
+
+                // --- 1. TỰ ĐỘNG VIẾT HOA TÊN KHI RỜI Ô NHẬP (BLUR) ---
+                $('#fullName').on('blur', function() {
+                    var val = $(this).val();
+                    if(val) {
+                        $(this).val(toTitleCase(val));
+                    }
+                });
+
+                // --- 2. ĐỊNH NGHĨA CÁC RULE VALIDATION ---
+
+                // Rule Regex: Username (Chỉ chữ cái và số)
+                $.validator.addMethod("validUsernameRegex", function(value, element) {
+                    return this.optional(element) || /^[a-zA-Z0-9]+$/.test(value);
+                }, "Username must contain only letters and numbers (no special characters).");
+
+                // Rule Regex: Full Name (Chữ cái và khoảng trắng, không số)
+                $.validator.addMethod("validNameRegex", function(value, element) {
+                    return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+                }, "Name cannot contain numbers or special characters.");
+
+                // Rule Regex: Password (Ít nhất 1 hoa, 1 đặc biệt)
+                $.validator.addMethod("complexPassword", function(value, element) {
+                    return this.optional(element) || /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>_+\-=\[\]{};':"\\|\/]).*$/.test(value);
+                }, "Password needs 1 uppercase letter & 1 special character.");
+
+                // Rule Regex: Phone (Bắt đầu bằng 0, đúng 10 số)
+                $.validator.addMethod("validPhoneRegex", function(value, element) {
+                    return this.optional(element) || /^0\d{9}$/.test(value);
+                }, "Phone must start with 0 and have exactly 10 digits.");
+
+                // Rule Regex: Address (Cho phép chữ, số, khoảng trắng và , . / -)
+                $.validator.addMethod("validAddressRegex", function(value, element) {
+                    return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+                }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+
+
+                // --- 3. CẤU HÌNH VALIDATE FORM ---
+                $("#signUp-form").validate({
+                    rules: {
+                        username: {
+                            required: true,
+                            minlength: 6,
+                            maxlength: 20,
+                            validUsernameRegex: true
+                        },
+                        fullName: {
+                            required: true,
+                            minlength: 2,
+                            maxlength: 100,
+                            validNameRegex: true
+                        },
+                        password: {
+                            required: true,
+                            minlength: 8,
+                            maxlength: 24,
+                            complexPassword: true
+                        },
+                        rePassword: {
+                            required: true,
+                            minlength: 8,
+                            maxlength: 24,
+                            equalTo: "#password"
+                        },
+                        email: {
+                            required: true,
+                            email: true,
+                            maxlength: 50
+                        },
+                        phoneNumber: {
+                            required: true,
+                            digits: true, // Chỉ chấp nhận số
+                            minlength: 10,
+                            maxlength: 10,
+                            validPhoneRegex: true
+                        },
+                        address: {
+                            required: true,
+                            maxlength: 255,
+                            validAddressRegex: true
+                        }
+                    },
+                    messages: {
+                        username: {
+                            required: "Please enter your username",
+                            minlength: "Username must be at least 6 characters.",
+                            maxlength: "Username cannot exceed 20 characters.",
+                            validUsernameRegex: "Username must contain only letters and numbers (no special characters)."
+                        },
+                        fullName: {
+                            required: "Please enter your full name",
+                            minlength: "Name must be at least 2 characters.",
+                            maxlength: "Name cannot exceed 100 characters.",
+                            validNameRegex: "Name cannot contain numbers or special characters."
+                        },
+                        password: {
+                            required: "Please provide a password",
+                            minlength: "Password must be at least 8 characters.",
+                            maxlength: "Password cannot exceed 24 characters.",
+                            complexPassword: "Password must have at least 1 Uppercase & 1 Special char."
+                        },
+                        rePassword: {
+                            required: "Please confirm your password",
+                            minlength: "Password must be at least 8 characters.",
+                            maxlength: "Password cannot exceed 24 characters.",
+                            equalTo: "Passwords do not match."
+                        },
+                        email: {
+                            required: "Please enter your email",
+                            email: "Please enter a valid email format (e.g., abc@domain.com).",
+                            maxlength: "Email cannot exceed 50 characters."
+                        },
+                        phoneNumber: {
+                            required: "Please enter your phone number",
+                            digits: "Only digits allowed.",
+                            minlength: "Phone number must have exactly 10 digits.",
+                            maxlength: "Phone number must have exactly 10 digits.",
+                            validPhoneRegex: "Phone must start with 0 and have exactly 10 digits."
+                        },
+                        address: {
+                            required: "Please enter your address",
+                            maxlength: "Address cannot exceed 255 characters.",
+                            validAddressRegex: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                        }
+                    },
+                    
+                    errorElement: "label",
+                    errorPlacement: function(error, element) {
+                        error.insertAfter(element.next("label"));
+                    },
+                    highlight: function(element) {
+                        $(element).addClass("error").removeClass("valid");
+                    },
+                    unhighlight: function(element) {
+                        $(element).removeClass("error").addClass("valid");
+                    },
+                    submitHandler: function(form) {
+                        $('.btn-register').html('<span class="spinner-border spinner-border-sm"></span> Processing...').prop('disabled', true);
+                        form.submit();
+                    }
+                });
+
+                // Popup Success Logic
+                <c:if test="${not empty registerSuccess}">
+                    new bootstrap.Modal(document.getElementById('successModal')).show();
+                </c:if>
             });
-        }
-    }
-
-    // Hàm viết hoa chữ cái đầu mỗi từ (Hỗ trợ tiếng Việt)
-    function toTitleCase(str) {
-        return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
-            return l.toUpperCase();
-        });
-    }
-
-    $(document).ready(function() {
-        // Auto close toast
-        setTimeout(function() { closeToast(); }, 5000);
-
-        // --- 1. TỰ ĐỘNG VIẾT HOA TÊN KHI RỜI Ô NHẬP ---
-        $('#fullName').on('blur', function() {
-            var val = $(this).val();
-            if(val) {
-                $(this).val(toTitleCase(val));
-            }
-        });
-
-        // --- 2. ĐỊNH NGHĨA CÁC RULE VALIDATION MỚI ---
-
-        // Rule: Username (Chữ + số, 6-20 ký tự)
-        $.validator.addMethod("validUsername", function(value, element) {
-            return this.optional(element) || /^[a-zA-Z0-9]{6,20}$/.test(value);
-        }, "Username must be 6-20 characters, letters and numbers only (no special chars).");
-
-        // Rule: Fullname (Chỉ chữ, không số/ký tự đặc biệt)
-        $.validator.addMethod("validName", function(value, element) {
-            // Regex chấp nhận chữ cái tiếng Anh + Tiếng Việt có dấu + khoảng trắng
-            return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
-        }, "Name cannot contain numbers or special characters.");
-
-        // Rule: Phone (10 số, bắt đầu bằng 0)
-        $.validator.addMethod("validPhone", function(value, element) {
-            return this.optional(element) || /^0\d{9}$/.test(value);
-        }, "Phone must start with 0 and have exactly 10 digits.");
-
-        // Rule: Address (Không ký tự đặc biệt lạ, cho phép , / . -)
-        $.validator.addMethod("validAddress", function(value, element) {
-            return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
-        }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
-
-        // Rule: Password Mạnh
-        $.validator.addMethod("complexPassword", function(value, element) {
-            return this.optional(element) || /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>_+\-=\[\]{};':"\\|\/])[a-zA-Z0-9!@#$%^&*(),.?":{}|<>_+\-=\[\]{};':"\\|\/]{8,24}$/.test(value);
-        }, "Password must be 8-24 chars, 1 uppercase & 1 special char.");
-
-
-        // --- 3. CẤU HÌNH VALIDATE FORM ---
-        $("#signUp-form").validate({
-            rules: {
-                username: {
-                    required: true,
-                    validUsername: true // Sử dụng rule mới
-                },
-                fullName: {
-                    required: true,
-                    minlength: 2,
-                    validName: true // Sử dụng rule mới
-                },
-                password: {
-                    required: true,
-                    complexPassword: true
-                },
-                rePassword: {
-                    required: true,
-                    equalTo: "#password"
-                },
-                email: {
-                    required: true,
-                    email: true
-                },
-                phoneNumber: {
-                    required: true,
-                    validPhone: true // Sử dụng rule mới
-                },
-                address: {
-                    required: true,
-                    validAddress: true // Sử dụng rule mới
-                }
-            },
-            messages: {
-                username: {
-                    required: "Please enter your username",
-                    validUsername: "Username must be 6-20 characters, no special characters."
-                },
-                fullName: {
-                    required: "Please enter your full name",
-                    validName: "Full name must consist of letters only."
-                },
-                password: {
-                    required: "Please provide a password",
-                    complexPassword: "8-24 characters, include Uppercase & Special char."
-                },
-                rePassword: {
-                    required: "Please confirm your password",
-                    equalTo: "Passwords do not match"
-                },
-                email: "Please enter a valid email address",
-                phoneNumber: {
-                    required: "Please enter your phone number",
-                    validPhone: "Invalid phone number (must imply 10 digits, start with 0)."
-                },
-                address: {
-                    required: "Please enter your address",
-                    validAddress: "Address not include special characters."
-                }
-            },
-            
-            errorElement: "label",
-            errorPlacement: function(error, element) {
-                error.insertAfter(element.next("label"));
-            },
-            highlight: function(element) {
-                $(element).addClass("error").removeClass("valid");
-            },
-            unhighlight: function(element) {
-                $(element).removeClass("error").addClass("valid");
-            },
-            submitHandler: function(form) {
-                $('.btn-register').html('<span class="spinner-border spinner-border-sm"></span> Processing...').prop('disabled', true);
-                form.submit();
-            }
-        });
-
-        // Popup Success Logic
-        <c:if test="${not empty registerSuccess}">
-            new bootstrap.Modal(document.getElementById('successModal')).show();
-        </c:if>
-    });
-</script>
+        </script>
     </body>
 </html>

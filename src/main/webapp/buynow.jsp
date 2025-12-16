@@ -1,3 +1,7 @@
+<%-- 
+    Document    : checkoutBuyNow.jsp
+    Description : Buy Now Checkout (Validated with Strict Rules)
+--%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -24,12 +28,10 @@
 <c:set var="unitPrice" value="${price}" />
 <c:set var="subtotal"  value="${unitPrice * qty}" />
 
-
-
 <c:set var="voucherPercent" value="0" />
 <c:set var="voucherId"      value="0" />
-<c:set var="discount"     value="0" />
-<c:set var="grandTotal"   value="${subtotal}" />
+<c:set var="discount"      value="0" />
+<c:set var="grandTotal"    value="${subtotal}" />
 
 <%-- Lấy Product ID để dùng cho nút Back --%>
 <c:set var="currentPId" value="${not empty param.productId ? param.productId : id}" />
@@ -207,12 +209,21 @@
                 border-color: var(--primary-color);
                 box-shadow: 0 0 0 0.2rem rgba(160, 129, 108, 0.15);
             }
+            
+            /* UPDATED VALIDATION CSS */
             .error {
                 color: #dc3545;
                 font-size: 0.85rem;
                 margin-top: 5px;
                 margin-left: 5px;
                 width: 100%;
+                font-weight: 600;
+                display: block;
+                line-height: 1.2;
+            }
+            input.error {
+                border-color: #dc3545;
+                background-color: #fff8f8;
             }
 
             /* PAYMENT METHOD */
@@ -419,19 +430,25 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                        <input type="text" class="form-control" placeholder="Full Name" name="fullName" value="${sessionScope.acc.fullName}" required>
+                                        <%-- Rule: Max 100 chars, Auto Capitalize --%>
+                                        <input type="text" class="form-control capitalize-input" placeholder="Full Name" name="fullName" 
+                                               value="${sessionScope.acc.fullName}" required minlength="2" maxlength="100" style="text-transform: capitalize;">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                        <input type="tel" class="form-control" placeholder="Phone Number" name="phoneNumber" id="phoneNumber" value="${sessionScope.acc.phoneNumber}" required>
+                                        <%-- Rule: Max 10 digits --%>
+                                        <input type="tel" class="form-control" placeholder="Phone Number" name="phoneNumber" id="phoneNumber" 
+                                               value="${sessionScope.acc.phoneNumber}" required maxlength="10">
                                     </div>
                                 </div>
                                 <div class="col-12">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                        <input type="email" class="form-control" placeholder="Email Address (Optional)" name="email" value="${sessionScope.acc.email}" required>
+                                        <%-- Rule: Max 50 chars --%>
+                                        <input type="email" class="form-control" placeholder="Email Address (Optional)" name="email" 
+                                               value="${sessionScope.acc.email}" required maxlength="50">
                                     </div>
                                 </div>
                             </div>
@@ -443,7 +460,9 @@
                             </div>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-map"></i></span>
-                                <input type="text" class="form-control" placeholder="House number, Street, Ward, District, City..." name="address" value="${sessionScope.acc.address}" required>
+                                <%-- Rule: Max 255 chars --%>
+                                <input type="text" class="form-control" placeholder="House number, Street, Ward, District, City..." name="address" 
+                                       value="${sessionScope.acc.address}" required maxlength="255">
                             </div>
                         </div>
 
@@ -460,18 +479,18 @@
                         </div>
 
                         <%-- Hidden Fields for Buy Now --%>
-                        <input type="hidden" name="productId"      value="${currentPId}">
-                        <input type="hidden" name="id"             value="${id}">
-                        <input type="hidden" name="quantity"       value="${qty}">
-                        <input type="hidden" name="size"           value="${param.size}">
-                        <input type="hidden" id="subtotalInput"    name="total"       value="${subtotal}">
-                        <input type="hidden" id="grandTotalInput"  name="grandTotal"  value="${grandTotal}">
+                        <input type="hidden" name="productId"     value="${currentPId}">
+                        <input type="hidden" name="id"            value="${id}">
+                        <input type="hidden" name="quantity"      value="${qty}">
+                        <input type="hidden" name="size"          value="${param.size}">
+                        <input type="hidden" id="subtotalInput"   name="total"       value="${subtotal}">
+                        <input type="hidden" id="grandTotalInput" name="grandTotal"  value="${grandTotal}">
 
                         <input type="hidden" id="voucherCodeInput"   name="voucherCode"   value="${sessionScope.voucherCode}">
                         <input type="hidden" id="voucherIdInput"     name="voucherId"     value="${voucherId}">
                         <input type="hidden" id="voucherTypeInput"   name="voucherType"   value="${sessionScope.voucherType}">
                         <input type="hidden" id="voucherValueInput"  name="voucherValue"  value="${voucherPercent}">
-                        <input type="hidden" id="discountInput"    name="discount"    value="${discount}">
+                        <input type="hidden" id="discountInput"      name="discount"      value="${discount}">
                     </form>
                 </div>
 
@@ -480,7 +499,6 @@
                         <div class="summary-header">Order Summary</div>
 
                         <div class="product-item">
-                            <%-- SỬA LẠI BIẾN: Dùng ${pic} và ${name} như file gốc --%>
                             <img src="${pic}" alt="Product" class="product-img">
                             <div class="product-info">
                                 <h6>${name}</h6>
@@ -559,156 +577,217 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
+            // BuyNow uses single item calc
+            let subtotal = ${subtotal};
+            let appliedVoucher = {value: 0, id: 0};
+            let successModal, processingModal;
 
-                                    // BuyNow uses single item calc
-                                    let subtotal = ${subtotal};
-                                    let appliedVoucher = {value: 0, id: 0};
-                                    let successModal, processingModal;
+            $(window).on('load', function () {
+                setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
+            });
 
-                                    $(window).on('load', function () {
-                                        setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
-                                    });
+            // Hàm tự động viết hoa chữ cái đầu (Hỗ trợ tiếng Việt)
+            function toTitleCase(str) {
+                return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
+                    return l.toUpperCase();
+                });
+            }
 
-                                    function fmt(n) {
-                                        return (n || 0).toLocaleString('vi-VN') + ' VND';
-                                    }
+            function fmt(n) {
+                return (n || 0).toLocaleString('vi-VN') + ' VND';
+            }
 
-                                    function recalcTotals() {
-                                        const discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
-                                        const grand = Math.max(0, subtotal - discount);
+            function recalcTotals() {
+                const discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
+                const grand = Math.max(0, subtotal - discount);
 
-                                        $('#subtotalText').text(fmt(subtotal));
-                                        $('#grandTotalText').text(fmt(grand));
+                $('#subtotalText').text(fmt(subtotal));
+                $('#grandTotalText').text(fmt(grand));
 
-                                        // Update hidden inputs
-                                        $('#discountInput').val(discount);
-                                        $('#grandTotalInput').val(grand);
-                                        $('#subtotalInput').val(subtotal);
-                                        $('#voucherIdInput').val(appliedVoucher.id || '');
-                                        $('#voucherValueInput').val(appliedVoucher.value || 0);
-                                        $('#voucherCodeInput').val(appliedVoucher.id || '');
-                                        $('#voucherTypeInput').val((appliedVoucher.value > 0) ? 'percent' : '');
+                // Update hidden inputs
+                $('#discountInput').val(discount);
+                $('#grandTotalInput').val(grand);
+                $('#subtotalInput').val(subtotal);
+                $('#voucherIdInput').val(appliedVoucher.id || '');
+                $('#voucherValueInput').val(appliedVoucher.value || 0);
+                $('#voucherCodeInput').val(appliedVoucher.id || '');
+                $('#voucherTypeInput').val((appliedVoucher.value > 0) ? 'percent' : '');
 
-                                        updateVoucherUI(discount);
-                                    }
+                updateVoucherUI(discount);
+            }
 
+            function updateVoucherUI(discount) {
+                if (appliedVoucher.value > 0) {
+                    $('#voucherError').hide().text('');
+                    $('#discountRow').css('display', 'flex');
+                    $('#discountValue').text('-' + fmt(discount));
+                    $('#voucherHint').css('display', 'flex');
+                    $('#badgeVoucher').text('Saved ' + appliedVoucher.value + '%');
+                } else {
+                    $('#discountRow').hide();
+                    $('#discountValue').text('-0 VND');
+                    $('#voucherHint').hide();
+                }
+            }
 
-                                    function updateVoucherUI(discount) {
-                                        if (appliedVoucher.value > 0) {
-                                            $('#voucherError').hide().text('');
-                                            $('#discountRow').css('display', 'flex');
-                                            $('#discountValue').text('-' + fmt(discount));
-                                            $('#voucherHint').css('display', 'flex');
-                                            $('#badgeVoucher').text('Saved ' + appliedVoucher.value + '%');
+            function applyVoucher() {
+                const code = ($('#voucherInput').val() || '').trim();
+                const err = $('#voucherError');
+                err.hide().text('');
 
-                                            // Giữ lại text voucher trong input
-                                            // $('#voucherInput').val(''); 
-                                        } else {
-                                            $('#discountRow').hide();
-                                            $('#discountValue').text('-0 VND');
-                                            $('#voucherHint').hide();
-                                        }
-                                    }
+                if (!code) {
+                    err.text('Please enter a voucher code.').show();
+                    return;
+                }
 
-                                    function applyVoucher() {
-                                        const code = ($('#voucherInput').val() || '').trim();
-                                        const err = $('#voucherError');
-                                        err.hide().text('');
+                $.ajax({
+                    url: BASE + '/applyVoucher',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {code: code},
+                    success: function (res) {
+                        if (res && res.ok && res.type === 'percent') {
+                            appliedVoucher = {value: parseInt(res.value || 0, 10), id: parseInt(res.voucherId || 0, 10)};
+                            recalcTotals();
+                        } else {
+                            removeVoucher();
+                            err.text((res && res.message) ? res.message : 'Invalid voucher code.').show();
+                        }
+                    },
+                    error: function () {
+                        removeVoucher();
+                        err.text('Cannot apply voucher right now.').show();
+                    }
+                });
+            }
 
-                                        if (!code) {
-                                            err.text('Please enter a voucher code.').show();
-                                            return;
-                                        }
+            function removeVoucher() {
+                appliedVoucher = {value: 0, id: 0};
+                $('#voucherError').hide().text('');
+                recalcTotals();
+            }
 
-                                        $.ajax({
-                                            url: BASE + '/applyVoucher',
-                                            method: 'POST',
-                                            dataType: 'json',
-                                            data: {code: code},
-                                            success: function (res) {
-                                                if (res && res.ok && res.type === 'percent') {
-                                                    appliedVoucher = {value: parseInt(res.value || 0, 10), id: parseInt(res.voucherId || 0, 10)};
-                                                    recalcTotals();
-                                                } else {
-                                                    removeVoucher();
-                                                    err.text((res && res.message) ? res.message : 'Invalid voucher code.').show();
-                                                }
-                                            },
-                                            error: function () {
-                                                removeVoucher();
-                                                err.text('Cannot apply voucher right now.').show();
-                                            }
-                                        });
-                                    }
+            $(document).ready(function () {
+                successModal = new bootstrap.Modal(document.getElementById('successModal'), {keyboard: false, backdrop: 'static'});
+                processingModal = new bootstrap.Modal(document.getElementById('processingModal'), {keyboard: false, backdrop: 'static'});
 
-                                    function removeVoucher() {
-                                        appliedVoucher = {value: 0, id: 0};
-                                        $('#voucherError').hide().text('');
-                                        recalcTotals();
-                                    }
+                $('#modalOkButton').on('click', function () {
+                    window.location.href = '${pageContext.request.contextPath}/orderView';
+                });
 
-                                    $(document).ready(function () {
-                                        successModal = new bootstrap.Modal(document.getElementById('successModal'), {keyboard: false, backdrop: 'static'});
-                                        processingModal = new bootstrap.Modal(document.getElementById('processingModal'), {keyboard: false, backdrop: 'static'});
+                // --- 1. Auto Capitalize on Blur ---
+                $('.capitalize-input').on('blur', function() {
+                    var val = $(this).val();
+                    if(val) {
+                        $(this).val(toTitleCase(val));
+                    }
+                });
 
-                                        $('#modalOkButton').on('click', function () {
-                                            window.location.href = '${pageContext.request.contextPath}/orderView';
-                                        });
+                // --- 2. VALIDATION RULES ---
+                
+                // Rule: Fullname (Only letters & spaces)
+                $.validator.addMethod("validName", function(value, element) {
+                    return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+                }, "Name cannot contain numbers or special characters.");
 
-                                        $.validator.addMethod("customPhone", function (value, element) {
-                                            return this.optional(element) || /^(0\d{9,10})$|^(\+84\d{9,10})$/.test(value);
-                                        }, "Invalid phone number");
+                // Rule: Phone (Start with 0, exactly 10 digits)
+                $.validator.addMethod("validPhone", function (value, element) { 
+                    return this.optional(element) || /^0\d{9}$/.test(value); 
+                }, "Phone must start with 0 and have exactly 10 digits.");
 
-                                        $("#payment-form").validate({
-                                            rules: {
-                                                fullName: {required: true},
-                                                email: {required: true, email: true},
-                                                phoneNumber: {required: true, customPhone: true},
-                                                address: {required: true}
-                                            },
-                                            messages: {
-                                                fullName: "Please enter your name",
-                                                email: "Valid email required",
-                                                phoneNumber: "Valid phone required",
-                                                address: "Address is required"
-                                            },
-                                            errorElement: "div",
-                                            errorPlacement: function (error, element) {
-                                                error.addClass("error");
-                                                element.closest('.input-group').after(error);
-                                            },
-                                            submitHandler: function (form) {
-                                                $('#btnComplete').prop('disabled', true);
-                                                processingModal.show();
+                // Rule: Address (Alphanumeric + , . / -)
+                $.validator.addMethod("validAddress", function(value, element) {
+                    return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+                }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
 
-                                                setTimeout(function () {
-                                                    const fd = new URLSearchParams(new FormData(form));
-                                                    let phone = fd.get('phoneNumber');
-                                                    if (phone.startsWith('+84'))
-                                                        fd.set('phoneNumber', '0' + phone.substring(3));
+                $("#payment-form").validate({
+                    rules: {
+                        fullName: {
+                            required: true,
+                            minlength: 2,
+                            maxlength: 100,
+                            validName: true
+                        },
+                        phoneNumber: {
+                            required: true,
+                            digits: true,
+                            minlength: 10,
+                            maxlength: 10,
+                            validPhone: true
+                        },
+                        email: {
+                            required: true,
+                            email: true,
+                            maxlength: 50
+                        },
+                        address: {
+                            required: true,
+                            maxlength: 255,
+                            validAddress: true
+                        }
+                    },
+                    messages: {
+                        fullName: {
+                            required: "Please enter your full name",
+                            minlength: "Name must be at least 2 characters",
+                            maxlength: "Name cannot exceed 100 characters",
+                            validName: "Name cannot contain numbers or special characters."
+                        },
+                        phoneNumber: {
+                            required: "Please enter phone number",
+                            digits: "Only digits allowed",
+                            minlength: "Phone number must have exactly 10 digits",
+                            maxlength: "Phone number must have exactly 10 digits",
+                            validPhone: "Phone must start with 0 and have exactly 10 digits."
+                        },
+                        email: {
+                            required: "Please enter an email",
+                            maxlength: "Email cannot exceed 50 characters",
+                            email: "Please enter a valid email address"
+                        },
+                        address: {
+                            required: "Please enter an address",
+                            maxlength: "Address cannot exceed 255 characters",
+                            validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                        }
+                    },
+                    errorElement: "div",
+                    errorPlacement: function (error, element) {
+                        error.addClass("error");
+                        element.closest('.input-group').after(error);
+                    },
+                    submitHandler: function (form) {
+                        $('#btnComplete').prop('disabled', true);
+                        processingModal.show();
 
-                                                    $.ajax({
-                                                        url: form.action,
-                                                        type: 'POST', // Đảm bảo dùng POST
-                                                        data: fd.toString(),
-                                                        headers: {'X-Requested-With': 'XMLHttpRequest'},
-                                                        success: function () {
-                                                            processingModal.hide();
-                                                            successModal.show();
-                                                        },
-                                                        error: function (jqXHR) {
-                                                            processingModal.hide();
-                                                            const msg = jqXHR?.responseJSON?.message || 'Order failed. Try again.';
-                                                            alert(msg);
-                                                            $('#btnComplete').prop('disabled', false);
-                                                        }
-                                                    });
-                                                }, 800);
-                                                return false;
-                                            }
-                                        });
-                                        recalcTotals();
-                                    });
+                        setTimeout(function () {
+                            const fd = new URLSearchParams(new FormData(form));
+                            // Ensure phone format is clean (just incase)
+                            let phone = fd.get('phoneNumber');
+                            if (phone.startsWith('+84')) fd.set('phoneNumber', '0' + phone.substring(3));
+
+                            $.ajax({
+                                url: form.action,
+                                type: 'POST',
+                                data: fd.toString(),
+                                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                                success: function () {
+                                    processingModal.hide();
+                                    successModal.show();
+                                },
+                                error: function (jqXHR) {
+                                    processingModal.hide();
+                                    const msg = jqXHR?.responseJSON?.message || 'Order failed. Try again.';
+                                    alert(msg);
+                                    $('#btnComplete').prop('disabled', false);
+                                }
+                            });
+                        }, 800);
+                        return false;
+                    }
+                });
+                recalcTotals();
+            });
         </script>
     </body>
 </html>

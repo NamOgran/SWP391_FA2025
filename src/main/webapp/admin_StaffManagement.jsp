@@ -1,6 +1,7 @@
 <%-- 
-    Document   : admin_StaffManagement.jsp
-    Description: Staff Management (Refactored: Ajax No-Reload, Table Blur, Address Truncate)
+    Document    : admin_StaffManagement.jsp
+    Description: Staff Management (Validated with Strict Rules & Ajax)
+    Updated     : Validation Rules per Requirements
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="entity.Staff" %>
@@ -126,6 +127,8 @@
                 display: block; 
                 margin-left: 5px; 
                 font-weight: 600; 
+                white-space: normal;
+                line-height: 1.2;
             }
             .form-control.error { 
                 border-color: #e74a3b !important; 
@@ -252,7 +255,6 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <%-- Changed: Use .text-truncate-2 for 2 lines max --%>
                                             <div class="text-truncate-2 text-muted small" title="${staff.address}">
                                                 ${staff.address}
                                             </div>
@@ -313,7 +315,8 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-person"></i></span>
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" name="username" placeholder="Username" required maxlength="50">
+                                            <%-- Validation: 6-20 chars --%>
+                                            <input type="text" class="form-control" name="username" placeholder="Username" required minlength="6" maxlength="20">
                                             <label>Username</label>
                                         </div>
                                     </div>
@@ -323,7 +326,8 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-card-text"></i></span>
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" name="fullName" placeholder="Full Name" required maxlength="50">
+                                            <%-- Validation: 2-100 chars, capitalize --%>
+                                            <input type="text" class="form-control capitalize-input" name="fullName" placeholder="Full Name" required minlength="2" maxlength="100" style="text-transform: capitalize;">
                                             <label>Full Name</label>
                                         </div>
                                     </div>
@@ -332,7 +336,8 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-key"></i></span>
                                         <div class="form-floating">
-                                            <input type="password" class="form-control" id="add_staff_password" name="password" placeholder="Password" required minlength="6">
+                                            <%-- Validation: 8-24 chars for pass --%>
+                                            <input type="password" class="form-control" id="add_staff_password" name="password" placeholder="Password" required minlength="8" maxlength="24">
                                             <label>Password</label>
                                         </div>
                                     </div>
@@ -341,7 +346,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-check2-circle"></i></span>
                                         <div class="form-floating">
-                                            <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm Password" required>
+                                            <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm Password" required minlength="8" maxlength="24">
                                             <label>Confirm Password</label>
                                         </div>
                                     </div>
@@ -350,7 +355,8 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                         <div class="form-floating">
-                                            <input type="email" class="form-control" name="email" placeholder="Email" required maxlength="100">
+                                            <%-- Validation: Max 50 chars --%>
+                                            <input type="email" class="form-control" name="email" placeholder="Email" required maxlength="50">
                                             <label>Email</label>
                                         </div>
                                     </div>
@@ -360,7 +366,8 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" name="phone" placeholder="Phone" required>
+                                            <%-- Validation: Max 10 digits --%>
+                                            <input type="text" class="form-control" name="phone" placeholder="Phone" required maxlength="10">
                                             <label>Phone</label>
                                         </div>
                                     </div>
@@ -413,7 +420,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-card-text"></i></span>
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" id="upd_fullName" name="fullName" required maxlength="50" placeholder="Name">
+                                            <input type="text" class="form-control capitalize-input" id="upd_fullName" name="fullName" required minlength="2" maxlength="100" placeholder="Name" style="text-transform: capitalize;">
                                             <label>Full Name</label>
                                         </div>
                                     </div>
@@ -422,7 +429,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                         <div class="form-floating">
-                                            <input type="email" class="form-control" id="upd_email" name="email" required maxlength="100" placeholder="Email">
+                                            <input type="email" class="form-control" id="upd_email" name="email" required maxlength="50" placeholder="Email">
                                             <label>Email</label>
                                         </div>
                                     </div>
@@ -431,7 +438,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" id="upd_phone" name="phone" required placeholder="Phone">
+                                            <input type="text" class="form-control" id="upd_phone" name="phone" required placeholder="Phone" maxlength="10">
                                             <label>Phone</label>
                                         </div>
                                     </div>
@@ -559,6 +566,13 @@
                 });
             }
 
+            // Hàm viết hoa chữ cái đầu (Auto-capitalize)
+            function toTitleCase(str) {
+                return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
+                    return l.toUpperCase();
+                });
+            }
+
             // Toggle table blur effect
             function toggleTableBlur(active) {
                 if(active) $('#accountTableMain tbody').addClass('table-blur');
@@ -566,10 +580,6 @@
             }
 
             // --- VALIDATION SETUP ---
-            $.validator.addMethod("validPhoneVN", function (value, element) { 
-                return this.optional(element) || /^0\d{9,10}$/.test(value); 
-            }, "Invalid Phone Number.");
-
             const validationConfig = {
                 errorElement: "label",
                 errorClass: "error",
@@ -582,6 +592,32 @@
                 }
             };
 
+            // Rule 1: Username (Letters & Numbers only)
+            $.validator.addMethod("validUsername", function(value, element) {
+                return this.optional(element) || /^[a-zA-Z0-9]+$/.test(value);
+            }, "Username must contain only letters and numbers (no special characters).");
+
+            // Rule 2: Fullname (Letters, Spaces, Vietnamese Chars)
+            $.validator.addMethod("validName", function(value, element) {
+                return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+            }, "Name cannot contain numbers or special characters.");
+
+            // Rule 3: Phone (Start with 0, Exactly 10 digits)
+            $.validator.addMethod("validPhone", function(value, element) {
+                return this.optional(element) || /^0\d{9}$/.test(value);
+            }, "Phone must start with 0 and have exactly 10 digits.");
+
+            // Rule 4: Address (Alphanumeric + , . / -)
+            $.validator.addMethod("validAddress", function(value, element) {
+                return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+            }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+
+            // Rule 5: Password Complexity (1 Upper, 1 Special)
+            $.validator.addMethod("complexPassword", function(value, element) {
+                return this.optional(element) || /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>_+\-=\[\]{};':"\\|\/]).*$/.test(value);
+            }, "Password must have at least 1 Uppercase & 1 Special char.");
+
+
             // --- SEARCH & PAGINATION & LOCAL DATA ---
             let allStaffData = [], filteredStaff = [], currentPage = 1, perPage = 8;
 
@@ -592,6 +628,14 @@
                         initStaffPagination(); 
                     });
                 }, 400);
+
+                // Auto Capitalize on Blur
+                $('.capitalize-input').on('blur', function() {
+                    var val = $(this).val();
+                    if(val) {
+                        $(this).val(toTitleCase(val));
+                    }
+                });
 
                 $('#sUser, #sName, #sEmail, #sPhone').on('input', function() {
                     toggleTableBlur(true);
@@ -617,7 +661,6 @@
                     let dAddr = cols[3].innerText.toLowerCase();
                     let dRole = r.querySelector('.badge.bg-danger') ? 'admin' : 'staff';
 
-                    // Parse text content cleaner
                     let cleanEmail = r.querySelector('.bi-envelope').nextSibling.nodeValue.trim();
                     let cleanPhone = r.querySelector('.bi-telephone').nextSibling.nodeValue.trim();
                     let cleanAddr = r.querySelector('.text-truncate-2').innerText.trim();
@@ -627,7 +670,6 @@
                     });
                 });
                 
-                // Sort by username initially
                 allStaffData.sort((a, b) => a.data.user.localeCompare(b.data.user));
                 filteredStaff = allStaffData;
                 renderStaffPage(1);
@@ -671,7 +713,7 @@
                     pageItems.forEach(item => {
                         tbody.append(renderRowHtml(item.data));
                     });
-                    initAvatars(); // Re-init avatars for new rows
+                    initAvatars();
                 }
 
                 let total = Math.ceil(filteredStaff.length / perPage);
@@ -701,7 +743,6 @@
                 }, 150);
             }
 
-            // HTML Generator for a Table Row
             function renderRowHtml(d) {
                 let adminBadge = d.role === 'admin' ? '<span class="badge bg-danger rounded-pill px-2 mt-1" style="font-size: 0.7rem;">Admin</span>' : '';
                 let actions = '';
@@ -768,22 +809,9 @@
                 `;
             }
 
-            // Central Function to Update Local Data without Reload
             function updateLocalData(action, data) {
                 if (action === 'add') {
-                    // Create new object (ID might be missing if backend doesn't return it, assumming we get full object or refresh)
-                    // Since backend returns {isSuccess, description}, we might not have the new ID. 
-                    // Ideally, backend should return the new ID. For now, we reload to get ID if needed, 
-                    // BUT user asked for no reload. Assuming simple list update:
-                    // NOTE: If backend doesn't return ID, we can't fully "No Reload" for Add unless backend is updated.
-                    // Fallback: We will just reload for Add to be safe about ID, OR if you change backend to return ID.
-                    // For now, let's assume we do reload for Add to get ID, but Update/Delete is client side.
-                    // User Request: "sửa tìm kiếm, add, update, delete hành động ko bị load trang"
-                    // To do "Add" without reload, backend MUST return the new ID. 
-                    // Since I cannot see Java Controller, I will simulate "Reload" for Add to ensure consistency,
-                    // BUT for Update and Delete we can definitely do it client-side.
-                    
-                    // IF you want full client side add, change Controller to return {isSuccess:true, newId: 123}
+                    // Force reload for Add to sync IDs
                     location.reload(); 
                 } else if (action === 'update') {
                     let idx = allStaffData.findIndex(i => i.data.id == data.id);
@@ -792,11 +820,11 @@
                         allStaffData[idx].data.email = data.email;
                         allStaffData[idx].data.phone = data.phone;
                         allStaffData[idx].data.addr = data.address;
-                        applyStaffFilters(); // Re-render
+                        applyStaffFilters(); 
                     }
                 } else if (action === 'delete') {
                     allStaffData = allStaffData.filter(i => i.data.id != data.id);
-                    applyStaffFilters(); // Re-render
+                    applyStaffFilters(); 
                 }
             }
 
@@ -834,17 +862,92 @@
                 });
             }
 
-            // Add Staff Form
+            // Add Staff Form (Validation Configured)
             $("#addStaffForm").validate({
                 ...validationConfig,
                 rules: {
-                    username: {required: true, maxlength: 50},
-                    email: {required: true, email: true, maxlength: 100},
-                    password: {required: true, minlength: 6},
-                    confirmPassword: {required: true, equalTo: "#add_staff_password"},
-                    fullName: {required: true, maxlength: 50},
-                    phone: {required: true, validPhoneVN: true},
-                    address: {required: true, maxlength: 255}
+                    username: {
+                        required: true,
+                        minlength: 6,
+                        maxlength: 20,
+                        validUsername: true
+                    },
+                    fullName: {
+                        required: true,
+                        minlength: 2,
+                        maxlength: 100,
+                        validName: true
+                    },
+                    password: {
+                        required: true,
+                        minlength: 8,
+                        maxlength: 24,
+                        complexPassword: true
+                    },
+                    confirmPassword: {
+                        required: true,
+                        minlength: 8,
+                        maxlength: 24,
+                        equalTo: "#add_staff_password"
+                    },
+                    email: {
+                        required: true,
+                        email: true,
+                        maxlength: 50
+                    },
+                    phone: {
+                        required: true,
+                        digits: true,
+                        minlength: 10,
+                        maxlength: 10,
+                        validPhone: true
+                    },
+                    address: {
+                        required: true,
+                        maxlength: 255,
+                        validAddress: true
+                    }
+                },
+                messages: {
+                    username: {
+                        required: "Please enter a username",
+                        minlength: "Username must be 6-20 characters",
+                        maxlength: "Username must be 6-20 characters",
+                        validUsername: "Username must contain only letters and numbers (no special characters)."
+                    },
+                    fullName: {
+                        required: "Please enter full name",
+                        minlength: "Name must be 2-100 characters",
+                        maxlength: "Name must be 2-100 characters",
+                        validName: "Name cannot contain numbers or special characters."
+                    },
+                    password: {
+                        required: "Please provide a password",
+                        minlength: "Password must be 8-24 characters",
+                        maxlength: "Password must be 8-24 characters",
+                        complexPassword: "Password must have at least 1 Uppercase & 1 Special char."
+                    },
+                    confirmPassword: {
+                        required: "Please confirm password",
+                        equalTo: "Passwords do not match"
+                    },
+                    email: {
+                        required: "Please enter an email",
+                        maxlength: "Email cannot exceed 50 characters",
+                        email: "Please enter a valid email address (e.g. abc@domain.com)"
+                    },
+                    phone: {
+                        required: "Please enter phone number",
+                        digits: "Only digits allowed",
+                        minlength: "Phone number must have exactly 10 digits",
+                        maxlength: "Phone number must have exactly 10 digits",
+                        validPhone: "Phone must start with 0 and have exactly 10 digits."
+                    },
+                    address: {
+                        required: "Please enter an address",
+                        maxlength: "Address cannot exceed 255 characters",
+                        validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                    }
                 },
                 submitHandler: function (form) {
                     var $btn = $(form).find('.submit-btn');
@@ -857,10 +960,9 @@
                             if (data.isSuccess) { 
                                 showToast('Staff added successfully!'); 
                                 $('#addStaffModal').modal('hide');
-                                // Force reload for Add because we need the new ID from DB
                                 setTimeout(() => location.reload(), 500); 
                             } else {
-                                if (data.description.includes("Username")) $("#add_staff_username_error").text("Username exists.").show();
+                                if (data.description.includes("Username")) $("#add_staff_username_error").text("Username existed.").show();
                                 else if (data.description.includes("Email")) $("#add_staff_email_error").text("Email used.").show();
                                 else showToast(data.description, 'error');
                                 $btn.prop('disabled', false).html('Add Staff');
@@ -871,10 +973,59 @@
                 }
             });
 
-            // Update Form - No Reload
+            // Update Form (Validation Configured)
             $("#updateAccountForm").validate({
                 ...validationConfig,
-                rules: { phone: { validPhoneVN: true } },
+                rules: { 
+                    fullName: {
+                        required: true,
+                        minlength: 2,
+                        maxlength: 100,
+                        validName: true
+                    },
+                    email: {
+                        required: true,
+                        email: true,
+                        maxlength: 50
+                    },
+                    phone: {
+                        required: true,
+                        digits: true,
+                        minlength: 10,
+                        maxlength: 10,
+                        validPhone: true
+                    },
+                    address: {
+                        required: true,
+                        maxlength: 255,
+                        validAddress: true
+                    }
+                },
+                messages: {
+                    fullName: {
+                        required: "Please enter full name",
+                        minlength: "Name must be 2-100 characters",
+                        maxlength: "Name must be 2-100 characters",
+                        validName: "Name cannot contain numbers or special characters."
+                    },
+                    email: {
+                        required: "Please enter an email",
+                        maxlength: "Email cannot exceed 50 characters",
+                        email: "Please enter a valid email address"
+                    },
+                    phone: {
+                        required: "Please enter phone number",
+                        digits: "Only digits allowed",
+                        minlength: "Phone number must have exactly 10 digits",
+                        maxlength: "Phone number must have exactly 10 digits",
+                        validPhone: "Phone must start with 0 and have exactly 10 digits."
+                    },
+                    address: {
+                        required: "Please enter an address",
+                        maxlength: "Address cannot exceed 255 characters",
+                        validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                    }
+                },
                 submitHandler: function (form) {
                     var $btn = $(form).find('.submit-btn');
                     $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
@@ -885,7 +1036,6 @@
                         success: function (data) {
                             if (data.isSuccess) { 
                                 showToast('Staff updated!');
-                                // Update Local Data
                                 let formData = {};
                                 $(form).serializeArray().forEach(item => formData[item.name] = item.value);
                                 updateLocalData('update', formData);
@@ -902,7 +1052,7 @@
                 }
             });
 
-            // Delete Logic - No Reload
+            // Delete Logic
             var deleteAccountModal = document.getElementById('deleteAccountModal');
             var confirmDeleteButton = document.getElementById('confirmAccountDeleteButton');
             
@@ -915,7 +1065,6 @@
                     $('#del_user_display').text(username);
                     $(confirmDeleteButton).data('id', accountId).data('username', username);
 
-                    // Reset State
                     $('#accountDataLoading').show(); 
                     $('#accountDataContent, #deleteAccountWarning, #deleteAccountSuccess').hide();
                     $(confirmDeleteButton).prop('disabled', true);

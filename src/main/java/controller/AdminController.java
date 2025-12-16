@@ -1086,7 +1086,7 @@ public class AdminController extends HttpServlet {
                     }
                 }
                 responseData.setIsSuccess(true);
-                responseData.setDescription("Profile updated and synchronized successfully.");
+                responseData.setDescription("Profile updated successfully.");
             } else {
                 responseData.setIsSuccess(false);
                 responseData.setDescription("Update failed. Email or Phone might be invalid or duplicate.");
@@ -1119,7 +1119,7 @@ public class AdminController extends HttpServlet {
                 if (isSuccess) {
                     customerDAO.updatePasswordByUsername(newPassHash, username);
                     responseData.setIsSuccess(true);
-                    responseData.setDescription("Password changed and synchronized successfully.");
+                    responseData.setDescription("Password changed successfully.");
                 } else {
                     responseData.setIsSuccess(false);
                     responseData.setDescription("Failed to update password in database.");

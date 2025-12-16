@@ -1,6 +1,6 @@
 <%-- 
-    Document   : admin_CustomerManagement.jsp
-    Description: Customer Management (Refactored: Loading Effect & Smooth Blur Table)
+    Document    : admin_CustomerManagement.jsp
+    Description: Customer Management (Validated with Strict Rules & Auto Capitalize)
 --%>
 <%@page import="entity.Staff"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -63,10 +63,10 @@
         .table-modern tbody td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #e3e6f0; color: #5a5c69; font-size: 0.95rem; }
         .table-modern tbody tr:hover { background-color: #fcfcfc; }
         
-        /* [UPDATED] Blur Effect for Data Loading */
+        /* Blur Effect for Data Loading */
         .table-blur { opacity: 0.5; pointer-events: none; transition: opacity 0.2s ease; }
 
-        /* [NEW] Loader */
+        /* Loader */
         #table-loader { min-height: 200px; display: flex; align-items: center; justify-content: center; }
 
         /* --- TRUNCATION HELPERS --- */
@@ -100,7 +100,6 @@
 
         .btn-soft-gray { background: rgba(108, 117, 125, 0.15); color: #6c757d; }
         .btn-soft-gray:hover { background: #6c757d; color: #fff; transform: translateY(-2px); box-shadow: 0 3px 8px rgba(108, 117, 125, 0.25); }
-        .btn-soft-gray.active { background: #6c757d; color: #fff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
 
         /* --- MODAL --- */
         .modal-content-modern { border-radius: 15px; border: none; overflow: hidden; }
@@ -111,7 +110,18 @@
         .input-group .form-floating > .form-control { border-radius: 0 10px 10px 0; border-left: none; }
         .input-group .input-group-text { border-radius: 10px 0 0 10px; background-color: #f8f9fc; border-right: none; color: var(--primary-color); min-width: 45px; justify-content: center; }
         
-        label.error { color: #e74a3b; font-size: 0.85rem; margin-top: 5px; display: block; margin-left: 5px; font-weight: 600; }
+        /* [UPDATED] Validation Error Style */
+        label.error { 
+            color: #e74a3b; 
+            font-size: 0.85rem; 
+            margin-top: 5px; 
+            display: block; 
+            margin-left: 5px; 
+            font-weight: 600; 
+            /* Fix long error text */
+            white-space: normal;
+            line-height: 1.2;
+        }
         .form-control.error { border-color: #e74a3b; background-color: #fff8f8; }
         .input-group > .form-floating > .form-control.error { z-index: 3; }
 
@@ -179,12 +189,10 @@
                 </div>
             </div>
 
-            <%-- [NEW] Table Loader --%>
             <div id="table-loader">
                 <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
             </div>
 
-            <%-- [UPDATED] Hidden initially --%>
             <div id="customer-content-container" style="display: none;">
                 <div class="table-responsive">
                     <table class="table table-modern align-middle" id="customer-table">
@@ -282,7 +290,8 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-card-text"></i></span>
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="upd_name" name="fullName" required maxlength="50" placeholder="Name">
+                                        <%-- Rule: 2-100 chars --%>
+                                        <input type="text" class="form-control capitalize-input" id="upd_name" name="fullName" required minlength="2" maxlength="100" placeholder="Name" style="text-transform: capitalize;">
                                         <label>Full Name</label>
                                     </div>
                                 </div>
@@ -291,7 +300,8 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                     <div class="form-floating">
-                                        <input type="email" class="form-control" id="upd_email" name="email" required maxlength="100" placeholder="Email">
+                                        <%-- Rule: Max 50 chars --%>
+                                        <input type="email" class="form-control" id="upd_email" name="email" required maxlength="50" placeholder="Email">
                                         <label>Email</label>
                                     </div>
                                 </div>
@@ -300,7 +310,8 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="upd_phone" name="phone" required placeholder="Phone">
+                                        <%-- Rule: Max 10 chars --%>
+                                        <input type="text" class="form-control" id="upd_phone" name="phone" required maxlength="10" placeholder="Phone">
                                         <label>Phone</label>
                                     </div>
                                 </div>
@@ -309,6 +320,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
                                     <div class="form-floating">
+                                        <%-- Rule: Max 255 chars --%>
                                         <input type="text" class="form-control" id="upd_addr" name="address" required maxlength="255" placeholder="Addr">
                                         <label>Address</label>
                                     </div>
@@ -421,7 +433,6 @@
             });
         }
         
-        // [UPDATED] Blur Table Function
         function toggleTableBlur(active) {
             if(active) $('#customer-table tbody').addClass('table-blur');
             else $('#customer-table tbody').removeClass('table-blur');
@@ -431,7 +442,6 @@
         let allRowsData = [], filteredRows = [], currentPage = 1, perPage = 8;
 
         document.addEventListener("DOMContentLoaded", function() {
-            // [UPDATED] Initial Load Effect
             setTimeout(function() {
                 $('#table-loader').fadeOut(200, function() {
                     $('#customer-content-container').fadeIn(200);
@@ -439,6 +449,14 @@
                     initAvatars();
                 });
             }, 400);
+
+            // [NEW] Logic: Auto capitalize name when blur
+            $('.capitalize-input').on('blur', function() {
+                var val = $(this).val();
+                if(val) {
+                    $(this).val(toTitleCase(val));
+                }
+            });
 
             $('#sUser, #sName, #sEmail, #sPhone').on('input', function() { 
                 toggleTableBlur(true);
@@ -448,6 +466,13 @@
                 }, 200);
             });
         });
+
+        // Hàm viết hoa chữ cái đầu
+        function toTitleCase(str) {
+            return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
+                return l.toUpperCase();
+            });
+        }
 
         function initPagination() {
             let tbody = document.getElementById('customer-table-body');
@@ -642,10 +667,22 @@
             new bootstrap.Modal(document.getElementById('customerInfoModal')).show();
         }
 
-        // --- FORMS & VALIDATION ---
-        $.validator.addMethod("validPhoneVN", function (value, element) { 
-            return this.optional(element) || /^0\d{9,10}$/.test(value); 
-        }, "Invalid Phone.");
+        // --- FORMS & VALIDATION (STRICT RULES) ---
+        
+        // Rule: Phone (Start with 0, exactly 10 digits)
+        $.validator.addMethod("validPhone", function (value, element) { 
+            return this.optional(element) || /^0\d{9}$/.test(value); 
+        }, "Phone must start with 0 and have exactly 10 digits.");
+
+        // Rule: Name (Letters + Spaces, English + Vietnamese)
+        $.validator.addMethod("validName", function(value, element) {
+            return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+        }, "Name cannot contain numbers or special characters.");
+
+        // Rule: Address (Alphanumeric + , . / -)
+        $.validator.addMethod("validAddress", function(value, element) {
+            return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+        }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
         
         const validationConfig = {
             errorElement: "label",
@@ -662,7 +699,56 @@
         // UPDATE CUSTOMER FORM
         $("#updateCustomerForm").validate({
             ...validationConfig,
-            rules: { phone:{validPhoneVN:true} },
+            rules: { 
+                fullName: {
+                    required: true,
+                    minlength: 2,
+                    maxlength: 100,
+                    validName: true
+                },
+                email: {
+                    required: true,
+                    email: true,
+                    maxlength: 50
+                },
+                phone: {
+                    required: true,
+                    digits: true,
+                    minlength: 10,
+                    maxlength: 10,
+                    validPhone: true
+                },
+                address: {
+                    required: true,
+                    maxlength: 255,
+                    validAddress: true
+                }
+            },
+            messages: {
+                fullName: {
+                    required: "Please enter full name",
+                    minlength: "Name must be 2-100 characters",
+                    maxlength: "Name must be 2-100 characters",
+                    validName: "Name cannot contain numbers or special characters."
+                },
+                email: {
+                    required: "Please enter an email",
+                    maxlength: "Email cannot exceed 50 characters",
+                    email: "Please enter a valid email address (e.g. abc@domain.com)"
+                },
+                phone: {
+                    required: "Please enter phone number",
+                    digits: "Only digits allowed",
+                    minlength: "Phone number must have exactly 10 digits",
+                    maxlength: "Phone number must have exactly 10 digits",
+                    validPhone: "Phone must start with 0 and have exactly 10 digits."
+                },
+                address: {
+                    required: "Please enter an address",
+                    maxlength: "Address cannot exceed 255 characters",
+                    validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                }
+            },
             submitHandler: function(form) {
                 let btn = $(form).find('.submit-btn');
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');

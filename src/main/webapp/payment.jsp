@@ -1,3 +1,7 @@
+<%-- 
+    Document    : checkout.jsp
+    Description : Cart Checkout (Validated with Strict Rules & Auto Capitalize)
+--%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -14,12 +18,9 @@
 </c:if>
 <c:set var="acc" value="${sessionScope.acc}" />
 
-<%-- 2. LOGIC ĐỒNG BỘ GIÁ & VOUCHER (SERVER-SIDE CALCULATION) --%>
-
-<%-- Bước 2.1: Tính lại Subtotal dựa trên giá mới nhất trong kho (priceP) --%>
+<%-- 2. LOGIC ĐỒNG BỘ GIÁ & VOUCHER --%>
 <c:set var="subtotal" value="0" />
 <c:forEach items="${requestScope.cartList}" var="c">
-    <%-- Ưu tiên lấy giá từ priceP, nếu null thì lấy giá cũ trong giỏ --%>
     <c:set var="currentPrice" value="${priceP[c.productID]}" />
     <c:if test="${empty currentPrice}">
         <c:set var="currentPrice" value="${c.price}" />
@@ -27,20 +28,16 @@
     <c:set var="subtotal" value="${subtotal + (currentPrice * c.quantity)}" />
 </c:forEach>
 
-<%-- Bước 2.2: Lấy thông tin Voucher từ Session (nếu có) --%>
 <c:set var="voucherPercent" value="${sessionScope.voucherValue != null ? sessionScope.voucherValue : 0}" />
 <c:set var="voucherCode"    value="${sessionScope.voucherCode}" />
 <c:set var="voucherId"      value="${sessionScope.voucherId != null ? sessionScope.voucherId : 0}" />
 
-<%-- Bước 2.3: Tính Discount và GrandTotal dựa trên Subtotal MỚI --%>
 <c:set var="discount"       value="${(subtotal * voucherPercent) / 100}" />
-<%-- Làm tròn discount (loại bỏ phần thập phân nếu có) --%>
 <fmt:parseNumber var="discount" integerOnly="true" type="number" value="${discount}" />
 
 <c:set var="grandTotal"     value="${subtotal - discount}" />
 <c:if test="${grandTotal < 0}"><c:set var="grandTotal" value="0"/></c:if>
 
-<%-- Format số để hiển thị --%>
 <fmt:formatNumber var="subtotalFmt" value="${subtotal}" pattern="###,###" />
 <fmt:formatNumber var="discountFmt" value="${discount}" pattern="###,###" />
 <fmt:formatNumber var="grandTotalFmt" value="${grandTotal}" pattern="###,###" />
@@ -127,7 +124,22 @@
             .input-group:focus-within .input-group-text, .input-group:focus-within .form-control {
                 border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(160, 129, 108, 0.15);
             }
-            .error { color: #dc3545; font-size: 0.85rem; margin-top: 5px; margin-left: 5px; width: 100%; }
+            
+            /* UPDATED VALIDATION CSS */
+            .error { 
+                color: #dc3545; 
+                font-size: 0.85rem; 
+                margin-top: 5px; 
+                margin-left: 5px; 
+                width: 100%; 
+                font-weight: 600;
+                display: block;
+                line-height: 1.2;
+            }
+            input.error {
+                border-color: #dc3545;
+                background-color: #fff8f8;
+            }
 
             /* PAYMENT METHOD */
             .payment-option {
@@ -215,19 +227,25 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                        <input type="text" class="form-control" placeholder="Full Name" name="fullName" value="${sessionScope.acc.fullName}" required>
+                                        <%-- Rule: Max 100 chars, Auto Capitalize --%>
+                                        <input type="text" class="form-control capitalize-input" placeholder="Full Name" name="fullName" 
+                                               value="${sessionScope.acc.fullName}" required minlength="2" maxlength="100" style="text-transform: capitalize;">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                        <input type="tel" class="form-control" placeholder="Phone Number" name="phoneNumber" id="phoneNumber" value="${sessionScope.acc.phoneNumber}" required>
+                                        <%-- Rule: Max 10 digits --%>
+                                        <input type="tel" class="form-control" placeholder="Phone Number" name="phoneNumber" id="phoneNumber" 
+                                               value="${sessionScope.acc.phoneNumber}" required maxlength="10">
                                     </div>
                                 </div>
                                 <div class="col-12">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                        <input type="email" class="form-control" placeholder="Email Address (Optional)" name="email" value="${sessionScope.acc.email}" required>
+                                        <%-- Rule: Max 50 chars --%>
+                                        <input type="email" class="form-control" placeholder="Email Address (Optional)" name="email" 
+                                               value="${sessionScope.acc.email}" required maxlength="50">
                                     </div>
                                 </div>
                             </div>
@@ -237,7 +255,9 @@
                             <div class="section-title"><i class="bi bi-geo-alt"></i> Shipping Address</div>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-map"></i></span>
-                                <input type="text" class="form-control" placeholder="House number, Street, Ward, District, City..." name="address" value="${sessionScope.acc.address}" required>
+                                <%-- Rule: Max 255 chars --%>
+                                <input type="text" class="form-control" placeholder="House number, Street, Ward, District, City..." name="address" 
+                                       value="${sessionScope.acc.address}" required maxlength="255">
                             </div>
                         </div>
 
@@ -251,17 +271,16 @@
                             </div>
                         </div>
 
-                        <input type="hidden" name="size"            value="${param.size}">
+                        <input type="hidden" name="size"             value="${param.size}">
                         
-                        <%-- CÁC GIÁ TRỊ NÀY ĐƯỢC TÍNH TOÁN LẠI Ở TRÊN --%>
-                        <input type="hidden" id="subtotalInput"     name="total"       value="${subtotal}">
-                        <input type="hidden" id="grandTotalInput"   name="grandTotal"  value="${grandTotal}">
+                        <input type="hidden" id="subtotalInput"      name="total"        value="${subtotal}">
+                        <input type="hidden" id="grandTotalInput"    name="grandTotal"   value="${grandTotal}">
                         
-                        <input type="hidden" id="voucherCodeInput"   name="voucherCode"   value="${voucherCode}">
-                        <input type="hidden" id="voucherIdInput"     name="voucherId"     value="${voucherId}">
-                        <input type="hidden" id="voucherTypeInput"   name="voucherType"   value="${sessionScope.voucherType}">
-                        <input type="hidden" id="voucherValueInput"  name="voucherValue"  value="${voucherPercent}">
-                        <input type="hidden" id="discountInput"     name="discount"     value="${discount}">
+                        <input type="hidden" id="voucherCodeInput"   name="voucherCode"    value="${voucherCode}">
+                        <input type="hidden" id="voucherIdInput"     name="voucherId"      value="${voucherId}">
+                        <input type="hidden" id="voucherTypeInput"   name="voucherType"    value="${sessionScope.voucherType}">
+                        <input type="hidden" id="voucherValueInput"  name="voucherValue"   value="${voucherPercent}">
+                        <input type="hidden" id="discountInput"      name="discount"       value="${discount}">
                     </form>
                 </div>
 
@@ -271,7 +290,6 @@
 
                         <div style="max-height: 300px; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;">
                             <c:forEach items="${requestScope.cartList}" var="cart">
-                                <%-- Lại logic kiểm tra giá để hiển thị đúng từng dòng --%>
                                 <c:set var="currPrice" value="${priceP[cart.productID]}" />
                                 <c:if test="${empty currPrice}">
                                     <c:set var="currPrice" value="${cart.price}" />
@@ -297,7 +315,6 @@
                                 <button class="btn btn-apply" type="button" onclick="applyVoucher()">Apply</button>
                             </div>
                             
-                            <%-- Hiển thị thông báo Voucher nếu đã áp dụng (Server-side check) --%>
                             <div id="voucherHint" class="mt-2 align-items-center" style="display: ${voucherPercent > 0 ? 'flex' : 'none'};">
                                 <span id="badgeVoucher" class="badge bg-success bg-opacity-75 text-white">Saved ${voucherPercent}%</span>
                                 <a href="javascript:void(0)" onclick="removeVoucher()" class="text-danger ms-2 small text-decoration-underline">Remove</a>
@@ -359,7 +376,6 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
-            // Quan trọng: Sử dụng biến subtotal mới đã tính ở server
             let subtotal = ${subtotal};
             let appliedVoucher = {
                 value: ${voucherPercent}, 
@@ -371,12 +387,18 @@
                 setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
             });
 
+            // Hàm tự động viết hoa chữ cái đầu (Hỗ trợ tiếng Việt)
+            function toTitleCase(str) {
+                return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
+                    return l.toUpperCase();
+                });
+            }
+
             function fmt(n) {
                 return (n || 0).toLocaleString('vi-VN') + ' VND';
             }
 
             function recalcTotals() {
-                // Tính toán phía Client để update UI ngay lập tức khi thêm/xóa voucher
                 const discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
                 const grand = Math.max(0, subtotal - discount);
 
@@ -390,8 +412,7 @@
 
                 $('#voucherIdInput').val(appliedVoucher.id || '');
                 $('#voucherValueInput').val(appliedVoucher.value || 0);
-                // Nếu backend cần voucherCode, đảm bảo server trả về đúng khi apply
-                // Ở đây ta update UI Voucher
+                
                 updateVoucherUI(discount);
             }
 
@@ -427,7 +448,6 @@
                     success: function (res) {
                         if (res && res.ok && res.type === 'percent') {
                             appliedVoucher = {value: parseInt(res.value || 0, 10), id: parseInt(res.voucherId || 0, 10)};
-                            // Cập nhật lại input voucher code trong form nếu cần
                             $('#voucherCodeInput').val(code);
                             recalcTotals();
                         } else {
@@ -448,10 +468,6 @@
                 $('#voucherCodeInput').val('');
                 $('#voucherError').hide().text('');
                 recalcTotals();
-                
-                // Gọi AJAX để xóa voucher khỏi session phía server (nếu cần thiết)
-                /* $.post(BASE + '/removeVoucherSession'); 
-                */
             }
 
             $(document).ready(function () {
@@ -462,22 +478,81 @@
                     window.location.href = '${pageContext.request.contextPath}/orderView';
                 });
 
+                // --- 1. Auto Capitalize on Blur ---
+                $('.capitalize-input').on('blur', function() {
+                    var val = $(this).val();
+                    if(val) {
+                        $(this).val(toTitleCase(val));
+                    }
+                });
+
+                // --- 2. VALIDATION RULES DEFINITION ---
+                
+                // Rule: Phone (Bắt đầu bằng 0, đúng 10 số)
                 $.validator.addMethod("customPhone", function (value, element) {
-                    return this.optional(element) || /^(0\d{9,10})$|^(\+84\d{9,10})$/.test(value);
-                }, "Invalid phone number");
+                    return this.optional(element) || /^0\d{9}$/.test(value);
+                }, "Phone must start with 0 and have exactly 10 digits.");
+
+                // Rule: Fullname (Chữ cái + khoảng trắng)
+                $.validator.addMethod("validName", function(value, element) {
+                    return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+                }, "Name cannot contain numbers or special characters.");
+
+                // Rule: Address (Chữ, số, khoảng trắng và , . / -)
+                $.validator.addMethod("validAddress", function(value, element) {
+                    return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+                }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
 
                 $("#payment-form").validate({
                     rules: {
-                        fullName: {required: true},
-                        email: {required: true, email: true},
-                        phoneNumber: {required: true, customPhone: true},
-                        address: {required: true}
+                        fullName: {
+                            required: true,
+                            minlength: 2,
+                            maxlength: 100,
+                            validName: true
+                        },
+                        email: {
+                            required: true,
+                            email: true,
+                            maxlength: 50
+                        },
+                        phoneNumber: {
+                            required: true,
+                            digits: true,
+                            minlength: 10,
+                            maxlength: 10,
+                            customPhone: true
+                        },
+                        address: {
+                            required: true,
+                            maxlength: 255,
+                            validAddress: true
+                        }
                     },
                     messages: {
-                        fullName: "Please enter your name",
-                        email: "Valid email required",
-                        phoneNumber: "Valid phone required",
-                        address: "Address is required"
+                        fullName: {
+                            required: "Please enter your full name",
+                            minlength: "Name must be at least 2 characters",
+                            maxlength: "Name cannot exceed 100 characters",
+                            validName: "Name cannot contain numbers or special characters."
+                        },
+                        email: {
+                            required: "Please enter an email",
+                            maxlength: "Email cannot exceed 50 characters",
+                            email: "Please enter a valid email address"
+                        },
+                        phoneNumber: {
+                            required: "Please enter phone number",
+                            digits: "Only digits allowed",
+                            minlength: "Phone number must have exactly 10 digits",
+                            maxlength: "Phone number must have exactly 10 digits",
+                            customPhone: "Phone must start with 0 and have exactly 10 digits."
+                        },
+                        address: {
+                            required: "Please enter an address",
+                            maxlength: "Address cannot exceed 255 characters",
+                            validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                        }
                     },
                     errorElement: "div",
                     errorPlacement: function (error, element) {
@@ -490,6 +565,7 @@
 
                         setTimeout(function () {
                             const fd = new URLSearchParams(new FormData(form));
+                            // Format lại số điện thoại nếu cần (dù regex đã check)
                             let phone = fd.get('phoneNumber');
                             if (phone.startsWith('+84'))
                                 fd.set('phoneNumber', '0' + phone.substring(3));
@@ -515,7 +591,7 @@
                     }
                 });
                 
-                // Khởi chạy tính toán ban đầu (để đồng bộ UI với Server values)
+                // Khởi chạy tính toán ban đầu
                 recalcTotals();
             });
         </script>

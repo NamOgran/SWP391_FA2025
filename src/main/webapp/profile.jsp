@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<%-- [MỚI] IMPORT DAO ĐỂ LẤY DỮ LIỆU ĐƠN HÀNG CHO SIDEBAR --%>
+<%-- IMPORT DAO --%>
 <%@page import="DAO.OrderDAO"%>
 <%@page import="entity.Orders"%>
 <%@page import="java.util.List"%>
@@ -15,8 +15,7 @@
 <c:set var="acc" value="${sessionScope.acc}" />
 
 <%
-    // [MỚI] LOGIC TỰ ĐỘNG LẤY DANH SÁCH ĐƠN HÀNG
-    // Giúp Sidebar hiển thị số lượng badge ngay cả khi vào trang Profile trực tiếp
+    // LOGIC FOR SIDEBAR BADGES
     if (session.getAttribute("acc") != null) {
         Customer currentAcc = (Customer) session.getAttribute("acc");
         OrderDAO orderDAO = new OrderDAO();
@@ -33,14 +32,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile | GIO</title>
 
-    <%-- Bootstrap CSS --%>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
-    <%-- Bootstrap Icons --%>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <%-- Font Family --%>
     <link href='https://fonts.googleapis.com/css?family=Quicksand:400,500,600,700&display=swap' rel='stylesheet'>
-    <%-- Font-Awesome --%>
     <script src="https://kit.fontawesome.com/1bd876819f.js" crossorigin="anonymous"></script>
 
     <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon">
@@ -134,10 +128,10 @@
             font-weight: 600;
             transition: all 0.3s ease;
             border-left: 4px solid transparent;
-            justify-content: space-between; /* Đẩy badge sang phải */
+            justify-content: space-between;
         }
 
-        .account-nav-link > div { display: flex; align-items: center; } /* Wrapper text + icon */
+        .account-nav-link > div { display: flex; align-items: center; }
         .account-nav-link i { margin-right: 15px; width: 20px; text-align: center; font-size: 1.1rem; }
         
         .account-nav-link:hover {
@@ -249,7 +243,7 @@
         }
 
         .edit-form-wrapper.active {
-            max-height: 800px; /* Đủ lớn để chứa form */
+            max-height: 800px;
             opacity: 1;
             margin-top: 20px;
         }
@@ -297,8 +291,22 @@
         }
         .btn-custom-secondary:hover { background-color: #e2e2e2; }
 
-        /* Error Messages */
-        label.error { color: #dc3545; font-size: 0.85rem; margin-top: 5px; display: block; }
+        /* Validation Error Messages */
+        label.error { 
+            color: #dc3545; 
+            font-size: 0.85rem; 
+            margin-top: 5px; 
+            display: block; 
+            margin-left: 5px;
+            font-weight: 600; 
+            white-space: normal;
+            line-height: 1.2;
+        }
+        .form-control.error { 
+            border-color: #dc3545; 
+            background-image: none !important;
+        }
+
         .server-error { color: #dc3545; background: #ffe6e6; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
 
         /* Loading */
@@ -310,6 +318,7 @@
         }
         .loading-overlay.hidden { opacity: 0; pointer-events: none; }
         .spinner-border { color: var(--primary-color); width: 3rem; height: 3rem; }
+        
         /* Back to Top Button */
         #btn-back-to-top {
             position: fixed;
@@ -341,10 +350,7 @@
 
     <main class="main-content-wrapper">
 
-        <%-- 
-            1. TÍNH TOÁN SỐ LƯỢNG CHO SIDEBAR 
-            (Sử dụng danh sách ordersUserList được lấy tự động ở đầu trang)
-        --%>
+        <%-- CALCULATE COUNTS FOR SIDEBAR --%>
         <c:set var="countPending" value="0" />
         <c:set var="countDelivering" value="0" />
         <c:set var="countDelivered" value="0" />
@@ -360,7 +366,6 @@
         </c:if>
         
         <c:set var="totalActive" value="${countPending + countDelivering}" />
-        <c:set var="totalHistory" value="${countDelivered + countCancelled}" />
 
         <div class="row g-4">
 
@@ -392,7 +397,6 @@
                         <li>
                             <a href="${pageContext.request.contextPath}/orderView" class="account-nav-link">
                                 <div><i class="fa-solid fa-box"></i> My Orders</div>
-                                <%-- SIDEBAR COUNT (ACTIVE) --%>
                                 <c:if test="${totalActive > 0}">
                                     <span class="badge-sidebar">${totalActive}</span>
                                 </c:if>
@@ -481,7 +485,13 @@
                                     <%-- Full Name --%>
                                     <div class="col-md-12">
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Full Name" value="${fullName}" required maxlength="100">
+                                            <%-- 
+                                                Rule: 2-100 characters.
+                                                Auto Capitalize logic handled via JS.
+                                            --%>
+                                            <input type="text" class="form-control capitalize-input" id="fullName" name="fullName" 
+                                                   placeholder="Full Name" value="${fullName}" 
+                                                   required minlength="2" maxlength="100" style="text-transform: capitalize;">
                                             <label for="fullName">Full Name</label>
                                         </div>
                                     </div>
@@ -489,7 +499,9 @@
                                     <%-- Email (Readonly) --%>
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="${email}" readonly style="background-color: #f8f9fa;">
+                                            <input type="email" class="form-control" id="email" name="email" 
+                                                   placeholder="name@example.com" value="${email}" 
+                                                   readonly style="background-color: #f8f9fa;" maxlength="50">
                                             <label for="email">Email (Readonly)</label>
                                         </div>
                                     </div>
@@ -497,7 +509,10 @@
                                     <%-- Phone --%>
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Phone Number" value="${phoneNumber}" required>
+                                            <%-- Rule: Max 10 digits --%>
+                                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
+                                                   placeholder="Phone Number" value="${phoneNumber}" 
+                                                   required maxlength="10">
                                             <label for="phoneNumber">Phone Number</label>
                                         </div>
                                     </div>
@@ -505,7 +520,10 @@
                                     <%-- Address --%>
                                     <div class="col-12">
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" id="address" name="address" placeholder="Address" value="${address}" required maxlength="255">
+                                            <%-- Rule: Max 255 chars --%>
+                                            <input type="text" class="form-control" id="address" name="address" 
+                                                   placeholder="Address" value="${address}" 
+                                                   required maxlength="255">
                                             <label for="address">Address</label>
                                         </div>
                                     </div>
@@ -523,7 +541,7 @@
             </div>
         </div>
     </main>
-                                    
+                                        
     <button type="button" class="btn" id="btn-back-to-top">
         <i class="bi bi-arrow-up"></i>
     </button>
@@ -535,6 +553,13 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
 
     <script>
+        // Hàm viết hoa chữ cái đầu (Hỗ trợ tiếng Việt)
+        function toTitleCase(str) {
+            return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
+                return l.toUpperCase();
+            });
+        }
+
         $(document).ready(function() {
             // Elements
             const $viewMode = $('#view-mode');
@@ -556,24 +581,75 @@
                 setTimeout(() => $loadingOverlay.hide(), 400);
             }, 500);
 
-            // Validation Setup
-            $.validator.addMethod("vietnamesePhone", function(value, element) {
-                return this.optional(element) || /^0[0-9]{9,10}$/.test(value);
-            }, "Phone number must start with 0 and have 10-11 digits.");
+            // --- 1. AUTO CAPITALIZE ON BLUR ---
+            $('.capitalize-input').on('blur', function() {
+                var val = $(this).val();
+                if(val) {
+                    $(this).val(toTitleCase(val));
+                }
+            });
 
+            // --- 2. DEFINE VALIDATION RULES ---
+
+            // Rule: Full Name (Letters + Spaces, Vietnamese support)
+            $.validator.addMethod("validName", function(value, element) {
+                return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+            }, "Name cannot contain numbers or special characters.");
+
+            // Rule: Phone (Start with 0, exactly 10 digits)
+            $.validator.addMethod("validPhone", function(value, element) {
+                return this.optional(element) || /^0\d{9}$/.test(value);
+            }, "Phone must start with 0 and have exactly 10 digits.");
+
+            // Rule: Address (Alphanumeric + specific punctuation)
+            $.validator.addMethod("validAddress", function(value, element) {
+                return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+            }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+
+            // --- 3. CONFIGURE VALIDATION ---
             $form.validate({
                 errorClass: "error",
                 validClass: "is-valid",
                 errorElement: "label",
                 rules: {
-                    fullName: { required: true, maxlength: 100 },
-                    address: { required: true, maxlength: 255 },
-                    phoneNumber: { required: true, vietnamesePhone: true }
+                    fullName: { 
+                        required: true, 
+                        minlength: 2,
+                        maxlength: 100,
+                        validName: true 
+                    },
+                    address: { 
+                        required: true, 
+                        maxlength: 255,
+                        validAddress: true 
+                    },
+                    phoneNumber: { 
+                        required: true,
+                        digits: true, // Numbers only
+                        minlength: 10,
+                        maxlength: 10,
+                        validPhone: true 
+                    }
                 },
                 messages: {
-                    fullName: { required: "Please enter your full name." },
-                    address: { required: "Please enter your address." },
-                    phoneNumber: { required: "Please enter your phone number." }
+                    fullName: { 
+                        required: "Please enter your full name.",
+                        minlength: "Name must be at least 2 characters.",
+                        maxlength: "Name cannot exceed 100 characters.",
+                        validName: "Name cannot contain numbers or special characters."
+                    },
+                    address: { 
+                        required: "Please enter your address.",
+                        maxlength: "Address cannot exceed 255 characters.",
+                        validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                    },
+                    phoneNumber: { 
+                        required: "Please enter your phone number.",
+                        digits: "Only digits allowed.",
+                        minlength: "Phone number must have exactly 10 digits.",
+                        maxlength: "Phone number must have exactly 10 digits.",
+                        validPhone: "Phone must start with 0 and have exactly 10 digits."
+                    }
                 },
                 highlight: function(element) {
                     $(element).addClass("is-invalid").removeClass("is-valid");
@@ -587,7 +663,7 @@
             function showEdit() {
                 $viewMode.slideUp(300);
                 $editMode.addClass('active');
-                $btnToggle.hide(); // Hide the pen icon when editing
+                $btnToggle.hide(); 
             }
 
             function hideEdit() {
@@ -613,10 +689,11 @@
 
             // Logic: If Server returned error, stay in Edit mode
             <c:if test="${not empty errorMessage}">
-                setTimeout(showEdit, 600); // Wait for loading to finish then show form
+                setTimeout(showEdit, 600); 
             </c:if>
         });
-        // --- 2. BACK TO TOP BUTTON ---
+
+        // --- 3. BACK TO TOP BUTTON ---
         let mybutton = document.getElementById("btn-back-to-top");
 
         window.onscroll = function () {
