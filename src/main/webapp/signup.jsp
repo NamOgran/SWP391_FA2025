@@ -387,112 +387,161 @@
 
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-        <script type="text/javascript">
-                    // Init Animation
-                    AOS.init();
+        <script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
+<script src="${pageContext.request.contextPath}/js/jquery.validate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-                    // Toast Logic
-                    function closeToast() {
-                        var alert = document.getElementById('toast-alert');
-                        if (alert) {
-                            alert.classList.add('hide-toast');
-                            alert.addEventListener('animationend', function () {
-                                alert.style.display = 'none';
-                            });
-                        }
-                    }
+<script src="${pageContext.request.contextPath}/js/jquery-3.7.0.min.js"></script>
+<script src="${pageContext.request.contextPath}/js/jquery.validate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-                    $(document).ready(function () {
-                        // Auto close toast
-                        setTimeout(function () {
-                            closeToast();
-                        }, 5000);
+<script type="text/javascript">
+    // Init Animation
+    AOS.init();
 
-                        // --- CONFIG VALIDATION ---
-                        $("#signUp-form").validate({
-                            // Quy tắc
-                            rules: {
-                                username: {
-                                    required: true,
-                                    minlength: 5,
-                                    maxlength: 20
-                                },
-                                fullName: {
-                                    required: true,
-                                    minlength: 2
-                                },
-                                password: {
-                                    required: true,
-                                    minlength: 6
-                                },
-                                rePassword: {
-                                    required: true,
-                                    equalTo: "#password" // Bắt buộc phải giống ô password
-                                },
-                                email: {
-                                    required: true,
-                                    email: true
-                                },
-                                phoneNumber: {
-                                    required: true,
-                                    digits: true, // Chỉ được nhập số
-                                    minlength: 10,
-                                    maxlength: 11
-                                },
-                                address: {
-                                    required: true
-                                }
-                            },
-                            // Thông báo lỗi (Có thể đổi sang tiếng Việt)
-                            messages: {
-                                username: {
-                                    required: "Please enter your username",
-                                    minlength: "Username must be at least 5 characters"
-                                },
-                                fullName: "Please enter your full name",
-                                password: {
-                                    required: "Please provide a password",
-                                    minlength: "Your password must be at least 6 characters"
-                                },
-                                rePassword: {
-                                    required: "Please confirm your password",
-                                    equalTo: "Passwords do not match"
-                                },
-                                email: "Please enter a valid email address",
-                                phoneNumber: {
-                                    required: "Please enter your phone number",
-                                    digits: "Please enter only digits",
-                                    minlength: "Phone number must be at least 10 digits"
-                                },
-                                address: "Please enter your address"
-                            },
-                            // Cấu hình vị trí hiện lỗi
-                            errorElement: "label",
-                            errorPlacement: function (error, element) {
-                                // Nếu dùng form-floating, error sẽ nằm trong div form-floating (sau input và label)
-                                error.insertAfter(element.next("label"));
-                            },
-                            highlight: function (element, errorClass, validClass) {
-                                $(element).addClass("error").removeClass("valid");
-                            },
-                            unhighlight: function (element, errorClass, validClass) {
-                                $(element).removeClass("error").addClass("valid");
-                            },
+    // Toast Logic
+    function closeToast() {
+        var alert = document.getElementById('toast-alert');
+        if (alert) {
+            alert.classList.add('hide-toast');
+            alert.addEventListener('animationend', function() {
+                alert.style.display = 'none';
+            });
+        }
+    }
 
-                            // Xử lý khi form hợp lệ
-                            submitHandler: function (form) {
-                                // Hiệu ứng loading nút bấm
-                                $('.btn-register').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...').prop('disabled', true);
-                                form.submit();
-                            }
-                        });
+    // Hàm viết hoa chữ cái đầu mỗi từ (Hỗ trợ tiếng Việt)
+    function toTitleCase(str) {
+        return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
+            return l.toUpperCase();
+        });
+    }
 
-                        // Logic Popup Success
-            <c:if test="${not empty registerSuccess}">
-                        var myModal = new bootstrap.Modal(document.getElementById('successModal'));
-                        myModal.show();
-            </c:if>
-                    });
-        </script>
+    $(document).ready(function() {
+        // Auto close toast
+        setTimeout(function() { closeToast(); }, 5000);
+
+        // --- 1. TỰ ĐỘNG VIẾT HOA TÊN KHI RỜI Ô NHẬP ---
+        $('#fullName').on('blur', function() {
+            var val = $(this).val();
+            if(val) {
+                $(this).val(toTitleCase(val));
+            }
+        });
+
+        // --- 2. ĐỊNH NGHĨA CÁC RULE VALIDATION MỚI ---
+
+        // Rule: Username (Chữ + số, 6-20 ký tự)
+        $.validator.addMethod("validUsername", function(value, element) {
+            return this.optional(element) || /^[a-zA-Z0-9]{6,20}$/.test(value);
+        }, "Username must be 6-20 characters, letters and numbers only (no special chars).");
+
+        // Rule: Fullname (Chỉ chữ, không số/ký tự đặc biệt)
+        $.validator.addMethod("validName", function(value, element) {
+            // Regex chấp nhận chữ cái tiếng Anh + Tiếng Việt có dấu + khoảng trắng
+            return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+        }, "Name cannot contain numbers or special characters.");
+
+        // Rule: Phone (10 số, bắt đầu bằng 0)
+        $.validator.addMethod("validPhone", function(value, element) {
+            return this.optional(element) || /^0\d{9}$/.test(value);
+        }, "Phone must start with 0 and have exactly 10 digits.");
+
+        // Rule: Address (Không ký tự đặc biệt lạ, cho phép , / . -)
+        $.validator.addMethod("validAddress", function(value, element) {
+            return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+        }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+
+        // Rule: Password Mạnh
+        $.validator.addMethod("complexPassword", function(value, element) {
+            return this.optional(element) || /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>_+\-=\[\]{};':"\\|\/])[a-zA-Z0-9!@#$%^&*(),.?":{}|<>_+\-=\[\]{};':"\\|\/]{8,24}$/.test(value);
+        }, "Password must be 8-24 chars, 1 uppercase & 1 special char.");
+
+
+        // --- 3. CẤU HÌNH VALIDATE FORM ---
+        $("#signUp-form").validate({
+            rules: {
+                username: {
+                    required: true,
+                    validUsername: true // Sử dụng rule mới
+                },
+                fullName: {
+                    required: true,
+                    minlength: 2,
+                    validName: true // Sử dụng rule mới
+                },
+                password: {
+                    required: true,
+                    complexPassword: true
+                },
+                rePassword: {
+                    required: true,
+                    equalTo: "#password"
+                },
+                email: {
+                    required: true,
+                    email: true
+                },
+                phoneNumber: {
+                    required: true,
+                    validPhone: true // Sử dụng rule mới
+                },
+                address: {
+                    required: true,
+                    validAddress: true // Sử dụng rule mới
+                }
+            },
+            messages: {
+                username: {
+                    required: "Please enter your username",
+                    validUsername: "Username must be 6-20 characters, no special characters."
+                },
+                fullName: {
+                    required: "Please enter your full name",
+                    validName: "Full name must consist of letters only."
+                },
+                password: {
+                    required: "Please provide a password",
+                    complexPassword: "8-24 characters, include Uppercase & Special char."
+                },
+                rePassword: {
+                    required: "Please confirm your password",
+                    equalTo: "Passwords do not match"
+                },
+                email: "Please enter a valid email address",
+                phoneNumber: {
+                    required: "Please enter your phone number",
+                    validPhone: "Invalid phone number (must imply 10 digits, start with 0)."
+                },
+                address: {
+                    required: "Please enter your address",
+                    validAddress: "Address not include special characters."
+                }
+            },
+            
+            errorElement: "label",
+            errorPlacement: function(error, element) {
+                error.insertAfter(element.next("label"));
+            },
+            highlight: function(element) {
+                $(element).addClass("error").removeClass("valid");
+            },
+            unhighlight: function(element) {
+                $(element).removeClass("error").addClass("valid");
+            },
+            submitHandler: function(form) {
+                $('.btn-register').html('<span class="spinner-border spinner-border-sm"></span> Processing...').prop('disabled', true);
+                form.submit();
+            }
+        });
+
+        // Popup Success Logic
+        <c:if test="${not empty registerSuccess}">
+            new bootstrap.Modal(document.getElementById('successModal')).show();
+        </c:if>
+    });
+</script>
     </body>
 </html>

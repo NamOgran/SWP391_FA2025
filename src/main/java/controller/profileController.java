@@ -1,17 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import DAO.CustomerDAO;
-import com.google.gson.Gson;
+import com.google.gson.Gson; // Đảm bảo đã add thư viện GSON vào Libraries
 import entity.Customer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,116 +14,148 @@ import jakarta.servlet.http.HttpSession;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import payLoad.ResponseData;
-import static url.ProfileURL.URL_CHANGEPASS;
-import static url.ProfileURL.URL_PROFILE;
-import static url.ProfileURL.URL_UPDATE;
+import payLoad.ResponseData; // Đảm bảo class này tồn tại
 
-/**
- *
- * @author nam
- */
-@WebServlet(name = "profileController", urlPatterns = {URL_PROFILE, URL_UPDATE, URL_CHANGEPASS})
+// [QUAN TRỌNG] Map chính xác các đường dẫn. 
+// "/changePassword" phải khớp với url trong AJAX
+@WebServlet(name = "profileController", urlPatterns = {"/profile", "/updateProfile", "/changePassword"})
 public class ProfileController extends HttpServlet {
 
-    CustomerDAO daoCustomer = new CustomerDAO();
+    private CustomerDAO daoCustomer = new CustomerDAO();
     private Gson gson = new Gson();
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-    }
+    // Regex check pass ở server
+    private static final String PASS_REGEX = "^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,24}$";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String urlPath = request.getServletPath();
-        switch (urlPath) {
-            case URL_PROFILE:
-                viewProfile(request, response);
-                break;
-            case URL_UPDATE:
-                updateProfile(request, response);
-                break;
-            case URL_CHANGEPASS:
-                changePass(request, response);
-                break;
+        
+        // Chỉ xử lý hiển thị profile ở GET
+        if ("/profile".equals(urlPath)) {
+            viewProfile(request, response);
+        } 
+        // Các action update/change pass phải dùng POST để bảo mật
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String urlPath = request.getServletPath();
+        
+        // Điều hướng xử lý dựa trên URL
+        if ("/changePassword".equals(urlPath)) {
+            handleChangePasswordAjax(request, response);
+        } else if ("/updateProfile".equals(urlPath)) {
+            updateProfile(request, response);
         }
     }
 
+    // --- LOGIC XỬ LÝ AJAX CHANGE PASSWORD ---
+    private void handleChangePasswordAjax(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Cấu hình header trả về JSON
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+        ResponseData resData = new ResponseData();
+
+        try {
+            HttpSession session = request.getSession(false);
+            Customer acc = (session != null) ? (Customer) session.getAttribute("acc") : null;
+
+            if (acc == null) {
+                resData.setIsSuccess(false);
+                resData.setDescription("Session expired. Please login again.");
+                out.print(gson.toJson(resData));
+                return;
+            }
+
+            String action = request.getParameter("action"); // Lấy cờ 'verify' hoặc 'change'
+
+            if ("verify".equals(action)) {
+                // === BƯỚC 1: KIỂM TRA MẬT KHẨU CŨ ===
+                String currentPass = request.getParameter("currentPassword");
+                if(currentPass == null) currentPass = "";
+                
+                String currentPassHash = getMd5(currentPass);
+                
+                // Kiểm tra trong DB (Sử dụng username hoặc email từ session)
+                boolean isCorrect = daoCustomer.checkLogin(acc.getUsername(), currentPassHash);
+                
+                if (isCorrect) {
+                    resData.setIsSuccess(true);
+                    resData.setDescription("Password correct.");
+                } else {
+                    resData.setIsSuccess(false);
+                    resData.setDescription("Incorrect current password.");
+                }
+
+            } else if ("change".equals(action)) {
+                // === BƯỚC 2: ĐỔI MẬT KHẨU MỚI ===
+                String newPass = request.getParameter("newPassword");
+                
+                // Validate lại ở Server
+                if (newPass == null || !newPass.matches(PASS_REGEX)) {
+                    resData.setIsSuccess(false);
+                    resData.setDescription("Password does not meet security requirements. Please try again.");
+                } else {
+                    String newPassHash = getMd5(newPass);
+                    boolean isSuccess = daoCustomer.updatePasswordByEmailOrUsername(newPassHash, acc.getUsername());
+                    
+                    if (isSuccess) {
+                        resData.setIsSuccess(true);
+                        resData.setDescription("Password updated successfully.");
+                        
+                        // (Tùy chọn) Cập nhật lại session nếu object session chứa pass
+                        // acc.setPassword(newPassHash); 
+                        // session.setAttribute("acc", acc);
+                    } else {
+                        resData.setIsSuccess(false);
+                        resData.setDescription("Database update failed.");
+                    }
+                }
+            } else {
+                resData.setIsSuccess(false);
+                resData.setDescription("Invalid action parameter.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace(); // In lỗi ra console server để debug
+            resData.setIsSuccess(false);
+            resData.setDescription("Server Error: " + e.getMessage());
+        }
+
+        out.print(gson.toJson(resData));
+        out.flush();
+    }
+
+    // --- CÁC HÀM HỖ TRỢ ---
+    
     public static String getMd5(String input) {
         try {
-
-            // Static getInstance method is called with hashing MD5
             MessageDigest md = MessageDigest.getInstance("MD5");
-
-            // digest() method is called to calculate message digest
-            // of an input digest() return array of byte
             byte[] messageDigest = md.digest(input.getBytes());
-
-            // Convert byte array into signum representation
             BigInteger no = new BigInteger(1, messageDigest);
-
-            // Convert message digest into hex value
             String hashtext = no.toString(16);
             while (hashtext.length() < 32) {
                 hashtext = "0" + hashtext;
             }
             return hashtext;
-        } // For specifying wrong message digest algorithms
-        catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void changePass(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String currentPassword = request.getParameter("currentPassword");
-        currentPassword = getMd5(currentPassword);
-        String newPassword = request.getParameter("newPassword");
-        newPassword = getMd5(newPassword);
-        String input = request.getParameter("input");
-        boolean isSuccess = false;
-        boolean isCorrect = daoCustomer.checkLogin(input, currentPassword);
-        if (isCorrect) {
-            isSuccess = daoCustomer.updatePasswordByEmailOrUsername(newPassword, input);
-
-        }
-        ResponseData data = new ResponseData();
-        data.setIsSuccess(isSuccess);
-        data.setDescription("");
-        data.setData("");
-        String json = gson.toJson(data);
-        PrintWriter pw = response.getWriter();
-        pw.print(json);
-        pw.flush();
-
-    }
-
-    private void updateProfile(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        // Get data from form
+    private void updateProfile(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String fullName = request.getParameter("fullName");
         String address = request.getParameter("address");
         String phoneNumber = request.getParameter("phoneNumber");
         String email = request.getParameter("email");
 
-        // Execute update to DB
         boolean isSuccess = daoCustomer.updateUserProfile(email, address, phoneNumber, fullName);
 
         if (isSuccess) {
-            // Update successful 
             HttpSession session = request.getSession(false);
             if (session != null) {
                 Customer updatedCustomer = daoCustomer.getCustomerByEmailOrUsername(email);
@@ -136,80 +163,26 @@ public class ProfileController extends HttpServlet {
                     session.setAttribute("acc", updatedCustomer);
                 }
             }
-
-            // Redirect to profile
             response.sendRedirect(request.getContextPath() + "/profile");
-
         } else {
-
-            // Set an error message in the request
-            request.setAttribute("errorMessage", "Update failed! An error occurred, please try again.");
-
-            // Retrieve (OLD) info from session to redisplay form          
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Customer c = (Customer) session.getAttribute("acc");
-                if (c != null) {
-                    // Reset attributes that profile.jsp needs to display
-                    request.setAttribute("fullName", c.getFullName());
-                    request.setAttribute("email", c.getEmail());
-                    request.setAttribute("address", c.getAddress());
-                    request.setAttribute("phoneNumber", c.getPhoneNumber());
-                }
-            }
-
-            // Forward back to profile.jsp to display error
-            // (Forward will keep the attributes you just set)
-            request.getRequestDispatcher("profile.jsp").forward(request, response);
-
+            request.setAttribute("errorMessage", "Update failed!");
+             viewProfile(request, response); // Reuse view logic to keep data
         }
     }
 
-    private void deleteCookie(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        Cookie[] cookies = request.getCookies();
-        for (int i = 0; i < cookies.length; i++) {
-            Cookie cookie = cookies[i];
-            cookie.setMaxAge(0);
-            response.addCookie(cookie);
-        }
-    }
-
-    private void viewProfile(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        // Get current session (do not create new if not exists)
+    private void viewProfile(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        Customer loggedInCustomer = null;
+        Customer loggedInCustomer = (session != null) ? (Customer) session.getAttribute("acc") : null;
 
-        // Prioritize checking if "acc" object exists in session
-        if (session != null) {
-            loggedInCustomer = (Customer) session.getAttribute("acc"); // Get Customer from session
-            System.out.println("ProfileController: Found user in session: " + (loggedInCustomer != null)); // Log for debug
-        } else {
-            System.out.println("ProfileController: Session not found."); // Log for debug
-        }
-
-        // If user found in session
         if (loggedInCustomer != null) {
-            // Get necessary info from Customer object in session
             request.setAttribute("fullName", loggedInCustomer.getFullName());
             request.setAttribute("email", loggedInCustomer.getEmail());
             request.setAttribute("address", loggedInCustomer.getAddress());
             request.setAttribute("phoneNumber", loggedInCustomer.getPhoneNumber());
-
-            // Put "acc" object into request scope
-            // so profile.jsp can use <c:if test="${empty acc.google_id}"> to check
             request.setAttribute("acc", loggedInCustomer);
-
-            // Forward to profile.jsp
             request.getRequestDispatcher("profile.jsp").forward(request, response);
-
         } else {
-            // If no user in session -> Redirect to login page
-            System.out.println("ProfileController: User not in session. Redirecting to login."); // Log for debug
             response.sendRedirect(request.getContextPath() + "/login.jsp");
         }
     }
-
 }

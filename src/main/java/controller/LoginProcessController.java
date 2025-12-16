@@ -80,7 +80,7 @@ public class LoginProcessController extends HttpServlet {
 
         // 3. NẾU SAI CẢ HAI
         // === ĐĂNG NHẬP THẤT BẠI ===
-        request.setAttribute("message", "<div style='color:red'>Invalid username or password!</div>");
+        request.setAttribute("message", "<div style='color:red'>Wrong username or password!</div>");
         request.getRequestDispatcher("/login.jsp").forward(request, response);
     }
 

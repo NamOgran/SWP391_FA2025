@@ -496,23 +496,38 @@
                         <div class="cart-preview-dropdown">
                             <div class="cart-preview-header">Products you've added:</div>
                             <ul class="cart-preview-list">
-                                <c:forEach var="item" items="${headerCartList}" end="4">
-                                    <c:set var="product" value="${headerProductMap[item.productID]}" />
-                                    <c:if test="${not empty product}">
-                                        <li class="cart-preview-item">
-                                        <a href="${pageContext.request.contextPath}/productDetail?id=${product.id}">
-                                            <img src="${product.picURL}" alt="${product.name}" class="cart-preview-image"/>
-                                            <div class="cart-preview-info">
-                                                <span class="cart-preview-name">${product.name}</span>
-                                                <div class="cart-preview-price">
-                                                    <fmt:formatNumber value="${item.price}" type="number" groupingUsed="true" /> VND
-                                                </div>
-                                            </div>
-                                        </a>
-                                        </li>
-                                    </c:if>
-                                </c:forEach>
-                            </ul>
+    <%-- SỬA 1: Bỏ thuộc tính end="4" để hiển thị tất cả --%>
+    <c:forEach var="item" items="${headerCartList}">
+        <c:set var="product" value="${headerProductMap[item.productID]}" />
+        <c:if test="${not empty product}">
+            <li class="cart-preview-item">
+                <a href="${pageContext.request.contextPath}/productDetail?id=${product.id}">
+                    <img src="${product.picURL}" alt="${product.name}" class="cart-preview-image"/>
+                    <div class="cart-preview-info">
+                        <span class="cart-preview-name">${product.name}</span>
+                        
+                        <%-- SỬA 2: Thêm thông tin Size --%>
+                        <div style="font-size: 0.8rem; color: #777; margin-bottom: 2px;">
+                            Size: <strong>${item.size_name}</strong> | Quantity: ${item.quantity}
+                        </div>
+
+                        <div class="cart-preview-price">
+                            <%-- Tính giá sau khi trừ voucher (nếu cần thiết, hoặc lấy giá gốc) --%>
+                            <c:set var="pVoucherId" value="${product.voucherID != null ? String.valueOf(product.voucherID) : ''}"/>
+                            <c:set var="pVoucherPct" value="${headerVoucherMap[pVoucherId] != null ? headerVoucherMap[pVoucherId] : 0}"/>
+                            <c:set var="finalPrice" value="${item.price}"/>
+                            
+                            <%-- Nếu item.price trong giỏ là giá gốc, ta có thể tính lại giá giảm tại đây để hiển thị cho đẹp (Optional) --%>
+                            <%-- Tuy nhiên, thường thì item.price trong Cart đã là đơn giá tại thời điểm thêm. Ta cứ hiển thị item.price --%>
+                            
+                            <fmt:formatNumber value="${finalPrice * item.quantity}" type="number" groupingUsed="true" /> VND
+                        </div>
+                    </div>
+                </a>
+            </li>
+        </c:if>
+    </c:forEach>
+</ul>
                             <div class="cart-preview-footer">
                                 <span class="cart-preview-count">${headerCartItemCount} Product(s)</span>
                                 <a href="${pageContext.request.contextPath}/loadCart" class="btn-view-cart">View Cart</a>
