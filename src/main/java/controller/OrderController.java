@@ -94,7 +94,10 @@ public class OrderController extends HttpServlet {
             priceProduct.put(p.getId(), p.getPrice());
             voucherID.put(p.getId(), String.valueOf(p.getVoucherID()));
             picUrlMap.put(p.getId(), p.getPicURL());
-            priceP.put(p.getId(), p.getPrice());
+            
+            // Logic tính giá hiển thị (đã trừ voucher sản phẩm nếu có) để hiển thị lịch sử
+            float priceF = calcUnitPriceWithVoucherSafe(daoProduct, daoVoucher, p.getId());
+            priceP.put(p.getId(), Math.round(priceF));
         }
 
         Map<Integer, Integer> ordersQuantityMap = new HashMap<>();
@@ -126,6 +129,7 @@ public class OrderController extends HttpServlet {
                 int staffRaw = parseIntSafe(request.getParameter("staff_id"), 0);
                 Integer staffId = (staffRaw > 0) ? Integer.valueOf(staffRaw) : null;
 
+                // --- TRƯỜNG HỢP 1: MUA NGAY (BUY NOW) ---
                 String idParam = request.getParameter("id");
                 if (idParam != null && !idParam.trim().isEmpty()) {
                     int productId = parseIntSafe(idParam, 0);
@@ -153,6 +157,7 @@ public class OrderController extends HttpServlet {
                         return;
                     }
 
+                    // Tính giá realtime
                     float unitPriceF = calcUnitPriceWithVoucherSafe(daoProduct, daoVoucher, productId);
                     int unitPrice = Math.max(0, Math.round(unitPriceF));
                     int subtotal = unitPrice * quantity;
@@ -185,12 +190,14 @@ public class OrderController extends HttpServlet {
                     return;
                 }
 
+                // --- TRƯỜNG HỢP 2: THANH TOÁN GIỎ HÀNG (CART CHECKOUT) ---
                 List<entity.Cart> cartList = daoCart.getAll(customer_id);
                 if (cartList == null || cartList.isEmpty()) {
                     response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cart is empty");
                     return;
                 }
 
+                // Kiểm tra hàng tồn/trạng thái sản phẩm
                 StringBuilder issue = new StringBuilder();
                 boolean hasIssue = false;
 
@@ -201,22 +208,16 @@ public class OrderController extends HttpServlet {
 
                     if (p == null || !p.isIs_active()) {
                         hasIssue = true;
-                        issue.append("Product '")
-                                .append(pname)
-                                .append("' is no longer available for sale.\\n");
+                        issue.append("Product '").append(pname).append("' is no longer available for sale.\\n");
                         continue;
                     }
 
                     if (sz == null || sz.getQuantity() <= 0 || c.getQuantity() > sz.getQuantity()) {
                         hasIssue = true;
                         int remain = (sz != null) ? sz.getQuantity() : 0;
-                        issue.append("Sold out! '")
-                                .append(pname)
-                                .append("' (size ")
-                                .append(c.getSize_name())
-                                .append(") only ")
-                                .append(remain)
-                                .append(" left.\\n");
+                        issue.append("Sold out! '").append(pname)
+                                .append("' (size ").append(c.getSize_name())
+                                .append(") only ").append(remain).append(" left.\\n");
                     }
                 }
 
@@ -228,18 +229,39 @@ public class OrderController extends HttpServlet {
                     return;
                 }
 
-                int subtotal = daoCart.getCartTotal(customer_id);
-                int voucherPercent = 0;
-                Object sessVoucher = (session != null) ? session.getAttribute("voucherPercent") : null;
-                if (sessVoucher instanceof Integer) {
-                    voucherPercent = (Integer) sessVoucher;
+                // =========================================================================
+                // [FIX] TÍNH LẠI TỔNG TIỀN THEO GIÁ MỚI NHẤT (ĐỒNG BỘ VỚI PAYMENT & LOAD)
+                // =========================================================================
+                long realSubtotal = 0; // Dùng long để tránh tràn số nếu tổng quá lớn
+                for (entity.Cart c : cartList) {
+                    // Tính giá hiện tại của sản phẩm (đã trừ voucher sản phẩm nếu có)
+                    float unitPriceF = calcUnitPriceWithVoucherSafe(daoProduct, daoVoucher, c.getProductID());
+                    int unitPrice = Math.round(unitPriceF);
+                    
+                    realSubtotal += (long) unitPrice * c.getQuantity();
                 }
 
-                int discount = Math.round(subtotal * (voucherPercent / 100.0f));
-                int finalTotal = Math.max(0, subtotal - discount);
+                // Lấy Voucher Đơn Hàng từ Session
+                int voucherPercent = 0;
+                Object sessVoucher = (session != null) ? session.getAttribute("voucherValue") : null;
+                // Fallback nếu tên biến khác
+                if (sessVoucher == null && session != null) {
+                    sessVoucher = session.getAttribute("voucherPercent");
+                }
+
+                if (sessVoucher instanceof Integer) {
+                    voucherPercent = (Integer) sessVoucher;
+                } else if (sessVoucher instanceof String) {
+                    try { voucherPercent = Integer.parseInt((String) sessVoucher); } catch (Exception e) {}
+                }
+
+                long discountLong = Math.round(realSubtotal * (voucherPercent / 100.0f));
+                int finalTotal = (int) Math.max(0, realSubtotal - discountLong);
+                // =========================================================================
 
                 String addr = (newaddress != null && !newaddress.trim().isEmpty()) ? newaddress : address;
 
+                // Insert Order với finalTotal chính xác
                 int orderID = daoOrder.insertOrder(addr, currentDate, status, phoneNumber, customer_id, staffId, finalTotal);
 
                 if (orderID <= 0) {
@@ -257,6 +279,7 @@ public class OrderController extends HttpServlet {
                     session.removeAttribute("voucherCode");
                     session.removeAttribute("voucherType");
                     session.removeAttribute("voucherValue");
+                    session.removeAttribute("voucherId");
                     session.setAttribute("popupMessage", "Order placed successfully! Thank you for shopping at GIO Shop!");
                 }
                 response.sendRedirect("productList");

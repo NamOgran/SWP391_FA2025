@@ -22,7 +22,6 @@
         :root {
             --primary-color: #a0816c;
             --primary-dark: #8a6d5a;
-            --primary-light: #fdfbf9;
             --text-main: #333;
             --text-light: #888;
             --bg-body: #f4f4f4;
@@ -39,244 +38,104 @@
             padding-bottom: calc(var(--bar-height) + 20px); 
             font-size: 15px;
         }
-
-        a { text-decoration: none; color: inherit; transition: 0.2s; }
         
         #page-loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--white);
-            z-index: 99999;
+            background-color: var(--white); z-index: 99999;
             display: flex; justify-content: center; align-items: center;
             transition: opacity 0.4s ease-out, visibility 0.4s;
         }
         .spinner-custom {
             width: 50px; height: 50px;
-            border: 3px solid rgba(160, 129, 108, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s ease-in-out infinite;
+            border: 3px solid rgba(160, 129, 108, 0.3); border-radius: 50%;
+            border-top-color: var(--primary-color); animation: spin 1s infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .main-container {
-            max-width: 1100px;
-            margin: 30px auto;
-            padding: 0 15px;
-        }
+        .main-container { max-width: 1100px; margin: 30px auto; padding: 0 15px; }
 
         .cart-header-row {
-            display: grid;
-            grid-template-columns: 50px 3fr 1fr 1fr 1fr 50px;
-            background: var(--white);
-            padding: 18px 25px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-soft);
-            margin-bottom: 15px;
-            font-weight: 600;
-            color: var(--text-light);
-            align-items: center;
-            text-align: center;
+            display: grid; grid-template-columns: 50px 3fr 1fr 1fr 1fr 50px;
+            background: var(--white); padding: 18px 25px;
+            border-radius: var(--border-radius); box-shadow: var(--shadow-soft);
+            margin-bottom: 15px; font-weight: 600; color: var(--text-light);
+            align-items: center; text-align: center;
         }
-        .header-left { text-align: left; grid-column: span 1; }
         .header-product { text-align: left; }
 
         .cart-item-card {
-            background: var(--white);
-            padding: 25px;
-            margin-bottom: 15px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-soft);
-            display: grid;
-            grid-template-columns: 50px 3fr 1fr 1fr 1fr 50px;
-            align-items: center;
-            transition: transform 0.2s, border-color 0.2s;
-            border: 1px solid transparent;
-            position: relative;
+            background: var(--white); padding: 25px; margin-bottom: 15px;
+            border-radius: var(--border-radius); box-shadow: var(--shadow-soft);
+            display: grid; grid-template-columns: 50px 3fr 1fr 1fr 1fr 50px;
+            align-items: center; position: relative;
+            transition: transform 0.2s;
         }
-        .cart-item-card:hover { transform: translateY(-2px); }
-        .cart-item-card.item-disabled { opacity: 0.5; background: #fafafa; pointer-events: none; }
-        .cart-item-card.item-disabled .col-action, 
-        .cart-item-card.item-disabled .col-check { pointer-events: auto; }
+        
+        .cart-item-card.item-disabled { opacity: 0.7; background: #fafafa; }
+        /* Cho phép click nút xóa/giảm số lượng ở dòng bị disable */
+        .cart-item-card.item-disabled .col-check input,
+        .cart-item-card.item-disabled .size-select,
+        .cart-item-card.item-disabled .btn-increase { pointer-events: none; opacity: 0.5; }
 
-        .col-check { display: flex; justify-content: center; align-items: center; }
-        .form-check-input {
-            width: 20px; height: 20px;
-            cursor: pointer;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-        }
-        .form-check-input:checked {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        .form-check-input:focus { box-shadow: 0 0 0 0.25rem rgba(160, 129, 108, 0.25); }
+        .col-check { display: flex; justify-content: center; }
+        .form-check-input { width: 20px; height: 20px; cursor: pointer; border: 2px solid #ddd; }
+        .form-check-input:checked { background-color: var(--primary-color); border-color: var(--primary-color); }
 
-        .product-flex {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            text-align: left;
-        }
-        .cart-img-wrapper {
-            width: 90px; height: 90px;
-            border-radius: 8px;
-            overflow: hidden;
-            flex-shrink: 0;
-            background: #f9f9f9;
-        }
+        .product-flex { display: flex; align-items: center; gap: 20px; text-align: left; }
+        .cart-img-wrapper { width: 90px; height: 90px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
         .cart-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         
         .product-details { display: flex; flex-direction: column; gap: 6px; }
-        .product-name {
-            font-weight: 600;
-            font-size: 1.05rem;
-            line-height: 1.4;
-            color: var(--text-main);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
+        .product-name { font-weight: 600; font-size: 1.05rem; color: var(--text-main); text-decoration: none; }
         .product-name:hover { color: var(--primary-color); }
-
-        .size-group { 
-            display: flex; 
-            align-items: center; 
-            font-size: 0.9rem; 
-            color: var(--text-light); 
-        }
-        .size-select {
-            border: none;
-            background: var(--bg-body);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            font-weight: 600;
-            cursor: pointer;
-            margin-left: 5px;
-            outline: none;
-        }
-        .size-select:focus { background: #ececec; }
+        .size-group { display: flex; align-items: center; font-size: 0.9rem; color: var(--text-light); }
+        .size-select { border: none; background: #f4f4f4; padding: 4px 10px; border-radius: 6px; margin-left: 5px; font-weight: 600; }
 
         .col-price { text-align: center; color: var(--text-light); }
-        .col-total { text-align: center; font-weight: 700; color: var(--primary-color); font-size: 1.1rem; }
         
-        .qty-wrapper { display: flex; justify-content: center; }
-        .qty-control {
-            display: flex;
-            align-items: center;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            overflow: hidden;
-            background: var(--white);
-        }
-        .qty-btn {
-            width: 32px; height: 32px;
-            border: none; background: #fff;
-            color: var(--text-main);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s;
-        }
-        .qty-btn:hover { background: var(--primary-light); color: var(--primary-color); }
-        .qty-input {
-            width: 40px; height: 32px;
-            border: none; text-align: center;
-            font-weight: 600; color: var(--text-main);
-            background: #fff; pointer-events: none;
-        }
-
-        .btn-remove {
-            border: none; background: transparent;
-            color: #999; font-size: 1.2rem;
-            cursor: pointer; transition: 0.2s;
-        }
-        .btn-remove:hover { color: #dc3545; transform: scale(1.1); }
-
+        /* Styles cho giá và thông báo */
+        .old-price-strike { text-decoration: line-through; color: #aaa; font-size: 0.85rem; display: block; }
+        .new-price-highlight { color: var(--primary-color); font-weight: 600; }
+        
         .cart-warning-row { grid-column: 2 / -1; margin-top: 10px; font-size: 0.85rem; font-weight: 500; text-align: left; }
-        .warning-text { color: #dc3545; display: flex; align-items: center; gap: 5px; }
-        .warning-text.info { color: #e58e26; }
+        
+        .msg-price-changed { color: #0d6efd; display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+        .msg-stock-error { color: #dc3545; display: flex; align-items: center; gap: 5px; }
+        .msg-stock-warn { color: #e58e26; display: flex; align-items: center; gap: 5px; }
 
-        /* --- STICKY BOTTOM BAR --- */
+        .col-total { text-align: center; font-weight: 700; color: var(--primary-color); font-size: 1.1rem; }
+        .qty-control { display: flex; align-items: center; border: 1px solid #eee; border-radius: 8px; overflow: hidden; background: #fff; width: fit-content; margin: 0 auto;}
+        .qty-btn { width: 32px; height: 32px; border: none; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .qty-btn:hover { background: #fdfbf9; color: var(--primary-color); }
+        .qty-input { width: 40px; height: 32px; border: none; text-align: center; font-weight: 600; pointer-events: none; }
+
+        .btn-remove { border: none; background: transparent; color: #999; font-size: 1.2rem; cursor: pointer; }
+        .btn-remove:hover { color: #dc3545; }
+
         .sticky-footer {
-            position: fixed;
-            bottom: 0; left: 0; width: 100%;
-            background: var(--white);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-            z-index: 1000;
-            padding: 0;
-            height: var(--bar-height);
-            display: flex; align-items: center;
+            position: fixed; bottom: 0; left: 0; width: 100%; background: var(--white);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 1000; height: var(--bar-height); display: flex; align-items: center;
         }
-        .footer-content {
-            max-width: 1100px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 0 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .footer-left { display: flex; align-items: center; gap: 15px; }
-        .footer-right { display: flex; align-items: center; gap: 30px; }
-        
-        .select-all-label { cursor: pointer; user-select: none; font-weight: 500; color: var(--text-main); }
-        
-        .total-label { font-size: 1rem; color: var(--text-main); margin-right: 10px; }
-        .total-price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
-        
-        .btn-checkout {
-            background-color: var(--primary-color);
-            color: var(--white);
-            border: none;
-            padding: 0 40px;
-            height: 45px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: 0.3s;
-        }
-        .btn-checkout:hover:not(:disabled) { background-color: var(--primary-dark); box-shadow: 0 4px 15px rgba(160, 129, 108, 0.4); }
+        .footer-content { max-width: 1100px; width: 100%; margin: 0 auto; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; }
+        .total-price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin-left: 10px; }
+        .btn-checkout { background-color: var(--primary-color); color: white; border: none; padding: 0 40px; height: 45px; border-radius: 8px; font-weight: 600; text-transform: uppercase; }
+        .btn-checkout:hover:not(:disabled) { background-color: var(--primary-dark); }
         .btn-checkout:disabled { background-color: #ccc; cursor: not-allowed; }
-
-        .empty-cart-box {
-            background: var(--white);
-            border-radius: var(--border-radius);
-            padding: 60px 20px;
-            text-align: center;
-            box-shadow: var(--shadow-soft);
-        }
-        .empty-icon { font-size: 4rem; color: #eee; margin-bottom: 20px; }
-        .btn-continue {
-            display: inline-block; padding: 12px 35px;
-            background: var(--text-main); color: white;
-            border-radius: 8px; font-weight: 600;
-            transition: 0.3s;
-        }
-        .btn-continue:hover { background: #000; }
+        .empty-cart-box { background: var(--white); border-radius: var(--border-radius); padding: 60px 20px; text-align: center; box-shadow: var(--shadow-soft); }
 
         @media (max-width: 768px) {
             .cart-header-row { display: none; }
-            .cart-item-card {
-                display: flex; flex-wrap: wrap; gap: 15px;
-                position: relative; padding: 20px;
-            }
-            .col-check { width: auto; position: absolute; top: 20px; left: 15px; z-index: 2; }
+            .cart-item-card { display: flex; flex-wrap: wrap; padding: 20px; position: relative; gap: 15px; }
+            .col-check { position: absolute; top: 20px; left: 15px; z-index: 2; }
             .product-flex { width: 100%; padding-left: 30px; }
-            .col-price { display: none; } 
-            .qty-wrapper { width: auto; margin-left: auto; }
-            .col-total { width: 100%; text-align: right; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-            .col-total::before { content: "Total:"; color: #888; font-size: 0.9rem; font-weight: 500; }
+            .col-price { width: 100%; text-align: left; padding-left: 30px; margin-top: -10px; }
+            .qty-wrapper { margin-left: auto; }
+            .col-total { width: 100%; text-align: right; display: flex; justify-content: space-between; margin-top: 10px; }
+            .col-total::before { content: "Total:"; color: #888; font-size: 0.9rem; }
             .col-action { position: absolute; top: 15px; right: 15px; }
-            
-            .footer-content { flex-direction: column; height: auto; padding: 15px; gap: 15px; align-items: stretch; }
+            .footer-content { flex-direction: column; gap: 10px; padding: 10px 15px; height: auto; }
             .sticky-footer { height: auto; }
-            .footer-left { justify-content: space-between; }
-            .footer-right { justify-content: space-between; width: 100%; gap: 0; }
-            .total-price { font-size: 1.3rem; }
-            .btn-checkout { flex: 1; margin-left: 15px; }
+            .btn-checkout { width: 100%; margin-left: 0 !important; }
         }
     </style>
 </head>
@@ -291,19 +150,16 @@
 
         <c:choose>
             <c:when test="${empty requestScope.cartList}">
-                <div class="empty-cart-box" data-aos="fade-up">
-                    <i class="bi bi-cart-x empty-icon"></i>
+                <div class="empty-cart-box">
+                    <i class="bi bi-cart-x empty-icon" style="font-size: 4rem; color: #eee;"></i>
                     <h3>Your cart is empty</h3>
-                    <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet.</p>
-                    <a href="${pageContext.request.contextPath}/" class="btn-continue">Start Shopping</a>
+                    <a href="${pageContext.request.contextPath}/" class="btn-continue mt-3" style="background:#333; color:white; padding:10px 30px; border-radius:8px; text-decoration:none;">Start Shopping</a>
                 </div>
             </c:when>
 
             <c:otherwise>
                 <div class="cart-header-row d-none d-md-grid">
-                    <div class="col-check">
-                        <input class="form-check-input" type="checkbox" id="selectAllTop" title="Select all">
-                    </div>
+                    <div class="col-check"><input class="form-check-input" type="checkbox" id="selectAllTop"></div>
                     <div class="header-product">Product</div>
                     <div>Unit Price</div>
                     <div>Quantity</div>
@@ -313,22 +169,25 @@
 
                 <div class="cart-list">
                     <c:forEach items="${requestScope.cartList}" var="cart">
+                        <%-- === LOGIC TÍNH TOÁN === --%>
                         <c:set var="availableQty" value="${cart.stockQuantity}" />
                         <c:set var="isMissing" value="${empty nameProduct[cart.productID]}" />
                         <c:set var="isOutOfStock" value="${availableQty le 0}" />
                         <c:set var="isStopped" value="${activeP[cart.productID] != null and not activeP[cart.productID]}" />
                         <c:set var="isInsufficient" value="${availableQty lt cart.quantity}" />
-                        <c:set var="hasError" value="${isMissing or isOutOfStock or isStopped}" />
+                        
+                        <%-- Biến hasError chỉ liên quan đến khả năng MUA (tồn kho, trạng thái) --%>
+                        <c:set var="hasError" value="${isMissing or isOutOfStock or isStopped or isInsufficient}" />
 
+                        <%-- Logic Giá --%>
+                        <c:set var="priceAtAdd" value="${cart.price}" />
                         <c:set var="priceNow" value="${priceP[cart.productID]}" />
-                        <c:if test="${empty priceNow}"><c:set var="priceNow" value="${cart.price}" /></c:if>
-
+                        <c:if test="${empty priceNow}"><c:set var="priceNow" value="${priceAtAdd}" /></c:if>
+                        <c:set var="hasPriceChanged" value="${priceNow ne priceAtAdd}" />
+                        
                         <c:set var="lineTotal" value="${priceNow * cart.quantity}" />
 
-                        <div class="cart-item-card ${hasError ? 'item-disabled' : ''}" 
-                             data-id="${cart.productID}" 
-                             data-row-id="${cart.productID}">
-
+                        <div class="cart-item-card ${hasError ? 'item-disabled' : ''}" data-id="${cart.productID}">
                             <div class="col-check">
                                 <input class="form-check-input item-check" 
                                        type="checkbox" 
@@ -336,8 +195,6 @@
                                        data-size="${cart.size_name}"
                                        data-price="${priceNow}"
                                        data-stock="${availableQty}"
-                                       data-locked="${hasError}"
-                                       data-auto-recheck="${isInsufficient}"
                                        <c:if test="${hasError}">disabled</c:if>
                                        <c:if test="${not hasError}">checked</c:if>>
                             </div>
@@ -352,13 +209,12 @@
                                     <a href="${pageContext.request.contextPath}/productDetail?id=${cart.productID}" class="product-name">
                                         ${nameProduct[cart.productID]}
                                     </a>
-                                    
                                     <div class="size-group">
                                         <span>Size: </span>
                                         <c:set var="sizesOfProduct" value="${productSizeMap[cart.productID]}" />
                                         <c:choose>
                                             <c:when test="${not empty sizesOfProduct}">
-                                                <select class="size-select action-change-size" <c:if test="${hasError}">disabled</c:if>>
+                                                <select class="size-select action-change-size" <c:if test="${isMissing or isStopped}">disabled</c:if>>
                                                     <c:forEach var="sz" items="${sizesOfProduct}">
                                                         <option value="${sz}" <c:if test="${sz eq cart.size_name}">selected</c:if>>${sz}</option>
                                                     </c:forEach>
@@ -375,16 +231,22 @@
                             </div>
 
                             <div class="col-price">
-                                <fmt:formatNumber value="${priceNow}" pattern="###,###" /> VND
+                                <c:choose>
+                                    <c:when test="${hasPriceChanged}">
+                                        <span class="old-price-strike"><fmt:formatNumber value="${priceAtAdd}" pattern="###,###" /> VND</span>
+                                        <span class="new-price-highlight"><fmt:formatNumber value="${priceNow}" pattern="###,###" /> VND</span>
+                                    </c:when>
+                                    <c:otherwise><fmt:formatNumber value="${priceNow}" pattern="###,###" /> VND</c:otherwise>
+                                </c:choose>
                             </div>
 
                             <div class="qty-wrapper">
                                 <div class="qty-control">
-                                    <button type="button" class="qty-btn btn-decrease" <c:if test="${hasError}">disabled</c:if>>
+                                    <button type="button" class="qty-btn btn-decrease">
                                         <i class="bi bi-dash"></i>
                                     </button>
                                     <input type="text" class="qty-input" value="${cart.quantity}" readonly>
-                                    <button type="button" class="qty-btn btn-increase" <c:if test="${hasError}">disabled</c:if>>
+                                    <button type="button" class="qty-btn btn-increase" <c:if test="${isMissing or isStopped or isOutOfStock}">disabled</c:if>>
                                         <i class="bi bi-plus"></i>
                                     </button>
                                 </div>
@@ -395,23 +257,32 @@
                             </div>
 
                             <div class="col-action">
-                                <button class="btn-remove action-delete">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
+                                <button class="btn-remove action-delete"><i class="bi bi-trash3"></i></button>
                             </div>
 
-                            <c:if test="${hasError or isInsufficient}">
+                            <%-- === PHẦN THÔNG BÁO TỔNG HỢP (GIÁ & KHO) === --%>
+                            <c:if test="${hasError or hasPriceChanged}">
                                 <div class="cart-warning-row">
+                                    
+                                    <%-- 1. Thông báo Giá Thay Đổi --%>
+                                    <c:if test="${hasPriceChanged}">
+                                        <div class="msg-price-changed">
+                                            <i class="bi bi-info-circle-fill"></i> Price has been updated based on current listing.
+                                        </div>
+                                    </c:if>
+
+                                    <%-- 2. Thông báo Lỗi Kho / Trạng Thái --%>
                                     <c:choose>
                                         <c:when test="${isMissing or isStopped}">
-                                            <div class="warning-text"><i class="bi bi-x-circle-fill"></i> Product unavailable. Please remove.</div>
+                                            <div class="msg-stock-error"><i class="bi bi-x-circle-fill"></i> Product unavailable. Please remove.</div>
                                         </c:when>
                                         <c:when test="${isOutOfStock}">
-                                            <div class="warning-text"><i class="bi bi-x-circle-fill"></i> Out of stock.</div>
+                                            <div class="msg-stock-error"><i class="bi bi-x-circle-fill"></i> Out of stock.</div>
                                         </c:when>
                                         <c:when test="${isInsufficient}">
-                                            <div class="warning-text info warn-insufficient">
-                                                <i class="bi bi-exclamation-circle-fill"></i> Only ${availableQty} left. Please reduce quantity.
+                                            <div class="msg-stock-warn warn-insufficient">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> 
+                                                Insufficient stock (Only ${availableQty} left). Please reduce quantity.
                                             </div>
                                         </c:when>
                                     </c:choose>
@@ -423,28 +294,20 @@
 
                 <div class="sticky-footer">
                     <div class="footer-content">
-                        <div class="footer-left">
-                            <div class="d-flex align-items-center">
-                                <input class="form-check-input me-2" type="checkbox" id="selectAllBottom">
-                                <label for="selectAllBottom" class="select-all-label">Select All (<span id="countSelected">0</span>)</label>
-                            </div>
-                            <button class="btn btn-link text-danger text-decoration-none p-0 ms-3" id="deleteSelectedBtn" style="font-size: 0.95rem; display:none;">Delete</button>
+                        <div style="display:flex; align-items:center;">
+                            <input class="form-check-input me-2" type="checkbox" id="selectAllBottom">
+                            <label for="selectAllBottom" style="cursor:pointer; font-weight:500;">Select All (<span id="countSelected">0</span>)</label>
                         </div>
-
-                        <div class="footer-right">
-                            <div class="d-flex align-items-baseline">
-                                <span class="total-label">Total Payment:</span>
-                                <span class="total-price" id="grandTotalDisplay">0 VND</span>
-                            </div>
-                            
-                            <form id="checkoutForm" action="${pageContext.request.contextPath}/loadPayment" method="get">
+                        <div style="display:flex; align-items:center;">
+                            <span class="d-none d-md-inline me-2">Total Payment:</span>
+                            <span class="total-price" id="grandTotalDisplay">0 VND</span>
+                            <form id="checkoutForm" action="${pageContext.request.contextPath}/loadPayment" method="get" style="display:inline; margin-left:20px;">
                                 <input type="hidden" id="grandTotalInput" name="grandTotal" value="0">
                                 <button type="submit" class="btn-checkout" id="checkoutBtn" disabled>Checkout</button>
                             </form>
                         </div>
                     </div>
                 </div>
-
             </c:otherwise>
         </c:choose>
     </div>
@@ -454,7 +317,7 @@
             <div class="modal-content border-0 shadow" style="border-radius: 12px;">
                 <div class="modal-body text-center p-4">
                     <div class="mb-3 text-warning"><i class="bi bi-exclamation-circle display-4"></i></div>
-                    <h6 class="mb-4">Remove this item from cart?</h6>
+                    <h6 class="mb-4">Remove this item?</h6>
                     <div class="d-flex gap-2 justify-content-center">
                         <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">No</button>
                         <button type="button" class="btn btn-danger px-4 rounded-pill" id="confirmDeleteBtn">Yes</button>
@@ -468,18 +331,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        function formatVND(amount) { 
-            return (amount || 0).toLocaleString('vi-VN') + " VND"; 
-        }
-
-        // --- Core Logic using Event Delegation ---
+        function formatVND(amount) { return (amount || 0).toLocaleString('vi-VN') + " VND"; }
 
         $(document).ready(function() {
-            // Remove Loader
             setTimeout(() => { $('#page-loader').fadeOut(); }, 400);
 
-            // Sync Checkboxes
-            const allChecks = $('.item-check');
             const masterTop = $('#selectAllTop');
             const masterBot = $('#selectAllBottom');
 
@@ -491,7 +347,6 @@
             function updateSummary() {
                 let total = 0;
                 let count = 0;
-
                 $('.item-check:checked').each(function() {
                     const row = $(this).closest('.cart-item-card');
                     const qty = parseInt(row.find('.qty-input').val()) || 0;
@@ -505,27 +360,18 @@
                 $('#countSelected').text(count);
                 $('#checkoutBtn').prop('disabled', count === 0);
 
-                // Update Master Checkbox State
                 const totalEnabled = $('.item-check:not(:disabled)').length;
                 const totalChecked = $('.item-check:checked').length;
                 
                 if (totalEnabled > 0 && totalEnabled === totalChecked) {
-                    syncMasters(true);
-                    masterTop.prop('indeterminate', false);
-                    masterBot.prop('indeterminate', false);
+                    syncMasters(true); masterTop.prop('indeterminate', false); masterBot.prop('indeterminate', false);
                 } else {
                     syncMasters(false);
-                    if (totalChecked > 0) {
-                        masterTop.prop('indeterminate', true);
-                        masterBot.prop('indeterminate', true);
-                    } else {
-                        masterTop.prop('indeterminate', false);
-                        masterBot.prop('indeterminate', false);
-                    }
+                    if (totalChecked > 0) { masterTop.prop('indeterminate', true); masterBot.prop('indeterminate', true); }
+                    else { masterTop.prop('indeterminate', false); masterBot.prop('indeterminate', false); }
                 }
             }
 
-            // Checkbox Events
             $('#selectAllTop, #selectAllBottom').on('change', function() {
                 const isChecked = $(this).prop('checked');
                 syncMasters(isChecked);
@@ -533,9 +379,8 @@
                 updateSummary();
             });
 
-            $('.item-check').on('change', updateSummary);
+            $(document).on('change', '.item-check', updateSummary);
 
-            // Quantity Increase
             $(document).on('click', '.btn-increase', function() {
                 const row = $(this).closest('.cart-item-card');
                 const qtyInput = row.find('.qty-input');
@@ -545,34 +390,31 @@
                 const newQty = currentQty + 1;
                 const pid = row.data('id');
                 const price = checkbox.data('price');
-                const size = checkbox.data('size'); // Get dynamic size from checkbox
+                const size = checkbox.data('size');
 
                 $.ajax({
                     url: BASE + '/cartIncrease', method: 'GET',
                     data: {id: pid, price: price, quantity: newQty, size: size},
                     success: function(resp) {
                         const parts = (resp || '').split(',');
-                        // Check logic based on your backend response. 
-                        // Assuming parts[2] == 0 means OK (no error code)
-                        const errCode = parseInt(parts[2] || '0'); 
-                        
-                        if (errCode === 0) {
+                        if (parseInt(parts[2] || '0') === 0) {
                             qtyInput.val(newQty);
-                            const lineTotal = newQty * price;
-                            row.find('.line-total-display').text(lineTotal.toLocaleString('vi-VN'));
+                            row.find('.line-total-display').text((newQty * price).toLocaleString('vi-VN'));
                             updateSummary();
                         } else {
-                            alert('Stock limit reached for this item.');
+                            alert('Stock limit reached.');
                         }
                     }
                 });
             });
 
-            // Quantity Decrease
+            // LOGIC GIẢM SỐ LƯỢNG - CHỈ ẨN CẢNH BÁO TỒN KHO, GIỮ CẢNH BÁO GIÁ
             $(document).on('click', '.btn-decrease', function() {
                 const row = $(this).closest('.cart-item-card');
                 const qtyInput = row.find('.qty-input');
                 const checkbox = row.find('.item-check');
+                // Chỉ tìm phần tử cảnh báo thiếu hàng cụ thể
+                const warningInsufficient = row.find('.warn-insufficient');
 
                 const currentQty = parseInt(qtyInput.val()) || 1;
                 if (currentQty <= 1) return;
@@ -581,114 +423,90 @@
                 const pid = row.data('id');
                 const price = checkbox.data('price');
                 const size = checkbox.data('size');
+                const stock = parseInt(checkbox.data('stock')) || 0;
 
                 $.ajax({
                     url: BASE + '/cartDecrease', method: 'GET',
                     data: {id: pid, price: price, quantity: newQty, size: size},
                     success: function(resp) {
                         qtyInput.val(newQty);
-                        const lineTotal = newQty * price;
-                        row.find('.line-total-display').text(lineTotal.toLocaleString('vi-VN'));
+                        row.find('.line-total-display').text((newQty * price).toLocaleString('vi-VN'));
+                        
+                        // Nếu số lượng hợp lệ, mở khóa và ẩn warning thiếu hàng
+                        if (newQty <= stock) {
+                            if (checkbox.prop('disabled')) {
+                                checkbox.prop('disabled', false); 
+                                checkbox.prop('checked', true);   
+                                row.removeClass('item-disabled'); 
+                                
+                                // Chỉ ẩn dòng chữ "Thiếu hàng"
+                                if(warningInsufficient.length) warningInsufficient.fadeOut();
+                                
+                                // Nếu không còn cảnh báo giá nào khác thì ẩn luôn cả row (optional)
+                                // Nhưng ở đây ta cứ để row nếu còn warning giá
+                            }
+                        }
                         updateSummary();
                     }
                 });
             });
 
-            // Change Size (NO RELOAD)
             $(document).on('change', '.action-change-size', function() {
                 const selectEl = $(this);
                 const row = selectEl.closest('.cart-item-card');
                 const oldSizeInput = row.find('.old-size-val');
                 const checkbox = row.find('.item-check');
-
                 const pid = row.data('id');
                 const oldSize = oldSizeInput.val();
                 const newSize = selectEl.val();
-
                 if (newSize === oldSize) return;
-
                 $.ajax({
                     url: BASE + '/cartChangeSize', method: 'GET',
                     data: {id: pid, oldSize: oldSize, newSize: newSize},
                     success: function(response) {
-                        // Assuming response format: "OK" or "OK,..." 
                         if (response && response.includes('OK')) {
-                            // Update DOM values without reload
                             oldSizeInput.val(newSize);
-                            checkbox.data('size', newSize); // Critical: Update data-size for other buttons
+                            checkbox.data('size', newSize); 
                             checkbox.attr('data-size', newSize);
-                            
-                            // Note: If price changes by size, backend needs to send new price.
-                            // Currently assuming price stays same or waiting for refresh.
                         } else {
-                            alert('Cannot switch to this size (Out of stock or error).');
-                            selectEl.val(oldSize); // Revert
+                            alert('Cannot switch size.'); selectEl.val(oldSize); 
                         }
                     },
-                    error: function() {
-                        alert('Error connecting to server.');
-                        selectEl.val(oldSize);
-                    }
+                    error: function() { alert('Error.'); selectEl.val(oldSize); }
                 });
             });
 
-            // Delete Handling
             let deleteTarget = null;
             $(document).on('click', '.action-delete', function() {
                 const row = $(this).closest('.cart-item-card');
-                const checkbox = row.find('.item-check');
-                deleteTarget = {
-                    el: row,
-                    id: row.data('id'),
-                    size: checkbox.data('size') // Get current dynamic size
-                };
+                deleteTarget = { el: row, id: row.data('id'), size: row.find('.item-check').data('size') };
                 new bootstrap.Modal('#deleteConfirmModal').show();
             });
 
             $('#confirmDeleteBtn').click(function() {
                 if (!deleteTarget) return;
-
                 $.ajax({
                     url: BASE + '/cartDelete', method: 'GET',
                     data: {id: deleteTarget.id, size: deleteTarget.size},
                     success: function() {
                         const modal = bootstrap.Modal.getInstance('#deleteConfirmModal');
                         modal.hide();
-
-                        deleteTarget.el.css({ opacity: 0, transform: 'scale(0.95)' });
-                        setTimeout(() => {
-                            deleteTarget.el.remove();
-                            updateSummary();
-                            if ($('.cart-item-card').length === 0) location.reload();
-                        }, 300);
+                        deleteTarget.el.remove();
+                        updateSummary();
+                        if ($('.cart-item-card').length === 0) location.reload();
                     }
                 });
             });
 
-            // Form Submit Intercept
             $('#checkoutForm').on('submit', function(e) {
                 const checked = $('.item-check:checked');
-                if (checked.length === 0) {
-                    e.preventDefault();
-                    return;
-                }
-                
-                // Clear old inputs
+                if (checked.length === 0) { e.preventDefault(); return; }
                 $(this).find('input[name="selectedItems"]').remove();
-
-                // Add selected items
                 checked.each(function() {
-                    const id = $(this).data('id');
-                    const size = $(this).data('size'); // Uses updated size
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'selectedItems',
-                        value: id + '::' + size
-                    }).appendTo('#checkoutForm');
+                    $('<input>').attr({ type: 'hidden', name: 'selectedItems', value: $(this).data('id') + '::' + $(this).data('size') }).appendTo('#checkoutForm');
                 });
             });
 
-            // Initial calc
             updateSummary();
         });
     </script>

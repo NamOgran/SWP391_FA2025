@@ -168,36 +168,46 @@ public class LoadController extends HttpServlet {
                 }
 
                 // NEW: receive selected items from cart.jsp
-                // Format: selectedItems=productId::size
                 String[] selectedItems = request.getParameterValues("selectedItems");
 
-                List<entity.Cart> paymentList = cartList; // default: old behavior
+                List<entity.Cart> paymentList = cartList; 
                 boolean isSelectionMode = (selectedItems != null && selectedItems.length > 0);
 
                 if (isSelectionMode) {
                     Set<String> selectedKeys = parseSelectedKeys(selectedItems);
                     paymentList = filterCartBySelected(cartList, selectedKeys);
 
-                    // No selected items -> back to cart
                     if (paymentList.isEmpty()) {
                         response.sendRedirect(request.getContextPath() + "/loadCart");
                         return;
                     }
                 }
 
-                // Server-side validation ONLY for items that will be paid
-                // (This ensures "out-of-stock / inactive" is still blocked correctly.)
                 String validationError = validatePaymentItems(paymentList, productDao, sizeDetailDao);
                 if (validationError != null) {
-                    // You can later pass a message via session/query param if you want
-                    // session.setAttribute("PAYMENT_ERROR", validationError);
                     response.sendRedirect(request.getContextPath() + "/loadCart");
                     return;
                 }
 
-                // Override attributes for payment page to use ONLY paymentList
+                // ================================================================
+                // [FIX] TÍNH LẠI TỔNG TIỀN DỰA TRÊN GIÁ MỚI NHẤT (priceP)
+                // ================================================================
+                int freshSum = 0;
+                for (entity.Cart c : paymentList) {
+                    // Lấy giá hiện tại từ Map priceP đã load ở đầu doGet
+                    Integer currentPrice = priceP.get(c.getProductID());
+                    
+                    // Nếu không tìm thấy giá mới (trường hợp hiếm), dùng giá cũ trong cart
+                    if (currentPrice == null) {
+                        currentPrice = c.getPrice();
+                    }
+                    
+                    freshSum += currentPrice * c.getQuantity();
+                }
+                // ================================================================
+
                 request.setAttribute("cartList", paymentList);
-                request.setAttribute("sum", calcSum(paymentList));
+                request.setAttribute("sum", freshSum); // Dùng biến freshSum vừa tính
                 request.setAttribute("quanP", paymentList.size());
 
                 request.getRequestDispatcher("payment.jsp").forward(request, response);
