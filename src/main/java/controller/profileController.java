@@ -148,28 +148,47 @@ public class ProfileController extends HttpServlet {
     }
 
     private void updateProfile(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // 1. QUAN TRỌNG: Thêm dòng này đầu tiên để nhận tiếng Việt không bị lỗi font
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
         String fullName = request.getParameter("fullName");
         String address = request.getParameter("address");
         String phoneNumber = request.getParameter("phoneNumber");
         String email = request.getParameter("email");
 
-        boolean isSuccess = daoCustomer.updateUserProfile(email, address, phoneNumber, fullName);
+        HttpSession session = request.getSession(false);
+        Customer currentAcc = (session != null) ? (Customer) session.getAttribute("acc") : null;
+
+        if (currentAcc == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+
+        // 2. Gọi hàm update (Update theo Username để an toàn)
+        boolean isSuccess = daoCustomer.updateUserProfileByUsername(currentAcc.getUsername(), email, address, phoneNumber, fullName);
 
         if (isSuccess) {
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Customer updatedCustomer = daoCustomer.getCustomerByEmailOrUsername(email);
-                if (updatedCustomer != null) {
-                    session.setAttribute("acc", updatedCustomer);
-                }
+            // 3. SỬA LỖI QUAN TRỌNG Ở ĐÂY:
+            // Hãy dùng hàm 'getCustomerByEmailOrUsername' (Hàm có code thực thi trong DAO của bạn)
+            // ĐỪNG dùng 'getCustomerByUsernameOrEmail' (Hàm đó đang trả về null trong file DAO bạn gửi)
+            Customer updatedCustomer = daoCustomer.getCustomerByEmailOrUsername(currentAcc.getUsername());
+            
+            if (updatedCustomer != null) {
+                // Cập nhật lại Session ngay lập tức
+                session.setAttribute("acc", updatedCustomer);
+            } else {
+                System.out.println("Lỗi: Không lấy được thông tin mới sau khi update!");
             }
+            
+            // Redirect về trang profile để hiển thị thông tin mới trong Session
             response.sendRedirect(request.getContextPath() + "/profile");
         } else {
-            request.setAttribute("errorMessage", "Update failed!");
-             viewProfile(request, response); // Reuse view logic to keep data
+            request.setAttribute("errorMessage", "Cập nhật thất bại. Vui lòng thử lại!");
+            viewProfile(request, response);
         }
     }
-
+    
     private void viewProfile(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         Customer loggedInCustomer = (session != null) ? (Customer) session.getAttribute("acc") : null;

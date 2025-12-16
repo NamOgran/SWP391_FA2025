@@ -291,7 +291,7 @@
         }
         .btn-custom-secondary:hover { background-color: #e2e2e2; }
 
-        /* Validation Error Messages */
+        /* --- CSS ERROR & VALIDATION --- */
         label.error { 
             color: #dc3545; 
             font-size: 0.85rem; 
@@ -301,10 +301,31 @@
             font-weight: 600; 
             white-space: normal;
             line-height: 1.2;
+            width: 100%;
         }
         .form-control.error { 
             border-color: #dc3545; 
             background-image: none !important;
+        }
+        
+        /* Style cho trạng thái lỗi (đỏ) */
+        .form-control.is-invalid, .was-validated .form-control:invalid {
+            border-color: #dc3545;
+            padding-right: 4.125rem;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5zM6 8.2a.3.3 0 00-.3.3.3.3 0 00.3.3.3.3 0 00.3-.3.3.3 0 00-.3-.3z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+
+        /* Style cho trạng thái đúng (xanh) - Chỉ hiện khi có class is-valid */
+        .form-control.is-valid, .was-validated .form-control:valid {
+            border-color: #198754;
+            padding-right: 4.125rem;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' width='8' height='8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
         }
 
         .server-error { color: #dc3545; background: #ffe6e6; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
@@ -455,7 +476,7 @@
                             <div class="info-item">
                                 <div class="info-icon"><i class="fa-regular fa-envelope"></i></div>
                                 <div class="info-content">
-                                    <small>Email Address</small>
+                                    <small>Email</small>
                                     <span data-field="email">${email}</span>
                                 </div>
                             </div>
@@ -479,16 +500,12 @@
 
                         <%-- EDIT MODE: FORM --%>
                         <div class="edit-form-wrapper" id="edit-mode">
-                            <form action="${pageContext.request.contextPath}/profile/update" method="GET" id="edit-profile-form">
+                            <form action="${pageContext.request.contextPath}/updateProfile" method="POST" id="edit-profile-form">
                                 
                                 <div class="row g-3">
                                     <%-- Full Name --%>
                                     <div class="col-md-12">
                                         <div class="form-floating">
-                                            <%-- 
-                                                Rule: 2-100 characters.
-                                                Auto Capitalize logic handled via JS.
-                                            --%>
                                             <input type="text" class="form-control capitalize-input" id="fullName" name="fullName" 
                                                    placeholder="Full Name" value="${fullName}" 
                                                    required minlength="2" maxlength="100" style="text-transform: capitalize;">
@@ -499,17 +516,21 @@
                                     <%-- Email (Readonly) --%>
                                     <div class="col-md-6">
                                         <div class="form-floating">
+                                            <%-- 
+                                                READONLY field:
+                                                - style background grey
+                                                - validation sẽ bỏ qua ô này nhờ cấu hình JS bên dưới
+                                            --%>
                                             <input type="email" class="form-control" id="email" name="email" 
                                                    placeholder="name@example.com" value="${email}" 
                                                    readonly style="background-color: #f8f9fa;" maxlength="50">
-                                            <label for="email">Email (Readonly)</label>
+                                            <label for="email">Email (Read-only)</label>
                                         </div>
                                     </div>
 
                                     <%-- Phone --%>
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            <%-- Rule: Max 10 digits --%>
                                             <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
                                                    placeholder="Phone Number" value="${phoneNumber}" 
                                                    required maxlength="10">
@@ -520,7 +541,6 @@
                                     <%-- Address --%>
                                     <div class="col-12">
                                         <div class="form-floating">
-                                            <%-- Rule: Max 255 chars --%>
                                             <input type="text" class="form-control" id="address" name="address" 
                                                    placeholder="Address" value="${address}" 
                                                    required maxlength="255">
@@ -553,7 +573,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
 
     <script>
-        // Hàm viết hoa chữ cái đầu (Hỗ trợ tiếng Việt)
+        // Hàm viết hoa chữ cái đầu
         function toTitleCase(str) {
             return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
                 return l.toUpperCase();
@@ -569,7 +589,7 @@
             const $loadingOverlay = $('#loading-overlay');
             const $form = $('#edit-profile-form');
             
-            // Initial Data Storage (to revert on Cancel)
+            // Initial Data Storage
             let initialData = {};
             $form.find('input').each(function() {
                 initialData[this.name] = $(this).val();
@@ -590,18 +610,14 @@
             });
 
             // --- 2. DEFINE VALIDATION RULES ---
-
-            // Rule: Full Name (Letters + Spaces, Vietnamese support)
             $.validator.addMethod("validName", function(value, element) {
                 return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
             }, "Name cannot contain numbers or special characters.");
 
-            // Rule: Phone (Start with 0, exactly 10 digits)
             $.validator.addMethod("validPhone", function(value, element) {
                 return this.optional(element) || /^0\d{9}$/.test(value);
             }, "Phone must start with 0 and have exactly 10 digits.");
 
-            // Rule: Address (Alphanumeric + specific punctuation)
             $.validator.addMethod("validAddress", function(value, element) {
                 return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
             }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
@@ -611,25 +627,19 @@
                 errorClass: "error",
                 validClass: "is-valid",
                 errorElement: "label",
+                
+                // QUAN TRỌNG: Bỏ qua các trường hidden VÀ readonly
+                ignore: ":hidden, [readonly]",
+
+                // QUAN TRỌNG: Đẩy lỗi ra ngoài form-floating
+                errorPlacement: function(error, element) {
+                    error.insertAfter(element.closest(".form-floating"));
+                },
+
                 rules: {
-                    fullName: { 
-                        required: true, 
-                        minlength: 2,
-                        maxlength: 100,
-                        validName: true 
-                    },
-                    address: { 
-                        required: true, 
-                        maxlength: 255,
-                        validAddress: true 
-                    },
-                    phoneNumber: { 
-                        required: true,
-                        digits: true, // Numbers only
-                        minlength: 10,
-                        maxlength: 10,
-                        validPhone: true 
-                    }
+                    fullName: { required: true, minlength: 2, maxlength: 100, validName: true },
+                    address: { required: true, maxlength: 255, validAddress: true },
+                    phoneNumber: { required: true, digits: true, minlength: 10, maxlength: 10, validPhone: true }
                 },
                 messages: {
                     fullName: { 
@@ -654,8 +664,15 @@
                 highlight: function(element) {
                     $(element).addClass("is-invalid").removeClass("is-valid");
                 },
+                
+                // --- SỬA ĐỔI Ở ĐÂY: CHECK READONLY TRƯỚC KHI THÊM 'is-valid' ---
                 unhighlight: function(element) {
-                    $(element).removeClass("is-invalid").addClass("is-valid");
+                    // Nếu là readonly, chỉ xóa lỗi (nếu có) chứ ko thêm class xanh (is-valid)
+                    if ($(element).attr("readonly")) {
+                         $(element).removeClass("is-invalid");
+                    } else {
+                         $(element).removeClass("is-invalid").addClass("is-valid");
+                    }
                 }
             });
 
@@ -673,47 +690,36 @@
                     $btnToggle.fadeIn();
                 }, 300);
                 
-                // Reset Form
                 $form.validate().resetForm();
                 $form.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
+                $form.find('label.error').remove();
                 
-                // Restore values
                 $form.find('input').each(function() {
                     $(this).val(initialData[this.name]);
                 });
             }
 
-            // Events
             $btnToggle.on('click', showEdit);
             $btnCancel.on('click', hideEdit);
 
-            // Logic: If Server returned error, stay in Edit mode
             <c:if test="${not empty errorMessage}">
                 setTimeout(showEdit, 600); 
             </c:if>
         });
 
-        // --- 3. BACK TO TOP BUTTON ---
+        // --- BACK TO TOP BUTTON ---
         let mybutton = document.getElementById("btn-back-to-top");
-
         window.onscroll = function () {
-            scrollFunction();
-        };
-
-        function scrollFunction() {
             if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
                 mybutton.style.display = "block";
             } else {
                 mybutton.style.display = "none";
             }
-        }
-
-        mybutton.addEventListener("click", backToTop);
-
-        function backToTop() {
+        };
+        mybutton.addEventListener("click", function() {
             document.body.scrollTop = 0;
             document.documentElement.scrollTop = 0;
-        }
+        });
     </script>
 </body>
 </html>

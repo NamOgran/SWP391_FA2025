@@ -117,7 +117,7 @@
             box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 1000; height: var(--bar-height); display: flex; align-items: center;
         }
         .footer-content { max-width: 1100px; width: 100%; margin: 0 auto; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; }
-        .total-price { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin-left: 10px; }
+        .total-price { font-size: 1.5rem; font-weight: 700; color: #dc3545; margin-left: 10px; }
         .btn-checkout { background-color: var(--primary-color); color: white; border: none; padding: 0 40px; height: 45px; border-radius: 8px; font-weight: 600; text-transform: uppercase; }
         .btn-checkout:hover:not(:disabled) { background-color: var(--primary-dark); }
         .btn-checkout:disabled { background-color: #ccc; cursor: not-allowed; }
@@ -152,8 +152,9 @@
             <c:when test="${empty requestScope.cartList}">
                 <div class="empty-cart-box">
                     <i class="bi bi-cart-x empty-icon" style="font-size: 4rem; color: #eee;"></i>
-                    <h3>Your cart is empty</h3>
-                    <a href="${pageContext.request.contextPath}/" class="btn-continue mt-3" style="background:#333; color:white; padding:10px 30px; border-radius:8px; text-decoration:none;">Start Shopping</a>
+                    <h3>Your cart is empty!</h3>
+                    <br>
+                    <a href="${pageContext.request.contextPath}/" class="btn-continue mt-3" style="background:#333; color:white; padding:10px 30px; border-radius:8px; text-decoration:none;">Go Shopping</a>
                 </div>
             </c:when>
 
@@ -299,7 +300,7 @@
                             <label for="selectAllBottom" style="cursor:pointer; font-weight:500;">Select All (<span id="countSelected">0</span>)</label>
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <span class="d-none d-md-inline me-2">Total Payment:</span>
+                            <span class="d-none d-md-inline me-2">Total Amount:</span>
                             <span class="total-price" id="grandTotalDisplay">0 VND</span>
                             <form id="checkoutForm" action="${pageContext.request.contextPath}/loadPayment" method="get" style="display:inline; margin-left:20px;">
                                 <input type="hidden" id="grandTotalInput" name="grandTotal" value="0">

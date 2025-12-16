@@ -239,7 +239,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content modal-content-modern">
                 <div class="modal-header-modern">
-                    <h4 class="fw-bold m-0" style="color: var(--primary-color);"><i class="bi bi-person-gear me-2"></i>Edit Profile</h4>
+                    <h4 class="fw-bold m-0" style="color: var(--primary-color);"><i class="bi bi-pencil-square"></i>Edit Profile</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -287,7 +287,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content modal-content-modern">
                 <div class="modal-header-modern">
-                    <h4 class="fw-bold m-0 text-warning"><i class="bi bi-shield-lock me-2"></i>Change Password</h4>
+                    <h4 class="fw-bold m-0 text-warning"><i class="bi bi-key-fill"></i> Change Password</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">

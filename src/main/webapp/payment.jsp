@@ -333,7 +333,7 @@
                         </div>
 
                         <div class="grand-total">
-                            <span>Total</span>
+                            <span>Total Payment</span>
                             <span class="amount" id="grandTotalText">${grandTotalFmt} VND</span>
                         </div>
 
