@@ -1199,38 +1199,70 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
         response.getWriter().write(new Gson().toJson(responseData));
     }
 
-    private void handleOrderStatusUpdate(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json; charset=UTF-8");
-        PrintWriter out = response.getWriter();
-        Gson gson = new Gson();
-        ResponseData responseData = new ResponseData();
-        try {
-            int orderId = Integer.parseInt(request.getParameter("orderId"));
-            String newStatus = request.getParameter("status");
-            OrderDAO orderDAO = new OrderDAO();
-            Size_detailDAO size_detailDAO = new Size_detailDAO();
-            orderDAO.updateStatus(newStatus, orderId);
-            if ("Delivering".equals(newStatus)) {
-                List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
-                if (details != null) {
-                    for (OrderDetail od : details) {
-                        Size_detail cur = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
-                        if (cur != null) {
-                            int newQty = cur.getQuantity() - od.getQuantity();
-                            size_detailDAO.updateQuanSize(newQty, od.getProductID(), cur.getSize_name());
-                        }
+    // [FIX] Cập nhật trong file: controller/AdminController.java
+
+private void handleOrderStatusUpdate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    response.setContentType("application/json; charset=UTF-8");
+    PrintWriter out = response.getWriter();
+    Gson gson = new Gson();
+    ResponseData responseData = new ResponseData();
+    
+    try {
+        int orderId = Integer.parseInt(request.getParameter("orderId"));
+        String newStatus = request.getParameter("status");
+        OrderDAO orderDAO = new OrderDAO();
+        Size_detailDAO size_detailDAO = new Size_detailDAO();
+
+        // LOGIC MỚI: Kiểm tra tồn kho trước khi xác nhận đơn (Pending -> Delivering)
+        if ("Delivering".equals(newStatus)) {
+            List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
+            
+            if (details != null && !details.isEmpty()) {
+                // BƯỚC 1: KIỂM TRA TỒN KHO (Validation Phase)
+                // Duyệt qua toàn bộ sản phẩm để đảm bảo TẤT CẢ đều đủ hàng trước khi trừ
+                for (OrderDetail od : details) {
+                    Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                    
+                    if (currentStock == null) {
+                        throw new Exception("Error data: Product ID not found " + od.getProductID() + " size " + od.getSize_name() + " in stock.");
+                    }
+                    
+                    if (currentStock.getQuantity() < od.getQuantity()) {
+                        // Nếu không đủ hàng, ném lỗi ngay lập tức để dừng quy trình
+                        throw new Exception("Insufficient stock for the product: " + od.getProductID() 
+                                + " (Size: " + od.getSize_name() + "). "
+                                + "In stock: " + currentStock.getQuantity() 
+                                + ", Customer order: " + od.getQuantity());
                     }
                 }
+
+                // BƯỚC 2: TRỪ KHO (Execution Phase)
+                // Chỉ chạy khi Bước 1 đã qua (tất cả sản phẩm đều đủ)
+                for (OrderDetail od : details) {
+                    Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                    int newQty = currentStock.getQuantity() - od.getQuantity();
+                    size_detailDAO.updateQuanSize(newQty, od.getProductID(), currentStock.getSize_name());
+                }
             }
-            responseData.setIsSuccess(true);
-            responseData.setDescription("Status updated to " + newStatus);
-        } catch (Exception e) {
-            responseData.setIsSuccess(false);
-            responseData.setDescription("Error: " + e.getMessage());
         }
-        out.print(gson.toJson(responseData));
-        out.flush();
+
+        // BƯỚC 3: CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
+        // Chỉ cập nhật khi không có lỗi ở trên
+        orderDAO.updateStatus(newStatus, orderId);
+
+        responseData.setIsSuccess(true);
+        responseData.setDescription("Update status successfully to " + newStatus);
+        
+    } catch (Exception e) {
+        // Nếu có lỗi (không đủ hàng), trả về thông báo lỗi cho Frontend hiển thị alert
+        responseData.setIsSuccess(false);
+        responseData.setDescription("Error: " + e.getMessage());
+        e.printStackTrace();
     }
+    
+    out.print(gson.toJson(responseData));
+    out.flush();
+}
 
     private void handleCreateImport(HttpServletRequest request, HttpServletResponse response, int staffId) throws IOException {
         response.setContentType("application/json; charset=UTF-8");
