@@ -9,6 +9,7 @@ import DAO.ProductDAO;
 import DAO.Size_detailDAO;
 import DAO.StaffDAO;
 import DAO.StatsDAO;
+import DAO.StatsDAO.ChartData; // IMPORTANT: Added for Charts
 import DAO.StatsDAO.OrderPopupData;
 import DAO.StatsDAO.TopProduct;
 import DAO.VoucherDAO;
@@ -47,7 +48,7 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import payLoad.ResponseData;
-import static url.StaffURL.*; // Import các hằng số URL
+import static url.StaffURL.*; 
 
 @WebServlet(name = "StaffController", urlPatterns = {
     URL_STAFF,                      // "/staff"
@@ -58,8 +59,8 @@ import static url.StaffURL.*; // Import các hằng số URL
     URL_ORDER_UPDATE_STAFF,         // "/staff/order/update"
     URL_IMPORT_STAFF,               // "/staff/import"
     URL_IMPORT_CREATE,              // "/staff/import/create"
-    "/staff/voucher",               // "/staff/voucher" (Chỉ xem)
-    "/staff/voucher/data",          // "/staff/voucher/data" (Lấy dữ liệu JSON)
+    "/staff/voucher",               // "/staff/voucher" (View only)
+    "/staff/voucher/data",          // "/staff/voucher/data" (JSON Data)
     "/staff/profile",               // "/staff/profile"
     "/staff/profile/update",        // "/staff/profile/update"
     "/staff/profile/changepass"     // "/staff/profile/changepass"
@@ -114,15 +115,23 @@ public class StaffController extends HttpServlet {
             return;
         }
 
+        // --- NEW: Handle API Chart Data request (for Dashboard AJAX) ---
+        String tab = request.getParameter("tab");
+        if ("api_chart_data".equals(tab)) {
+            getChartData(request, response);
+            return;
+        }
+        // -------------------------------------------------------------
+
         String urlPath = request.getServletPath();
 
-        // 1. Xử lý các request trả về JSON (AJAX GET)
+        // 1. JSON Data Requests
         if ("/staff/voucher/data".equals(urlPath)) {
             getVoucherData(request, response);
             return;
         } 
 
-        // 2. Xử lý điều hướng trang JSP
+        // 2. JSP Navigation
         switch (urlPath) {
             case URL_STAFF:
                 showDashboard(request, response);
@@ -197,11 +206,13 @@ public class StaffController extends HttpServlet {
     }
 
     // ============================================================
-    // 1. LOGIC DASHBOARD
+    // 1. LOGIC DASHBOARD (UPDATED FOR ADMIN-LIKE LAYOUT)
     // ============================================================
     private void showDashboard(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         StatsDAO statsDAO = new StatsDAO();
+        Gson gson = new Gson();
         
+        // 1. Date Range Handling (for Cards and Pie Chart)
         String fromParam = request.getParameter("fromDate");
         String toParam = request.getParameter("toDate");
         LocalDate now = LocalDate.now();
@@ -209,7 +220,7 @@ public class StaffController extends HttpServlet {
 
         if (fromParam == null || fromParam.isEmpty() || toParam == null || toParam.isEmpty()) {
             toDate = now;
-            fromDate = now.withDayOfYear(1);
+            fromDate = now.withDayOfYear(1); // Default: Start of this year
         } else {
             try {
                 fromDate = LocalDate.parse(fromParam);
@@ -222,12 +233,17 @@ public class StaffController extends HttpServlet {
         Date sqlFrom = Date.valueOf(fromDate);
         Date sqlTo = Date.valueOf(toDate);
 
-        // Stats
+        // 2. Fetch Statistics
+        // All-time counts
         int productsInStock = statsDAO.getAllProductSizeDetail();
+        int totalCustomers = statsDAO.getAllCustomersCount();
+        
+        // Date-range based counts
         Stats statsRange = statsDAO.getStatsByDateRange(sqlFrom, sqlTo);
         int totalOrders = (statsRange != null) ? statsRange.getTotalOrders() : 0;
+        int revenue = (statsRange != null) ? (int) statsRange.getTotalRevenue() : 0;
 
-        // Chart Data
+        // 3. Order Status Pie Chart Data
         Map<String, Integer> orderMap = statsDAO.getOrderStatusCounts(sqlFrom, sqlTo);
         String[] fixedStatuses = {"Pending", "Preparing", "Delivering", "Delivered", "Cancelled", "Returned"};
         List<String> labels = new ArrayList<>();
@@ -249,22 +265,75 @@ public class StaffController extends HttpServlet {
             totalOrdersChart += count;
         }
 
+        // 4. Line/Bar Chart Data (Revenue & Orders per Month for Current Year)
+        int currentYear = now.getYear();
+        List<ChartData> yearData = statsDAO.getMonthlyStatsByYear(currentYear);
+        double[] fullRevenue = new double[12];
+        int[] fullOrders = new int[12];
+        
+        if (yearData != null) {
+            for (ChartData d : yearData) {
+                int mIndex = d.month - 1;
+                if (mIndex >= 0 && mIndex < 12) {
+                    fullRevenue[mIndex] = d.revenue;
+                    fullOrders[mIndex] = d.orders;
+                }
+            }
+        }
+
+        // 5. Recent Orders & Top Products
         List<OrderPopupData> recentOrders = statsDAO.getOrdersForPopup(sqlFrom, sqlTo);
         List<TopProduct> topProducts = statsDAO.getBestSellers(5);
 
+        // 6. Set Attributes
         request.setAttribute("displayFrom", fromDate.toString());
         request.setAttribute("displayTo", toDate.toString());
-        request.setAttribute("productsInStock", productsInStock);
-        request.setAttribute("totalOrders", totalOrders);
+        
+        request.setAttribute("numberOfProduct", productsInStock);
+        request.setAttribute("numberOfCustomer", totalCustomers);
+        request.setAttribute("numberOfOrder", totalOrders);
+        request.setAttribute("revenue", revenue);
 
-        Gson gson = new Gson();
         request.setAttribute("orderStatsLabels", gson.toJson(labels));
         request.setAttribute("orderStatsData", gson.toJson(data));
         request.setAttribute("totalOrdersChart", totalOrdersChart);
+        
         request.setAttribute("recentOrders", recentOrders);
         request.setAttribute("topProducts", topProducts);
+        
+        request.setAttribute("currentYear", currentYear);
+        request.setAttribute("chartRevenue", gson.toJson(fullRevenue));
+        request.setAttribute("chartOrders", gson.toJson(fullOrders));
 
         request.getRequestDispatcher("/staff_Dashboard.jsp").forward(request, response);
+    }
+
+    // --- NEW: API Method for Chart Data (AJAX) ---
+    private void getChartData(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        StatsDAO statsDAO = new StatsDAO();
+        int year = parseIntSafe(request.getParameter("year"), LocalDate.now().getYear());
+        
+        List<ChartData> dbData = statsDAO.getMonthlyStatsByYear(year);
+        
+        double[] revenueData = new double[12];
+        int[] ordersData = new int[12];
+        
+        if (dbData != null) {
+            for (ChartData data : dbData) {
+                int mIndex = data.month - 1;
+                if (mIndex >= 0 && mIndex < 12) {
+                    revenueData[mIndex] = data.revenue;
+                    ordersData[mIndex] = data.orders;
+                }
+            }
+        }
+
+        response.setContentType("application/json");
+        Gson gson = new Gson();
+        Map<String, Object> jsonResponse = new HashMap<>();
+        jsonResponse.put("revenue", revenueData);
+        jsonResponse.put("orders", ordersData);
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     // ============================================================
@@ -438,77 +507,70 @@ public class StaffController extends HttpServlet {
         request.getRequestDispatcher("/staff_Order.jsp").forward(request, response);
     }
 
-    // [FIX] Cập nhật trong file: controller/StaffController.java
-
-private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType("application/json; charset=UTF-8");
-    PrintWriter out = response.getWriter();
-    Gson gson = new Gson();
-    ResponseData responseData = new ResponseData();
-    
-    try {
-        int orderId = Integer.parseInt(request.getParameter("orderId"));
-        String newStatus = request.getParameter("status");
+    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        ResponseData responseData = new ResponseData();
         
-        OrderDAO orderDAO = new OrderDAO();
-        Size_detailDAO size_detailDAO = new Size_detailDAO();
-        ProductDAO productDAO = new ProductDAO(); // [THÊM] Khởi tạo ProductDAO để lấy tên
-        
-        // LOGIC MỚI: Kiểm tra tồn kho trước khi xác nhận (Pending -> Delivering)
-        if ("Delivering".equals(newStatus)) {
-            List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
+        try {
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
+            String newStatus = request.getParameter("status");
             
-            if (details != null && !details.isEmpty()) {
-                // BƯỚC 1: PRE-CHECK (Kiểm tra tồn kho)
-                for (OrderDetail od : details) {
-                    Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
-                    
-                    if (currentStock == null) {
-                         // Lấy tên sản phẩm để báo lỗi rõ ràng hơn
-                        Product p = productDAO.getProductById(od.getProductID());
-                        String pName = (p != null) ? p.getName() : "ID " + od.getProductID();
-                        throw new Exception("Error data: No information found for the product: " + pName);
-                    }
-                    
-                    if (currentStock.getQuantity() < od.getQuantity()) {
-                        // [THÊM] Lấy tên sản phẩm từ ID
-                        Product p = productDAO.getProductById(od.getProductID());
-                        String productName = (p != null) ? p.getName() : "Product ID " + od.getProductID();
+            OrderDAO orderDAO = new OrderDAO();
+            Size_detailDAO size_detailDAO = new Size_detailDAO();
+            ProductDAO productDAO = new ProductDAO(); 
+            
+            // Logic: Check stock before confirming (Pending -> Delivering)
+            if ("Delivering".equals(newStatus)) {
+                List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
+                
+                if (details != null && !details.isEmpty()) {
+                    // STEP 1: PRE-CHECK (Check stock)
+                    for (OrderDetail od : details) {
+                        Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                        
+                        if (currentStock == null) {
+                            Product p = productDAO.getProductById(od.getProductID());
+                            String pName = (p != null) ? p.getName() : "ID " + od.getProductID();
+                            throw new Exception("Error data: No information found for the product: " + pName);
+                        }
+                        
+                        if (currentStock.getQuantity() < od.getQuantity()) {
+                            Product p = productDAO.getProductById(od.getProductID());
+                            String productName = (p != null) ? p.getName() : "Product ID " + od.getProductID();
 
-                        // Ném lỗi với Tên sản phẩm thay vì ID
-                        throw new Exception("Insufficient stock for: " + productName 
-                                + " (Size: " + od.getSize_name() + "). "
-                                + "In stock: " + currentStock.getQuantity() 
-                                + ", Customer Order: " + od.getQuantity());
+                            throw new Exception("Insufficient stock for: " + productName 
+                                    + " (Size: " + od.getSize_name() + "). "
+                                    + "In stock: " + currentStock.getQuantity() 
+                                    + ", Customer Order: " + od.getQuantity());
+                        }
                     }
-                }
 
-                // BƯỚC 2: EXECUTION (Trừ kho)
-                // Chỉ chạy khi Bước 1 đã qua (tất cả sản phẩm đều đủ)
-                for (OrderDetail od : details) {
-                    Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
-                    int newQty = currentStock.getQuantity() - od.getQuantity();
-                    size_detailDAO.updateQuanSize(newQty, od.getProductID(), currentStock.getSize_name());
+                    // STEP 2: EXECUTION (Deduct stock)
+                    for (OrderDetail od : details) {
+                        Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                        int newQty = currentStock.getQuantity() - od.getQuantity();
+                        size_detailDAO.updateQuanSize(newQty, od.getProductID(), currentStock.getSize_name());
+                    }
                 }
             }
+            
+            // STEP 3: UPDATE STATUS
+            orderDAO.updateStatus(newStatus, orderId);
+            
+            responseData.setIsSuccess(true);
+            responseData.setDescription("Status update successful: " + newStatus);
+            
+        } catch (Exception e) {
+            responseData.setIsSuccess(false);
+            responseData.setDescription("Error: " + e.getMessage());
+            e.printStackTrace();
         }
         
-        // BƯỚC 3: CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
-        orderDAO.updateStatus(newStatus, orderId);
-        
-        responseData.setIsSuccess(true);
-        responseData.setDescription("Status update successful: " + newStatus);
-        
-    } catch (Exception e) {
-        // Trả về lỗi để frontend hiển thị alert
-        responseData.setIsSuccess(false);
-        responseData.setDescription("Error: " + e.getMessage());
-        e.printStackTrace();
+        out.print(gson.toJson(responseData));
+        out.flush();
     }
-    
-    out.print(gson.toJson(responseData));
-    out.flush();
-}
 
     // ============================================================
     // 5. LOGIC IMPORT (VIEW & CREATE ONLY)

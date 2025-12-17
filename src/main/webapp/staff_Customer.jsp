@@ -32,7 +32,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff | Customer List</title>
+    <title>Staff | Customer Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://kit.fontawesome.com/1bd876819f.js" crossorigin="anonymous"></script>
@@ -138,7 +138,7 @@
         <div class="card-modern">
             <div class="card-header-modern">
                 <div class="page-title">
-                    <i class="bi bi-people-fill"></i> Customer List
+                    <i class="bi bi-people-fill"></i> Customer Management
                     <span class="stat-badge"><c:out value="${custTotal}" default="0"/> Customers</span>
                 </div>
                 </div>

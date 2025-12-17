@@ -210,7 +210,7 @@
         <ul class="nav-list">
             <li class="nav-link ${param.tab == 'dashboard' || param.tab == null ? 'active' : ''}" data-target="dashboard">
                 <a href="${BASE_URL}/admin?tab=dashboard">
-                    <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
+                    <i class="fa-solid fa-chart-line"></i> <span>Statistic</span>
                 </a>
             </li>
 

@@ -194,13 +194,13 @@
         <ul class="nav-list">
             <li class="<%= currentPath.equals("/staff") ? "active" : "" %>" data-target="dashboard">
                 <a href="${BASE_URL}/staff">
-                    <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
+                    <i class="fa-solid fa-chart-line"></i> <span>Statistic</span>
                 </a>
             </li>
 
             <li class="<%= currentPath.contains("/staff/product") ? "active" : "" %>" data-target="product-list">
                 <a href="${BASE_URL}/staff/product">
-                    <i class="bi bi-box-seam"></i> <span>Product List</span>
+                    <i class="bi bi-box-seam"></i> <span>Product Management</span>
                 </a>
             </li>
             
