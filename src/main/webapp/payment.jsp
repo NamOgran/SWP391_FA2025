@@ -220,6 +220,9 @@
             <div class="row g-5">
                 <div class="col-lg-7">
                     <form action="${pageContext.request.contextPath}/insertOrders" method="post" id="payment-form">
+<c:forEach items="${requestScope.cartList}" var="c">
+        <input type="hidden" name="checkoutItems" value="${c.productID}::${c.size_name}">
+    </c:forEach>                        
 
                         <div class="section-card">
                             <div class="section-title"><i class="bi bi-person-vcard"></i> Contact Information</div>

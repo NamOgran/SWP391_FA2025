@@ -438,42 +438,77 @@ public class StaffController extends HttpServlet {
         request.getRequestDispatcher("/staff_Order.jsp").forward(request, response);
     }
 
-    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json; charset=UTF-8");
-        PrintWriter out = response.getWriter();
-        Gson gson = new Gson();
-        ResponseData responseData = new ResponseData();
+    // [FIX] Cập nhật trong file: controller/StaffController.java
+
+private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    response.setContentType("application/json; charset=UTF-8");
+    PrintWriter out = response.getWriter();
+    Gson gson = new Gson();
+    ResponseData responseData = new ResponseData();
+    
+    try {
+        int orderId = Integer.parseInt(request.getParameter("orderId"));
+        String newStatus = request.getParameter("status");
         
-        try {
-            int orderId = Integer.parseInt(request.getParameter("orderId"));
-            String newStatus = request.getParameter("status");
-            OrderDAO orderDAO = new OrderDAO();
-            Size_detailDAO size_detailDAO = new Size_detailDAO();
+        OrderDAO orderDAO = new OrderDAO();
+        Size_detailDAO size_detailDAO = new Size_detailDAO();
+        ProductDAO productDAO = new ProductDAO(); // [THÊM] Khởi tạo ProductDAO để lấy tên
+        
+        // LOGIC MỚI: Kiểm tra tồn kho trước khi xác nhận (Pending -> Delivering)
+        if ("Delivering".equals(newStatus)) {
+            List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
             
-            orderDAO.updateStatus(newStatus, orderId);
-            
-            // Nếu Delivering -> Trừ kho
-            if ("Delivering".equals(newStatus)) {
-                List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
-                if (details != null) {
-                    for (OrderDetail od : details) {
-                        Size_detail cur = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
-                        if (cur != null) {
-                            int newQty = cur.getQuantity() - od.getQuantity();
-                            size_detailDAO.updateQuanSize(newQty, od.getProductID(), cur.getSize_name());
-                        }
+            if (details != null && !details.isEmpty()) {
+                // BƯỚC 1: PRE-CHECK (Kiểm tra tồn kho)
+                for (OrderDetail od : details) {
+                    Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                    
+                    if (currentStock == null) {
+                         // Lấy tên sản phẩm để báo lỗi rõ ràng hơn
+                        Product p = productDAO.getProductById(od.getProductID());
+                        String pName = (p != null) ? p.getName() : "ID " + od.getProductID();
+                        throw new Exception("Error data: No information found for the product: " + pName);
+                    }
+                    
+                    if (currentStock.getQuantity() < od.getQuantity()) {
+                        // [THÊM] Lấy tên sản phẩm từ ID
+                        Product p = productDAO.getProductById(od.getProductID());
+                        String productName = (p != null) ? p.getName() : "Product ID " + od.getProductID();
+
+                        // Ném lỗi với Tên sản phẩm thay vì ID
+                        throw new Exception("Insufficient stock for: " + productName 
+                                + " (Size: " + od.getSize_name() + "). "
+                                + "In stock: " + currentStock.getQuantity() 
+                                + ", Customer Order: " + od.getQuantity());
                     }
                 }
+
+                // BƯỚC 2: EXECUTION (Trừ kho)
+                // Chỉ chạy khi Bước 1 đã qua (tất cả sản phẩm đều đủ)
+                for (OrderDetail od : details) {
+                    Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                    int newQty = currentStock.getQuantity() - od.getQuantity();
+                    size_detailDAO.updateQuanSize(newQty, od.getProductID(), currentStock.getSize_name());
+                }
             }
-            responseData.setIsSuccess(true);
-            responseData.setDescription("Status updated to " + newStatus);
-        } catch (Exception e) {
-            responseData.setIsSuccess(false);
-            responseData.setDescription("Error: " + e.getMessage());
         }
-        out.print(gson.toJson(responseData));
-        out.flush();
+        
+        // BƯỚC 3: CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
+        orderDAO.updateStatus(newStatus, orderId);
+        
+        responseData.setIsSuccess(true);
+        responseData.setDescription("Status update successful: " + newStatus);
+        
+    } catch (Exception e) {
+        // Trả về lỗi để frontend hiển thị alert
+        responseData.setIsSuccess(false);
+        responseData.setDescription("Error: " + e.getMessage());
+        e.printStackTrace();
     }
+    
+    out.print(gson.toJson(responseData));
+    out.flush();
+}
 
     // ============================================================
     // 5. LOGIC IMPORT (VIEW & CREATE ONLY)

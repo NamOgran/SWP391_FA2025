@@ -216,7 +216,7 @@
 
             <li class="nav-link ${param.tab == 'product' ? 'active' : ''}" data-target="product-manage">
                 <a href="${BASE_URL}/admin?tab=product">
-                    <i class="bi bi-box"></i> <span>Product Management</span>
+                    <i class="bi bi-box-seam"></i> <span>Product Management</span>
                 </a>
             </li>
 

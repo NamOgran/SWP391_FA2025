@@ -191,11 +191,46 @@ public class OrderController extends HttpServlet {
                 }
 
                 // --- TRƯỜNG HỢP 2: THANH TOÁN GIỎ HÀNG (CART CHECKOUT) ---
-                List<entity.Cart> cartList = daoCart.getAll(customer_id);
-                if (cartList == null || cartList.isEmpty()) {
-                    response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cart is empty");
-                    return;
-                }
+                // --- TRƯỜNG HỢP 2: THANH TOÁN GIỎ HÀNG (CART CHECKOUT) ---
+// 1. Lấy toàn bộ giỏ hàng từ DB
+List<entity.Cart> fullCart = daoCart.getAll(customer_id);
+
+// 2. Lấy danh sách ID::Size được gửi từ Checkout.jsp
+String[] checkoutItems = request.getParameterValues("checkoutItems");
+
+if (fullCart == null || fullCart.isEmpty() || checkoutItems == null || checkoutItems.length == 0) {
+    response.sendRedirect(request.getContextPath() + "/error.jsp?message=Cart is empty or no items selected");
+    return;
+}
+
+// 3. Lọc: Chỉ giữ lại những item có trong checkoutItems
+List<entity.Cart> cartList = new java.util.ArrayList<>();
+for (String itemStr : checkoutItems) {
+    // itemStr dạng "productID::sizeName"
+    String[] parts = itemStr.split("::");
+    if (parts.length == 2) {
+        int pId = parseIntSafe(parts[0], 0);
+        String pSize = parts[1];
+
+        // Tìm trong fullCart xem có item này không
+        for (entity.Cart c : fullCart) {
+            if (c.getProductID() == pId && c.getSize_name().equals(pSize)) {
+                cartList.add(c);
+                break; 
+            }
+        }
+    }
+}
+
+if (cartList.isEmpty()) {
+    response.sendRedirect(request.getContextPath() + "/error.jsp?message=No valid items found to checkout");
+    return;
+}
+
+// ... (Phần code bên dưới giữ nguyên: Kiểm tra tồn kho, tính tiền, insert order) ...
+
+// Lưu ý đoạn vòng lặp cuối cùng xử lý insertOrderDetail và xóa giỏ hàng
+// Nó sẽ tự động đúng vì bây giờ biến 'cartList' chỉ chứa các sản phẩm đã được lọc.
 
                 // Kiểm tra hàng tồn/trạng thái sản phẩm
                 StringBuilder issue = new StringBuilder();

@@ -1210,34 +1210,43 @@ private void handleOrderStatusUpdate(HttpServletRequest request, HttpServletResp
     try {
         int orderId = Integer.parseInt(request.getParameter("orderId"));
         String newStatus = request.getParameter("status");
+        
         OrderDAO orderDAO = new OrderDAO();
         Size_detailDAO size_detailDAO = new Size_detailDAO();
-
-        // LOGIC MỚI: Kiểm tra tồn kho trước khi xác nhận đơn (Pending -> Delivering)
+        ProductDAO productDAO = new ProductDAO(); // [THÊM] Khởi tạo ProductDAO
+        
+        // LOGIC MỚI: Kiểm tra tồn kho trước khi Admin xác nhận (Pending -> Delivering)
         if ("Delivering".equals(newStatus)) {
             List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
             
             if (details != null && !details.isEmpty()) {
-                // BƯỚC 1: KIỂM TRA TỒN KHO (Validation Phase)
-                // Duyệt qua toàn bộ sản phẩm để đảm bảo TẤT CẢ đều đủ hàng trước khi trừ
+                // BƯỚC 1: PRE-CHECK (Kiểm tra tồn kho)
+                // Duyệt để đảm bảo TẤT CẢ sản phẩm đều đủ hàng trước khi trừ
                 for (OrderDetail od : details) {
                     Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
                     
                     if (currentStock == null) {
-                        throw new Exception("Error data: Product ID not found " + od.getProductID() + " size " + od.getSize_name() + " in stock.");
+                         // Lấy tên sản phẩm để báo lỗi rõ ràng hơn
+                        Product p = productDAO.getProductById(od.getProductID());
+                        String pName = (p != null) ? p.getName() : "ID " + od.getProductID();
+                        throw new Exception("Error data: No information found for the product: " + pName);
                     }
                     
                     if (currentStock.getQuantity() < od.getQuantity()) {
-                        // Nếu không đủ hàng, ném lỗi ngay lập tức để dừng quy trình
-                        throw new Exception("Insufficient stock for the product: " + od.getProductID() 
+                        // [THÊM] Lấy tên sản phẩm từ ID
+                        Product p = productDAO.getProductById(od.getProductID());
+                        String productName = (p != null) ? p.getName() : "Product ID " + od.getProductID();
+
+                        // Ném lỗi với Tên sản phẩm thay vì ID
+                        throw new Exception("Insufficient stock for: " + productName 
                                 + " (Size: " + od.getSize_name() + "). "
                                 + "In stock: " + currentStock.getQuantity() 
-                                + ", Customer order: " + od.getQuantity());
+                                + ", Customer Order: " + od.getQuantity());
                     }
                 }
 
-                // BƯỚC 2: TRỪ KHO (Execution Phase)
-                // Chỉ chạy khi Bước 1 đã qua (tất cả sản phẩm đều đủ)
+                // BƯỚC 2: EXECUTION (Trừ kho)
+                // Chỉ chạy khi Bước 1 đã qua (tất cả sản phẩm đều hợp lệ)
                 for (OrderDetail od : details) {
                     Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
                     int newQty = currentStock.getQuantity() - od.getQuantity();
@@ -1247,14 +1256,13 @@ private void handleOrderStatusUpdate(HttpServletRequest request, HttpServletResp
         }
 
         // BƯỚC 3: CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
-        // Chỉ cập nhật khi không có lỗi ở trên
         orderDAO.updateStatus(newStatus, orderId);
 
         responseData.setIsSuccess(true);
-        responseData.setDescription("Update status successfully to " + newStatus);
+        responseData.setDescription("Status update successful: " + newStatus);
         
     } catch (Exception e) {
-        // Nếu có lỗi (không đủ hàng), trả về thông báo lỗi cho Frontend hiển thị alert
+        // Trả về lỗi để frontend hiển thị alert
         responseData.setIsSuccess(false);
         responseData.setDescription("Error: " + e.getMessage());
         e.printStackTrace();

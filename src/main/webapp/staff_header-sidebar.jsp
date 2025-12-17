@@ -194,7 +194,7 @@
         <ul class="nav-list">
             <li class="<%= currentPath.equals("/staff") ? "active" : "" %>" data-target="dashboard">
                 <a href="${BASE_URL}/staff">
-                    <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+                    <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
                 </a>
             </li>
 
@@ -206,13 +206,13 @@
             
             <li class="<%= currentPath.contains("/staff/customer") ? "active" : "" %>" data-target="customer-list">
                 <a href="${BASE_URL}/staff/customer">
-                    <i class="bi bi-people"></i> <span>Customer List</span>
+                    <i class="bi bi-people-fill"></i> <span>Customer Management</span>
                 </a>
             </li>
 
             <li class="<%= currentPath.contains("/staff/order") ? "active" : "" %>" data-target="order-manage">
                 <a href="${BASE_URL}/staff/order">
-                    <i class="bi bi-cart-check"></i> <span>Order Management</span>
+                    <i class="bi bi-cart-check-fill"></i> <span>Order Management</span>
                 </a>
             </li>
 
@@ -224,13 +224,13 @@
             
             <li class="<%= currentPath.contains("/staff/voucher") ? "active" : "" %>" data-target="voucher-list">
                 <a href="${BASE_URL}/staff/voucher">
-                    <i class="bi bi-tags"></i> <span>Voucher List</span>
+                    <i class="bi bi-tags-fill"></i> <span>Voucher Management</span>
                 </a>
             </li>
 
             <li class="<%= currentPath.contains("/staff/profile") ? "active" : "" %>" data-target="my-profile">
                 <a href="${BASE_URL}/staff/profile">
-                    <i class="bi bi-person"></i> <span>My Profile</span>
+                    <i class="bi bi-person-fill"></i> <span>My Profile</span>
                 </a>
             </li>
         </ul>
