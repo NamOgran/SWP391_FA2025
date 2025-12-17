@@ -1,11 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.util.List;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,64 +12,58 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-// Import your DAO and Entity
+// Import đầy đủ các thư viện cần thiết
 import DAO.FeedBackDAO;
-import entity.Feedback; 
-import entity.Customer; // ===== ADDED: Import your Customer class =====
-
-import java.io.BufferedReader;
-// JSON Library, need to add JAR file to WEB-INF/lib
+import entity.Feedback;
+import entity.Customer;
 import org.json.JSONObject;
 
 /**
- *
- * @author Tran Quang Duyen
+ * Controller xử lý tất cả các tác vụ liên quan đến Feedback
+ * - GET: Xem lịch sử đánh giá
+ * - POST: Gửi đánh giá mới
  */
-// This URL Pattern must match the fetch() command in JavaScript
-@WebServlet(name = "FeedBackController", urlPatterns = {"/feedback"})
+@WebServlet(name = "FeedBackController", urlPatterns = {"/feedback", "/my-feedback"})
 public class FeedBackController extends HttpServlet {
 
     private FeedBackDAO feedbackDAO;
 
-    // Initialize DAO when servlet is loaded
     @Override
     public void init() {
         feedbackDAO = new FeedBackDAO();
     }
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet FeedbackController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet FeedbackController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    /**
-     * Handles the HTTP <code>GET</code> method.
+     * Xử lý GET: Hiển thị trang lịch sử đánh giá (Logic từ MyFeedbackController cũ)
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Do not use doGet for sending feedback, keep as is
-        processRequest(request, response);
+        
+        // 1. Lấy thông tin session
+        HttpSession session = request.getSession();
+        Customer acc = (Customer) session.getAttribute("acc");
+
+        // 2. Kiểm tra đăng nhập
+        if (acc == null) {
+            // Nếu chưa đăng nhập thì chuyển về trang login
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        // 3. Lấy danh sách feedback của user (Logic hiển thị lịch sử)
+        // Lưu ý: Đảm bảo DAO đã có hàm getFeedbackByCustomerId như chúng ta đã sửa ở bước trước
+        List<Feedback> myFeedbacks = feedbackDAO.getFeedbackByCustomerId(acc.getCustomer_id());
+
+        // 4. Đẩy dữ liệu ra view
+        request.setAttribute("myFeedbacks", myFeedbacks);
+        
+        // 5. Forward sang trang JSP hiển thị danh sách
+        request.getRequestDispatcher("my_feedback.jsp").forward(request, response);
     }
 
     /**
-     * Handles the HTTP <code>POST</code> method.
+     * Xử lý POST: Nhận JSON để tạo đánh giá mới (Logic từ FeedBackController cũ)
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -81,12 +74,8 @@ public class FeedBackController extends HttpServlet {
         PrintWriter out = response.getWriter();
         JSONObject jsonResponse = new JSONObject();
 
-        // ===== MODIFIED FROM HERE =====
-
-        // 1. Get customerId from Session
+        // 1. Kiểm tra session
         HttpSession session = request.getSession(false);
-
-        // 1.1. Check if session has "acc" attribute (from LoginServlet)
         if (session == null || session.getAttribute("acc") == null) {
             jsonResponse.put("status", "error");
             jsonResponse.put("message", "You need to log in to leave a review.");
@@ -97,26 +86,18 @@ public class FeedBackController extends HttpServlet {
         
         int customerId;
         try {
-            // 1.2. Get Customer object from session
             Customer loggedInCustomer = (Customer) session.getAttribute("acc");
-            
-            // 1.3. Get ID from that object
-            // *** IMPORTANT: Update .getCustomerID() if your method is named .getId() or similar ***
             customerId = loggedInCustomer.getCustomer_id(); 
-
         } catch (Exception e) {
-             e.printStackTrace(); // Print error to console for debugging
+             e.printStackTrace();
              jsonResponse.put("status", "error");
             jsonResponse.put("message", "Session error (Cannot read Customer data).");
             out.print(jsonResponse.toString());
             out.flush();
             return;
         }
-        
-        // ===== END MODIFICATION =====
 
-
-        // 2. Read JSON data from request body (Keep as is)
+        // 2. Đọc dữ liệu JSON từ request body
         StringBuilder sb = new StringBuilder();
         String line;
         try (BufferedReader reader = request.getReader()) {
@@ -125,7 +106,7 @@ public class FeedBackController extends HttpServlet {
             }
         }
         
-        // 3. Parse JSON and Process Logic (Keep as is)
+        // 3. Xử lý logic nghiệp vụ
         try {
             JSONObject jsonRequest = new JSONObject(sb.toString());
             
@@ -134,9 +115,9 @@ public class FeedBackController extends HttpServlet {
             int rating = jsonRequest.getInt("rating");
             String comment = jsonRequest.getString("comment");
 
-            // 4. Use DAO to check business logic
+            // 4. Kiểm tra điều kiện (Business Logic)
             
-            // 4.1. Check if user actually purchased the item
+            // 4.1. Đã mua hàng chưa?
             if (!feedbackDAO.hasPurchased(customerId, productId, orderId)) {
                 jsonResponse.put("status", "error");
                 jsonResponse.put("message", "You can only review products that have been purchased and delivered.");
@@ -145,7 +126,7 @@ public class FeedBackController extends HttpServlet {
                 return;
             }
 
-            // 4.2. Check if they have already reviewed this order
+            // 4.2. Đã đánh giá đơn này chưa?
             if (feedbackDAO.hasAlreadyReviewed(customerId, productId, orderId)) {
                 jsonResponse.put("status", "error");
                 jsonResponse.put("message", "You have already reviewed this product for this order.");
@@ -154,9 +135,9 @@ public class FeedBackController extends HttpServlet {
                 return;
             }
 
-            // 5. If everything is OK -> Insert into Database
+            // 5. Insert vào Database
             Feedback fb = new Feedback(); 
-            fb.setCustomerId(customerId); // customerId is now correct
+            fb.setCustomerId(customerId);
             fb.setProductId(productId);
             fb.setOrderId(orderId);
             fb.setRatePoint(rating);
@@ -166,10 +147,6 @@ public class FeedBackController extends HttpServlet {
 
             if (insertSuccess) {
                 jsonResponse.put("status", "success");
-                // Optional: Call another DAO function here to update
-                // average rating in 'Products' table
-                // productDAO.updateAverageRating(productId);
-                
             } else {
                 jsonResponse.put("status", "error");
                 jsonResponse.put("message", "Could not save feedback. Please try again.");
@@ -181,17 +158,13 @@ public class FeedBackController extends HttpServlet {
             jsonResponse.put("message", "Server error while processing data: " + e.getMessage());
         }
 
-        // 6. Send JSON response back to JavaScript
+        // 6. Trả về kết quả JSON
         out.print(jsonResponse.toString());
         out.flush();
     }
 
-    /**
-     * Returns a short description of the servlet.
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Feedback Controller handles both viewing history and submitting reviews";
+    }
 }
