@@ -448,11 +448,8 @@ public class AdminController extends HttpServlet {
                 } else {
                     filteredCust = allCust;
                 }
-                Collections.sort(filteredCust, (c1, c2) -> {
-                    String s1 = c1.getUsername() != null ? c1.getUsername() : "";
-                    String s2 = c2.getUsername() != null ? c2.getUsername() : "";
-                    return s1.compareToIgnoreCase(s2);
-                });
+                // Sắp xếp ID giảm dần (Mới nhất lên đầu)
+Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), c1.getCustomer_id()));
                 request.setAttribute("customerList", filteredCust);
                 request.setAttribute("custTotal", filteredCust.size());
                 forwardPage = "/admin_CustomerManagement.jsp";
@@ -1342,6 +1339,8 @@ public class AdminController extends HttpServlet {
             int custId = Integer.parseInt(request.getParameter("id"));
             OrderDAO orderDAO = new OrderDAO();
             List<Orders> orders = orderDAO.getOrdersByCustomerID(custId);
+            Collections.sort(orders, (o1, o2) -> Integer.compare(o2.getOrderID(), o1.getOrderID()));
+            
             List<Map<String, Object>> simpleList = new ArrayList<>();
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             for (Orders o : orders) {

@@ -71,7 +71,7 @@
             .form-floating > .form-control:focus { border-color: #4e73df; box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25); }
             
             /* Validation */
-            label.error { color: #e74a3b; font-size: 0.85rem; margin-top: 5px; display: block; margin-left: 5px; font-weight: 600; }
+            label.error { color: #e74a3b; font-size: 0.85rem; margin-top: 2px; display: block; margin-left: 5px; font-weight: 600; }
             .form-control.error { border-color: #e74a3b !important; background-color: #fff8f8 !important; }
 
             /* Pagination */
@@ -182,34 +182,44 @@
                     </div>
                     <div class="modal-body p-4">
                         <form id="addVoucherForm">
-                            <input type="hidden" name="action" value="add">
-                            <div class="form-floating mb-3">
-                                <input type="text" name="id" id="addVoucherID" class="form-control" placeholder="Voucher Code" style="text-transform: uppercase;" required>
-                                <label for="addVoucherID">Voucher Code (ID)</label>
-                            </div>
-                            <div class="form-floating mb-3">
-                                <input type="number" name="percent" id="addPercent" class="form-control" placeholder="Percent" required>
-                                <label for="addPercent">Discount Percent (%)</label>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-6">
-                                    <div class="form-floating">
-                                        <input type="date" name="startDate" id="addStartDate" class="form-control" required>
-                                        <label for="addStartDate">Start Date</label>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="form-floating">
-                                        <input type="date" name="endDate" id="addEndDate" class="form-control" required>
-                                        <label for="addEndDate">End Date</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-4 text-end">
-                                <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-success px-4 fw-bold">Create Voucher</button>
-                            </div>
-                        </form>
+    <input type="hidden" name="action" value="add">
+
+    <div class="mb-3">
+        <div class="form-floating">
+            <input type="text" name="id" id="addVoucherID" class="form-control" placeholder="Voucher Code" style="text-transform: uppercase;" required maxlength="50">
+            <label for="addVoucherID">Voucher Code (ID)</label>
+        </div>
+        </div>
+
+    <div class="mb-3">
+        <div class="form-floating">
+            <input type="number" name="percent" id="addPercent" class="form-control" placeholder="Percent" required>
+            <label for="addPercent">Discount Percent (%)</label>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-6">
+            <div class="mb-3"> <div class="form-floating">
+                    <input type="date" name="startDate" id="addStartDate" class="form-control" required>
+                    <label for="addStartDate">Start Date</label>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mb-3"> <div class="form-floating">
+                    <input type="date" name="endDate" id="addEndDate" class="form-control" required>
+                    <label for="addEndDate">End Date</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-end">
+        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success px-4 fw-bold">Create Voucher</button>
+    </div>
+</form>
                     </div>
                 </div>
             </div>

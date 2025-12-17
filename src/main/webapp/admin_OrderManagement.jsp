@@ -150,7 +150,7 @@
                     <div class="col-md-2">
                         <span class="form-label-small">Status</span>
                         <select id="filterStatus" class="form-select">
-                            <option value="">All Status</option>
+                            <option value="">--All Status--</option>
                             <option value="Pending">Pending</option>
                             <option value="Delivering">Delivering</option>
                             <option value="Delivered">Delivered</option>

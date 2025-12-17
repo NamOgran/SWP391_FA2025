@@ -1,6 +1,6 @@
 <%-- 
     Document   : admin_ProductManagement.jsp
-    Description: Product Management (Refactored: Loading Effect & Smooth Blur Table)
+    Description: Product Management (Refactored: Loading Effect & Smooth Blur Table & Fixed Delete AJAX)
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="entity.Staff" %>
@@ -182,7 +182,7 @@
                         
                         <div class="col-md-2">
                             <select id="filter-category" class="form-select">
-                                <option value="0">All Categories</option>
+                                <option value="0">--All Categories--</option>
                                 <c:forEach var="cate" items="${cateList}">
                                     <option value="${cate.category_id}" ${selectedCategory == cate.category_id ? 'selected' : ''}>${cate.type} (${cate.gender})</option>
                                 </c:forEach>
@@ -191,7 +191,7 @@
                         
                         <div class="col-md-2">
                             <select id="filter-status" class="form-select">
-                                <option value="all" ${selectedStatus == 'all' ? 'selected' : ''}>All Status</option>
+                                <option value="all" ${selectedStatus == 'all' ? 'selected' : ''}>--All Status--</option>
                                 <option value="active" ${selectedStatus == 'active' ? 'selected' : ''}>Active</option>
                                 <option value="inactive" ${selectedStatus == 'inactive' ? 'selected' : ''}>Inactive</option>
                             </select>
@@ -199,7 +199,7 @@
                         
                         <div class="col-md-2">
                             <select id="filter-sort" class="form-select">
-                                <option value="">Sort By</option>
+                                <option value="">--Sort By--</option>
                                 <option value="price_asc" ${sortBy == 'price_asc' ? 'selected' : ''}>Price: Low to High</option>
                                 <option value="price_desc" ${sortBy == 'price_desc' ? 'selected' : ''}>Price: High to Low</option>
                                 <option value="name_asc" ${sortBy == 'name_asc' ? 'selected' : ''}>Name: A-Z</option>
@@ -293,13 +293,13 @@
                                                             <c:choose>
                                                                 <c:when test="${p.is_active}">
                                                                     <button type="button" class="btn-soft btn-soft-warning" data-bs-toggle="modal" data-bs-target="#toggleStatusModal"
-                                                                            data-id="${p.id}" data-action-type="Deactivate" title="Deactivate">
+                                                                                data-id="${p.id}" data-action-type="Deactivate" title="Deactivate">
                                                                         <i class="bi bi-eye-slash-fill"></i>
                                                                     </button>
                                                                 </c:when>
                                                                 <c:otherwise>
                                                                     <button type="button" class="btn-soft btn-soft-success" data-bs-toggle="modal" data-bs-target="#toggleStatusModal"
-                                                                            data-id="${p.id}" data-action-type="Reactivate" title="Reactivate">
+                                                                                data-id="${p.id}" data-action-type="Reactivate" title="Reactivate">
                                                                         <i class="bi bi-eye-fill"></i>
                                                                     </button>
                                                                 </c:otherwise>
@@ -974,7 +974,7 @@
                 });
             }
 
-            // DELETE
+            // DELETE MODAL LOGIC (FIXED)
             const deleteModalEl = document.getElementById('deleteConfirmationModal');
             if (deleteModalEl) {
                 deleteModalEl.addEventListener('show.bs.modal', function (event) {
@@ -983,7 +983,8 @@
                     var productName = button.getAttribute('data-product-name');
                     
                     var modalTitle = deleteModalEl.querySelector('#deleteConfirmationModalLabel span');
-                    modalTitle.textContent = productName;
+                    if(modalTitle) modalTitle.textContent = productName;
+                    
                     $('#confirmDeleteButton').data('product-id', productId);
                     
                     $('#relatedDataLoading').show();
@@ -995,24 +996,28 @@
                     $('#sizes-none, #carts-none, #orders-none, #imports-none, #feedbacks-none').hide();
                     
                     $('#sizes-count, #carts-count, #orders-count, #imports-count, #feedbacks-count')
-                        .text('0')
-                        .removeClass('bg-danger bg-success bg-warning') 
-                        .addClass('bg-secondary'); 
+                        .text('0').removeClass('bg-danger bg-success bg-warning').addClass('bg-secondary');
 
                     var firstTabEl = document.querySelector('#relatedDataTab button[data-bs-target="#sizes-content"]');
-                    var firstTab = new bootstrap.Tab(firstTabEl);
-                    firstTab.show();
+                    if(firstTabEl) {
+                        var firstTab = new bootstrap.Tab(firstTabEl);
+                        firstTab.show();
+                    }
 
+                    // --- AJAX CALL (CORRECTED) ---
                     $.ajax({
-                        url: '${BASE_URL}/admin/productRelatedData', 
-                        type: 'GET', 
-                        data: {productId: productId}, 
+                        url: '${BASE_URL}/admin', // Points to the main servlet
+                        type: 'GET',
+                        data: {
+                            action: 'get_product_related_data', // Identify the specific operation
+                            productId: productId
+                        },
                         dataType: 'json',
                         success: function (data) {
                             var reasons = [];
                             var canDelete = true;
                             
-                            // --- SIZES ---
+                            // 1. SIZES
                             if (data.sizes && data.sizes.length > 0) {
                                 var totalStock = 0;
                                 $.each(data.sizes, function (i, item) { 
@@ -1020,9 +1025,7 @@
                                     $('#sizes-table-body').append('<tr class="'+rowClass+'"><td>' + item.size_name + '</td><td>' + item.quantity + '</td></tr>'); 
                                     totalStock += item.quantity;
                                 });
-                                
                                 $('#sizes-count').text(data.sizes.length).removeClass('bg-secondary').addClass('bg-danger');
-
                                 if (totalStock > 0) {
                                     reasons.push("Product still has physical stock (Total: " + totalStock + ").");
                                     canDelete = false;
@@ -1032,7 +1035,7 @@
                                 $('#sizes-none').show(); 
                             }
                             
-                            // --- CARTS ---
+                            // 2. CARTS
                             if (data.carts && data.carts.length > 0) { 
                                 $('#carts-count').text(data.carts.length).removeClass('bg-secondary').addClass('bg-danger'); 
                                 $.each(data.carts, function (i, item) { $('#carts-table-body').append('<tr><td>' + item.cart_id + '</td><td>' + item.customer_id + '</td><td>' + item.size_name + '</td><td>' + item.quantity + '</td></tr>'); }); 
@@ -1043,7 +1046,7 @@
                                 $('#carts-none').show(); 
                             }
 
-                            // --- ORDERS ---
+                            // 3. ORDERS
                             if (data.orders && data.orders.length > 0) { 
                                 $('#orders-count').text(data.orders.length).removeClass('bg-secondary').addClass('bg-danger'); 
                                 $.each(data.orders, function (i, item) { $('#orders-table-body').append('<tr><td>' + item.orderID + '</td><td>' + item.size_name + '</td><td>' + item.quantity + '</td></tr>'); }); 
@@ -1053,7 +1056,7 @@
                                 $('#orders-none').show(); 
                             }
 
-                            // --- IMPORTS ---
+                            // 4. IMPORTS
                             if (data.imports && data.imports.length > 0) { 
                                 $('#imports-count').text(data.imports.length).removeClass('bg-secondary').addClass('bg-danger'); 
                                 $.each(data.imports, function (i, item) { $('#imports-table-body').append('<tr><td>' + item.id + '</td><td>' + item.date + '</td><td>' + item.total + '</td><td>' + item.status + '</td></tr>'); }); 
@@ -1063,7 +1066,7 @@
                                 $('#imports-none').show(); 
                             }
 
-                            // --- FEEDBACKS ---
+                            // 5. FEEDBACKS
                             if (data.feedbacks && data.feedbacks.length > 0) { 
                                 $('#feedbacks-count').text(data.feedbacks.length).removeClass('bg-secondary').addClass('bg-danger'); 
                                 $.each(data.feedbacks, function (i, item) { $('#feedbacks-table-body').append('<tr><td>' + item.feedback_id + '</td><td>' + item.customer_id + '</td><td>' + item.rate_point + '</td></tr>'); }); 
@@ -1087,7 +1090,20 @@
                             }
                         },
                         error: function (jqXHR, textStatus, errorThrown) { 
-                            $('#relatedDataLoading').html('<div class="alert alert-danger"><strong>Error checking data:</strong> ' + (jqXHR.responseJSON || errorThrown) + '</div>'); 
+                            console.log("Error details:", jqXHR.responseText);
+                            var errorMsg = "Unknown Error";
+                            if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                                errorMsg = jqXHR.responseJSON.message;
+                            } else if (jqXHR.responseText) {
+                                if (jqXHR.responseText.includes("<!DOCTYPE html>")) {
+                                    errorMsg = "Server returned HTML instead of JSON. Check Login or URL path.";
+                                } else {
+                                    errorMsg = jqXHR.responseText;
+                                }
+                            } else {
+                                errorMsg = errorThrown;
+                            }
+                            $('#relatedDataLoading').html('<div class="alert alert-danger"><strong>Error checking data:</strong> ' + errorMsg + '</div>'); 
                         }
                     });
                 });

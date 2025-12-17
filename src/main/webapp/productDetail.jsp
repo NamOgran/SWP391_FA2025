@@ -654,7 +654,7 @@
                                             <c:if test="${fn:length(feedbackList) > 2}">
                                                 <div class="text-center" id="showMoreContainer">
                                                     <button id="btnShowMoreReviews" type="button" class="btn-show-more">
-                                                        Show More <i class="bi bi-chevron-down"></i>
+                                                        Show All <i class="bi bi-chevron-down"></i>
                                                     </button>
                                                 </div>
                                             </c:if>
