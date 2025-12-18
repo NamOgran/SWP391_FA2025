@@ -29,11 +29,11 @@ public class MaleProductController extends HttpServlet {
             throws ServletException, IOException {
 
         String urlPath = request.getServletPath();
-        
+
         // Load Vouchers
         VoucherDAO voucher2 = new VoucherDAO();
         List<Voucher> voucherList = voucher2.getAll();
-        
+
         // [FIX] Map key changed to String for VoucherID
         Map<String, Integer> voucherMap = new HashMap<>();
         for (Voucher voucher : voucherList) {
@@ -53,7 +53,7 @@ public class MaleProductController extends HttpServlet {
                 getShort(request, response);
                 break;
             case URL_MALE_PANT:
-                getPant(request,response);
+                getPant(request, response);
                 break;
         }
     }
@@ -63,7 +63,7 @@ public class MaleProductController extends HttpServlet {
         List<Product> list = DAOproduct.getMaleProductByType("t-shirt");
         request.setAttribute("productList", list);
         // Important: Set context for Breadcrumbs and Sorting
-        request.setAttribute("pageContext", "male_tshirt"); 
+        request.setAttribute("pageContext", "male_tshirt");
         request.getRequestDispatcher("/productList.jsp").forward(request, response);
     }
 

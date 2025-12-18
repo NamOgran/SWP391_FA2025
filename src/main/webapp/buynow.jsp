@@ -1,6 +1,6 @@
 <%-- 
     Document    : checkoutBuyNow.jsp
-    Description : Buy Now Checkout (Validated with Strict Rules)
+    Description : Buy Now Checkout (Updated with Max Discount Logic)
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -30,8 +30,8 @@
 
 <c:set var="voucherPercent" value="0" />
 <c:set var="voucherId"      value="0" />
-<c:set var="discount"      value="0" />
-<c:set var="grandTotal"    value="${subtotal}" />
+<c:set var="discount"       value="0" />
+<c:set var="grandTotal"     value="${subtotal}" />
 
 <%-- Lấy Product ID để dùng cho nút Back --%>
 <c:set var="currentPId" value="${not empty param.productId ? param.productId : id}" />
@@ -209,7 +209,7 @@
                 border-color: var(--primary-color);
                 box-shadow: 0 0 0 0.2rem rgba(160, 129, 108, 0.15);
             }
-            
+
             /* UPDATED VALIDATION CSS */
             .error {
                 color: #dc3545;
@@ -405,17 +405,13 @@
 
         <div class="container">
             <div class="checkout-steps">
-                <div class="step-item">
-                    <span class="step-count">1</span> Product View
-                </div>
+
                 <div class="step-line"></div>
                 <div class="step-item active">
-                    <span class="step-count">2</span> Checkout (Buy Now)
+                    <span class="step-count"><i class="bi bi-credit-card"></i></span> Checkout (Buy Now)
                 </div>
                 <div class="step-line"></div>
-                <div class="step-item">
-                    <span class="step-count">3</span> Order Complete
-                </div>
+
             </div>
 
             <div class="row g-5">
@@ -430,7 +426,6 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                        <%-- Rule: Max 100 chars, Auto Capitalize --%>
                                         <input type="text" class="form-control capitalize-input" placeholder="Full Name" name="fullName" 
                                                value="${sessionScope.acc.fullName}" required minlength="2" maxlength="100" style="text-transform: capitalize;">
                                     </div>
@@ -438,7 +433,6 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                        <%-- Rule: Max 10 digits --%>
                                         <input type="tel" class="form-control" placeholder="Phone Number" name="phoneNumber" id="phoneNumber" 
                                                value="${sessionScope.acc.phoneNumber}" required maxlength="10">
                                     </div>
@@ -446,7 +440,6 @@
                                 <div class="col-12">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                        <%-- Rule: Max 50 chars --%>
                                         <input type="email" class="form-control" placeholder="Email Address (Optional)" name="email" 
                                                value="${sessionScope.acc.email}" required maxlength="50">
                                     </div>
@@ -460,7 +453,6 @@
                             </div>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-map"></i></span>
-                                <%-- Rule: Max 255 chars --%>
                                 <input type="text" class="form-control" placeholder="House number, Street, Ward, District, City..." name="address" 
                                        value="${sessionScope.acc.address}" required maxlength="255">
                             </div>
@@ -577,217 +569,235 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
-            // BuyNow uses single item calc
-            let subtotal = ${subtotal};
-            let appliedVoucher = {value: 0, id: 0};
-            let successModal, processingModal;
+                                    // BuyNow uses single item calc
+                                    let subtotal = ${subtotal};
+                                    // [UPDATED] Store Max Discount
+                                    let appliedVoucher = {value: 0, id: 0, maxDiscount: 0};
+                                    let successModal, processingModal;
 
-            $(window).on('load', function () {
-                setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
-            });
+                                    $(window).on('load', function () {
+                                        setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
+                                    });
 
-            // Hàm tự động viết hoa chữ cái đầu (Hỗ trợ tiếng Việt)
-            function toTitleCase(str) {
-                return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
-                    return l.toUpperCase();
-                });
-            }
+                                    // Hàm tự động viết hoa chữ cái đầu (Hỗ trợ tiếng Việt)
+                                    function toTitleCase(str) {
+                                        return str.toLowerCase().replace(/(^|\s)\S/g, function (l) {
+                                            return l.toUpperCase();
+                                        });
+                                    }
 
-            function fmt(n) {
-                return (n || 0).toLocaleString('vi-VN') + ' VND';
-            }
+                                    function fmt(n) {
+                                        return (n || 0).toLocaleString('vi-VN') + ' VND';
+                                    }
 
-            function recalcTotals() {
-                const discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
-                const grand = Math.max(0, subtotal - discount);
+                                    // [UPDATED] Logic tính toán giảm giá có Max Limit
+                                    function recalcTotals() {
+                                        // 1. Tính mức giảm theo phần trăm
+                                        let discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
 
-                $('#subtotalText').text(fmt(subtotal));
-                $('#grandTotalText').text(fmt(grand));
+                                        // 2. Kiểm tra Max Discount (Nếu voucher có giới hạn)
+                                        if (appliedVoucher.maxDiscount > 0 && discount > appliedVoucher.maxDiscount) {
+                                            discount = appliedVoucher.maxDiscount;
+                                        }
 
-                // Update hidden inputs
-                $('#discountInput').val(discount);
-                $('#grandTotalInput').val(grand);
-                $('#subtotalInput').val(subtotal);
-                $('#voucherIdInput').val(appliedVoucher.id || '');
-                $('#voucherValueInput').val(appliedVoucher.value || 0);
-                $('#voucherCodeInput').val(appliedVoucher.id || '');
-                $('#voucherTypeInput').val((appliedVoucher.value > 0) ? 'percent' : '');
+                                        const grand = Math.max(0, subtotal - discount);
 
-                updateVoucherUI(discount);
-            }
+                                        $('#subtotalText').text(fmt(subtotal));
+                                        $('#grandTotalText').text(fmt(grand));
 
-            function updateVoucherUI(discount) {
-                if (appliedVoucher.value > 0) {
-                    $('#voucherError').hide().text('');
-                    $('#discountRow').css('display', 'flex');
-                    $('#discountValue').text('-' + fmt(discount));
-                    $('#voucherHint').css('display', 'flex');
-                    $('#badgeVoucher').text('Saved ' + appliedVoucher.value + '%');
-                } else {
-                    $('#discountRow').hide();
-                    $('#discountValue').text('-0 VND');
-                    $('#voucherHint').hide();
-                }
-            }
+                                        // Update hidden inputs
+                                        $('#discountInput').val(discount);
+                                        $('#grandTotalInput').val(grand);
+                                        $('#subtotalInput').val(subtotal);
+                                        $('#voucherIdInput').val(appliedVoucher.id || '');
+                                        $('#voucherValueInput').val(appliedVoucher.value || 0);
+                                        $('#voucherCodeInput').val(appliedVoucher.id || '');
+                                        $('#voucherTypeInput').val((appliedVoucher.value > 0) ? 'percent' : '');
 
-            function applyVoucher() {
-                const code = ($('#voucherInput').val() || '').trim();
-                const err = $('#voucherError');
-                err.hide().text('');
+                                        updateVoucherUI(discount);
+                                    }
 
-                if (!code) {
-                    err.text('Please enter a voucher code.').show();
-                    return;
-                }
+                                    function updateVoucherUI(discount) {
+                                        if (appliedVoucher.value > 0) {
+                                            $('#voucherError').hide().text('');
+                                            $('#discountRow').css('display', 'flex');
+                                            $('#discountValue').text('-' + fmt(discount));
+                                            $('#voucherHint').css('display', 'flex');
 
-                $.ajax({
-                    url: BASE + '/applyVoucher',
-                    method: 'POST',
-                    dataType: 'json',
-                    data: {code: code},
-                    success: function (res) {
-                        if (res && res.ok && res.type === 'percent') {
-                            appliedVoucher = {value: parseInt(res.value || 0, 10), id: parseInt(res.voucherId || 0, 10)};
-                            recalcTotals();
-                        } else {
-                            removeVoucher();
-                            err.text((res && res.message) ? res.message : 'Invalid voucher code.').show();
-                        }
-                    },
-                    error: function () {
-                        removeVoucher();
-                        err.text('Cannot apply voucher right now.').show();
-                    }
-                });
-            }
+                                            // [UPDATED] Hiển thị Badge thông minh hơn
+                                            let label = 'Saved ' + appliedVoucher.value + '%';
+                                            if (appliedVoucher.maxDiscount > 0) {
+                                                label += ' (Max ' + fmt(appliedVoucher.maxDiscount) + ')';
+                                            }
+                                            $('#badgeVoucher').text(label);
 
-            function removeVoucher() {
-                appliedVoucher = {value: 0, id: 0};
-                $('#voucherError').hide().text('');
-                recalcTotals();
-            }
+                                        } else {
+                                            $('#discountRow').hide();
+                                            $('#discountValue').text('-0 VND');
+                                            $('#voucherHint').hide();
+                                        }
+                                    }
 
-            $(document).ready(function () {
-                successModal = new bootstrap.Modal(document.getElementById('successModal'), {keyboard: false, backdrop: 'static'});
-                processingModal = new bootstrap.Modal(document.getElementById('processingModal'), {keyboard: false, backdrop: 'static'});
+                                    function applyVoucher() {
+                                        const code = ($('#voucherInput').val() || '').trim();
+                                        const err = $('#voucherError');
+                                        err.hide().text('');
 
-                $('#modalOkButton').on('click', function () {
-                    window.location.href = '${pageContext.request.contextPath}/orderView';
-                });
+                                        if (!code) {
+                                            err.text('Please enter a voucher code.').show();
+                                            return;
+                                        }
 
-                // --- 1. Auto Capitalize on Blur ---
-                $('.capitalize-input').on('blur', function() {
-                    var val = $(this).val();
-                    if(val) {
-                        $(this).val(toTitleCase(val));
-                    }
-                });
+                                        $.ajax({
+                                            url: BASE + '/applyVoucher',
+                                            method: 'POST',
+                                            dataType: 'json',
+                                            data: {code: code},
+                                            success: function (res) {
+                                                if (res && res.ok && res.type === 'percent') {
+                                                    // [UPDATED] Lấy thêm maxDiscount từ JSON response
+                                                    appliedVoucher = {
+                                                        value: parseInt(res.value || 0, 10),
+                                                        id: parseInt(res.voucherId || 0, 10),
+                                                        maxDiscount: parseInt(res.maxDiscount || 0, 10) // <--- Cần backend trả về
+                                                    };
+                                                    recalcTotals();
+                                                } else {
+                                                    removeVoucher();
+                                                    err.text((res && res.message) ? res.message : 'Invalid voucher code.').show();
+                                                }
+                                            },
+                                            error: function () {
+                                                removeVoucher();
+                                                err.text('Cannot apply voucher right now.').show();
+                                            }
+                                        });
+                                    }
 
-                // --- 2. VALIDATION RULES ---
-                
-                // Rule: Fullname (Only letters & spaces)
-                $.validator.addMethod("validName", function(value, element) {
-                    return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
-                }, "Name cannot contain numbers or special characters.");
+                                    function removeVoucher() {
+                                        appliedVoucher = {value: 0, id: 0, maxDiscount: 0};
+                                        $('#voucherError').hide().text('');
+                                        recalcTotals();
+                                    }
 
-                // Rule: Phone (Start with 0, exactly 10 digits)
-                $.validator.addMethod("validPhone", function (value, element) { 
-                    return this.optional(element) || /^0\d{9}$/.test(value); 
-                }, "Phone must start with 0 and have exactly 10 digits.");
+                                    $(document).ready(function () {
+                                        successModal = new bootstrap.Modal(document.getElementById('successModal'), {keyboard: false, backdrop: 'static'});
+                                        processingModal = new bootstrap.Modal(document.getElementById('processingModal'), {keyboard: false, backdrop: 'static'});
 
-                // Rule: Address (Alphanumeric + , . / -)
-                $.validator.addMethod("validAddress", function(value, element) {
-                    return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
-                }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+                                        $('#modalOkButton').on('click', function () {
+                                            window.location.href = '${pageContext.request.contextPath}/orderView';
+                                        });
 
-                $("#payment-form").validate({
-                    rules: {
-                        fullName: {
-                            required: true,
-                            minlength: 2,
-                            maxlength: 100,
-                            validName: true
-                        },
-                        phoneNumber: {
-                            required: true,
-                            digits: true,
-                            minlength: 10,
-                            maxlength: 10,
-                            validPhone: true
-                        },
-                        email: {
-                            required: true,
-                            email: true,
-                            maxlength: 50
-                        },
-                        address: {
-                            required: true,
-                            maxlength: 255,
-                            validAddress: true
-                        }
-                    },
-                    messages: {
-                        fullName: {
-                            required: "Please enter your full name",
-                            minlength: "Name must be at least 2 characters",
-                            maxlength: "Name cannot exceed 100 characters",
-                            validName: "Name cannot contain numbers or special characters."
-                        },
-                        phoneNumber: {
-                            required: "Please enter phone number",
-                            digits: "Only digits allowed",
-                            minlength: "Phone number must have exactly 10 digits",
-                            maxlength: "Phone number must have exactly 10 digits",
-                            validPhone: "Phone must start with 0 and have exactly 10 digits."
-                        },
-                        email: {
-                            required: "Please enter an email",
-                            maxlength: "Email cannot exceed 50 characters",
-                            email: "Please enter a valid email address"
-                        },
-                        address: {
-                            required: "Please enter an address",
-                            maxlength: "Address cannot exceed 255 characters",
-                            validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
-                        }
-                    },
-                    errorElement: "div",
-                    errorPlacement: function (error, element) {
-                        error.addClass("error");
-                        element.closest('.input-group').after(error);
-                    },
-                    submitHandler: function (form) {
-                        $('#btnComplete').prop('disabled', true);
-                        processingModal.show();
+                                        // --- 1. Auto Capitalize on Blur ---
+                                        $('.capitalize-input').on('blur', function () {
+                                            var val = $(this).val();
+                                            if (val) {
+                                                $(this).val(toTitleCase(val));
+                                            }
+                                        });
 
-                        setTimeout(function () {
-                            const fd = new URLSearchParams(new FormData(form));
-                            // Ensure phone format is clean (just incase)
-                            let phone = fd.get('phoneNumber');
-                            if (phone.startsWith('+84')) fd.set('phoneNumber', '0' + phone.substring(3));
+                                        // --- 2. VALIDATION RULES ---
+                                        $.validator.addMethod("validName", function (value, element) {
+                                            return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+                                        }, "Name cannot contain numbers or special characters.");
 
-                            $.ajax({
-                                url: form.action,
-                                type: 'POST',
-                                data: fd.toString(),
-                                headers: {'X-Requested-With': 'XMLHttpRequest'},
-                                success: function () {
-                                    processingModal.hide();
-                                    successModal.show();
-                                },
-                                error: function (jqXHR) {
-                                    processingModal.hide();
-                                    const msg = jqXHR?.responseJSON?.message || 'Order failed. Try again.';
-                                    alert(msg);
-                                    $('#btnComplete').prop('disabled', false);
-                                }
-                            });
-                        }, 800);
-                        return false;
-                    }
-                });
-                recalcTotals();
-            });
+                                        $.validator.addMethod("validPhone", function (value, element) {
+                                            return this.optional(element) || /^0\d{9}$/.test(value);
+                                        }, "Phone must start with 0 and have exactly 10 digits.");
+
+                                        $.validator.addMethod("validAddress", function (value, element) {
+                                            return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+                                        }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+
+                                        $("#payment-form").validate({
+                                            rules: {
+                                                fullName: {
+                                                    required: true,
+                                                    minlength: 2,
+                                                    maxlength: 100,
+                                                    validName: true
+                                                },
+                                                phoneNumber: {
+                                                    required: true,
+                                                    digits: true,
+                                                    minlength: 10,
+                                                    maxlength: 10,
+                                                    validPhone: true
+                                                },
+                                                email: {
+                                                    required: true,
+                                                    email: true,
+                                                    maxlength: 50
+                                                },
+                                                address: {
+                                                    required: true,
+                                                    maxlength: 255,
+                                                    validAddress: true
+                                                }
+                                            },
+                                            messages: {
+                                                fullName: {
+                                                    required: "Please enter your full name",
+                                                    minlength: "Name must be at least 2 characters",
+                                                    maxlength: "Name cannot exceed 100 characters",
+                                                    validName: "Name cannot contain numbers or special characters."
+                                                },
+                                                phoneNumber: {
+                                                    required: "Please enter phone number",
+                                                    digits: "Only digits allowed",
+                                                    minlength: "Phone number must have exactly 10 digits",
+                                                    maxlength: "Phone number must have exactly 10 digits",
+                                                    validPhone: "Phone must start with 0 and have exactly 10 digits."
+                                                },
+                                                email: {
+                                                    required: "Please enter an email",
+                                                    maxlength: "Email cannot exceed 50 characters",
+                                                    email: "Please enter a valid email address"
+                                                },
+                                                address: {
+                                                    required: "Please enter an address",
+                                                    maxlength: "Address cannot exceed 255 characters",
+                                                    validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                                                }
+                                            },
+                                            errorElement: "div",
+                                            errorPlacement: function (error, element) {
+                                                error.addClass("error");
+                                                element.closest('.input-group').after(error);
+                                            },
+                                            submitHandler: function (form) {
+                                                $('#btnComplete').prop('disabled', true);
+                                                processingModal.show();
+
+                                                setTimeout(function () {
+                                                    const fd = new URLSearchParams(new FormData(form));
+                                                    // Ensure phone format is clean (just incase)
+                                                    let phone = fd.get('phoneNumber');
+                                                    if (phone.startsWith('+84'))
+                                                        fd.set('phoneNumber', '0' + phone.substring(3));
+
+                                                    $.ajax({
+                                                        url: form.action,
+                                                        type: 'POST',
+                                                        data: fd.toString(),
+                                                        headers: {'X-Requested-With': 'XMLHttpRequest'},
+                                                        success: function () {
+                                                            processingModal.hide();
+                                                            successModal.show();
+                                                        },
+                                                        error: function (jqXHR) {
+                                                            processingModal.hide();
+                                                            const msg = jqXHR?.responseJSON?.message || 'Order failed. Try again.';
+                                                            alert(msg);
+                                                            $('#btnComplete').prop('disabled', false);
+                                                        }
+                                                    });
+                                                }, 800);
+                                                return false;
+                                            }
+                                        });
+                                        recalcTotals();
+                                    });
         </script>
     </body>
 </html>

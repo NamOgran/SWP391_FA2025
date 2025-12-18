@@ -6,7 +6,7 @@ package url;
 
 /**
  *
- * 
+ *
  */
 public class MaleProductURL {
 

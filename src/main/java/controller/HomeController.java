@@ -53,18 +53,18 @@ public class HomeController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String urlPath = request.getServletPath();
-        
+
         // 1. Lấy danh sách khuyến mãi để tính giá giảm
         List<Voucher> voucherList = voucher.getAll();
-        
+
         // [FIX] Map key changed to String for VoucherID
         Map<String, Integer> voucherMap = new HashMap<>();
         for (Voucher p : voucherList) {
             voucherMap.put(p.getVoucherID(), p.getVoucherPercent());
         }
-        
+
         switch (urlPath) {
             case URL_PRODUCT_DETAIL:
                 int id = 0;
@@ -76,46 +76,56 @@ public class HomeController extends HttpServlet {
                     response.sendRedirect("productList");
                     return;
                 }
-                
+
                 // 2. Lấy thông tin sản phẩm
                 Product p = DAOproduct.getProductById(id);
-                
+
                 // === [LOGIC MỚI: BREADCRUMBS] ===
                 // Xác định pageContext dựa trên Category của sản phẩm
                 if (p != null) {
                     Category cat = catDao.getCategoryById(p.getCategoryID());
                     String contextString = "";
-                    
+
                     if (cat != null) {
                         String gender = cat.getGender().trim().toLowerCase(); // "male" hoặc "female"
                         String type = cat.getType().trim().toLowerCase();     // "t-shirt", "dress", "pant", "short"
 
                         if (gender.equals("male")) {
-                            if (type.contains("t-shirt")) contextString = "male_tshirt";
-                            else if (type.contains("pant")) contextString = "male_pant";
-                            else if (type.contains("short")) contextString = "male_short";
-                            else contextString = "all_male";
+                            if (type.contains("t-shirt")) {
+                                contextString = "male_tshirt";
+                            } else if (type.contains("pant")) {
+                                contextString = "male_pant";
+                            } else if (type.contains("short")) {
+                                contextString = "male_short";
+                            } else {
+                                contextString = "all_male";
+                            }
                         } else if (gender.equals("female")) {
-                            if (type.contains("t-shirt")) contextString = "female_tshirt";
-                            else if (type.contains("pant")) contextString = "female_pant";
-                            else if (type.contains("dress")) contextString = "female_dress";
-                            else contextString = "all_female";
+                            if (type.contains("t-shirt")) {
+                                contextString = "female_tshirt";
+                            } else if (type.contains("pant")) {
+                                contextString = "female_pant";
+                            } else if (type.contains("dress")) {
+                                contextString = "female_dress";
+                            } else {
+                                contextString = "all_female";
+                            }
                         }
                     }
                     // Gửi biến này sang JSP để <c:choose> trong breadcrumb hoạt động
-                    request.setAttribute("pageContext", contextString); 
+                    request.setAttribute("pageContext", contextString);
                 }
                 // ===================================
 
                 // 3. Lấy danh sách Size_detail và số lượng tồn kho
                 List<Size_detail> sizeList = sizeDAO.getSizesByProductId(id);
-                
+
                 // 4. Lấy Feedback và tính điểm đánh giá
                 FeedBackDAO feedbackDAO = new FeedBackDAO();
                 List<Feedback> feedbackList = feedbackDAO.getFeedbacksByProductID(id);
                 double averageRating = 0;
                 int reviewCount = feedbackList.size();
-                
+
                 if (reviewCount > 0) {
                     int totalStars = 0;
                     for (Feedback fb : feedbackList) {
@@ -128,15 +138,15 @@ public class HomeController extends HttpServlet {
                 request.setAttribute("voucherMap", voucherMap);
                 request.setAttribute("p", p);
                 request.setAttribute("sizeList", sizeList);
-                
+
                 // Gửi dữ liệu Feedback
                 request.setAttribute("feedbackList", feedbackList);
                 request.setAttribute("averageRating", averageRating);
                 request.setAttribute("reviewCount", reviewCount);
-                
+
                 request.getRequestDispatcher("productDetail.jsp").forward(request, response);
                 break;
-                
+
             case URL_PRODUCT_LIST:
                 // Lấy 8 sản phẩm ngẫu nhiên cho trang chủ
                 List<Product> productList = DAOproduct.get8RandomProduct();

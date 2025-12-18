@@ -1,6 +1,6 @@
 <%-- 
     Document    : checkout.jsp
-    Description : Cart Checkout (Validated with Strict Rules & Auto Capitalize)
+    Description : Cart Checkout (Updated with Voucher Max Discount Logic)
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -18,7 +18,7 @@
 </c:if>
 <c:set var="acc" value="${sessionScope.acc}" />
 
-<%-- 2. LOGIC ĐỒNG BỘ GIÁ & VOUCHER --%>
+<%-- 2. LOGIC ĐỒNG BỘ GIÁ & VOUCHER (Server Side Calculation) --%>
 <c:set var="subtotal" value="0" />
 <c:forEach items="${requestScope.cartList}" var="c">
     <c:set var="currentPrice" value="${priceP[c.productID]}" />
@@ -28,12 +28,26 @@
     <c:set var="subtotal" value="${subtotal + (currentPrice * c.quantity)}" />
 </c:forEach>
 
+<%-- Lấy thông tin Voucher từ Session --%>
 <c:set var="voucherPercent" value="${sessionScope.voucherValue != null ? sessionScope.voucherValue : 0}" />
 <c:set var="voucherCode"    value="${sessionScope.voucherCode}" />
 <c:set var="voucherId"      value="${sessionScope.voucherId != null ? sessionScope.voucherId : 0}" />
+<%-- [MỚI] Lấy Max Discount từ Session (nếu chưa có thì là 0) --%>
+<c:set var="voucherMax"     value="${sessionScope.voucherMax != null ? sessionScope.voucherMax : 0}" />
 
-<c:set var="discount"       value="${(subtotal * voucherPercent) / 100}" />
-<fmt:parseNumber var="discount" integerOnly="true" type="number" value="${discount}" />
+<%-- Tính toán Discount ban đầu --%>
+<c:set var="rawDiscount"    value="${(subtotal * voucherPercent) / 100}" />
+<fmt:parseNumber var="rawDiscount" integerOnly="true" type="number" value="${rawDiscount}" />
+
+<%-- [MỚI] Áp dụng logic Max Discount --%>
+<c:choose>
+    <c:when test="${voucherMax > 0 && rawDiscount > voucherMax}">
+        <c:set var="discount" value="${voucherMax}" />
+    </c:when>
+    <c:otherwise>
+        <c:set var="discount" value="${rawDiscount}" />
+    </c:otherwise>
+</c:choose>
 
 <c:set var="grandTotal"     value="${subtotal - discount}" />
 <c:if test="${grandTotal < 0}"><c:set var="grandTotal" value="0"/></c:if>
@@ -75,63 +89,150 @@
                 color: var(--text-main);
                 padding-bottom: 60px;
             }
-            a { text-decoration: none; color: inherit; }
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
 
             /* LOADING */
             #page-loader {
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background-color: var(--white); z-index: 9999;
-                display: flex; justify-content: center; align-items: center;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: var(--white);
+                z-index: 9999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
-            .spinner-custom { color: var(--primary-color); width: 3rem; height: 3rem; }
+            .spinner-custom {
+                color: var(--primary-color);
+                width: 3rem;
+                height: 3rem;
+            }
 
             /* HEADER & NAV */
             .checkout-nav {
-                background: var(--white); padding: 15px 0;
-                box-shadow: var(--shadow-sm); margin-bottom: 30px;
+                background: var(--white);
+                padding: 15px 0;
+                box-shadow: var(--shadow-sm);
+                margin-bottom: 30px;
             }
-            .nav-content { display: flex; align-items: center; justify-content: space-between; }
-            .brand-logo { font-size: 24px; font-weight: 800; color: var(--primary-color); letter-spacing: 1px; }
-            .back-link { font-weight: 600; color: var(--text-light); display: flex; align-items: center; gap: 5px; transition: 0.3s; }
-            .back-link:hover { color: var(--primary-color); }
+            .nav-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .brand-logo {
+                font-size: 24px;
+                font-weight: 800;
+                color: var(--primary-color);
+                letter-spacing: 1px;
+            }
+            .back-link {
+                font-weight: 600;
+                color: var(--text-light);
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: 0.3s;
+            }
+            .back-link:hover {
+                color: var(--primary-color);
+            }
 
             /* PROGRESS STEPS */
-            .checkout-steps { display: flex; justify-content: center; margin-bottom: 40px; }
-            .step-item { display: flex; align-items: center; color: #ccc; font-weight: 600; font-size: 0.95rem; }
-            .step-item.active { color: var(--text-main); }
-            .step-item.active .step-count { background-color: var(--primary-color); border-color: var(--primary-color); color: #fff; }
-            .step-count {
-                width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ccc;
-                display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 0.9rem;
+            .checkout-steps {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 40px;
             }
-            .step-line { width: 60px; height: 2px; background-color: #e0e0e0; margin: 0 15px; }
+            .step-item {
+                display: flex;
+                align-items: center;
+                color: #ccc;
+                font-weight: 600;
+                font-size: 0.95rem;
+            }
+            .step-item.active {
+                color: var(--text-main);
+            }
+            .step-item.active .step-count {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+                color: #fff;
+            }
+            .step-count {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                border: 2px solid #ccc;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 10px;
+                font-size: 0.9rem;
+            }
+            .step-line {
+                width: 60px;
+                height: 2px;
+                background-color: #e0e0e0;
+                margin: 0 15px;
+            }
 
             /* LEFT COLUMN - FORMS */
             .section-card {
-                background: var(--white); border-radius: var(--border-radius);
-                padding: 25px 30px; margin-bottom: 25px; box-shadow: var(--shadow-sm);
+                background: var(--white);
+                border-radius: var(--border-radius);
+                padding: 25px 30px;
+                margin-bottom: 25px;
+                box-shadow: var(--shadow-sm);
             }
             .section-title {
-                font-size: 1.1rem; font-weight: 700; margin-bottom: 20px;
-                display: flex; align-items: center; gap: 10px; color: var(--text-main);
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--text-main);
             }
-            .section-title i { color: var(--primary-color); font-size: 1.2rem; }
+            .section-title i {
+                color: var(--primary-color);
+                font-size: 1.2rem;
+            }
 
             /* INPUT GROUPS */
-            .input-group-text { background: #f8f9fa; border-right: none; color: var(--text-light); border-radius: var(--border-radius) 0 0 var(--border-radius); }
-            .form-control { border-left: none; height: 50px; font-size: 0.95rem; border-radius: 0 var(--border-radius) var(--border-radius) 0; }
-            .form-control:focus { box-shadow: none; border-color: #ced4da; }
-            .input-group:focus-within .input-group-text, .input-group:focus-within .form-control {
-                border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(160, 129, 108, 0.15);
+            .input-group-text {
+                background: #f8f9fa;
+                border-right: none;
+                color: var(--text-light);
+                border-radius: var(--border-radius) 0 0 var(--border-radius);
             }
-            
+            .form-control {
+                border-left: none;
+                height: 50px;
+                font-size: 0.95rem;
+                border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            }
+            .form-control:focus {
+                box-shadow: none;
+                border-color: #ced4da;
+            }
+            .input-group:focus-within .input-group-text, .input-group:focus-within .form-control {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 0.2rem rgba(160, 129, 108, 0.15);
+            }
+
             /* UPDATED VALIDATION CSS */
-            .error { 
-                color: #dc3545; 
-                font-size: 0.85rem; 
-                margin-top: 5px; 
-                margin-left: 5px; 
-                width: 100%; 
+            .error {
+                color: #dc3545;
+                font-size: 0.85rem;
+                margin-top: 5px;
+                margin-left: 5px;
+                width: 100%;
                 font-weight: 600;
                 display: block;
                 line-height: 1.2;
@@ -143,52 +244,161 @@
 
             /* PAYMENT METHOD */
             .payment-option {
-                border: 2px solid var(--primary-color); background: #fdf8f5; border-radius: var(--border-radius);
-                padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; position: relative;
+                border: 2px solid var(--primary-color);
+                background: #fdf8f5;
+                border-radius: var(--border-radius);
+                padding: 15px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+                position: relative;
             }
-            .payment-option::after { content: '\F26B'; font-family: "bootstrap-icons"; font-size: 1.3rem; color: var(--primary-color); }
-            .payment-info { display: flex; align-items: center; gap: 15px; font-weight: 600; }
-            .payment-icon { height: 30px; width: auto; }
+            .payment-option::after {
+                content: '\F26B';
+                font-family: "bootstrap-icons";
+                font-size: 1.3rem;
+                color: var(--primary-color);
+            }
+            .payment-info {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-weight: 600;
+            }
+            .payment-icon {
+                height: 30px;
+                width: auto;
+            }
 
             /* RIGHT COLUMN - SUMMARY */
             .summary-box {
-                background: var(--white); border-radius: var(--border-radius); padding: 30px;
-                box-shadow: var(--shadow-md); position: sticky; top: 100px;
+                background: var(--white);
+                border-radius: var(--border-radius);
+                padding: 30px;
+                box-shadow: var(--shadow-md);
+                position: sticky;
+                top: 100px;
             }
-            .summary-header { font-size: 1.25rem; font-weight: 700; border-bottom: 2px dashed #eee; padding-bottom: 15px; margin-bottom: 20px; }
+            .summary-header {
+                font-size: 1.25rem;
+                font-weight: 700;
+                border-bottom: 2px dashed #eee;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
 
-            .product-item { display: flex; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f8f9fa; }
-            .product-item:last-child { border-bottom: none; }
-            .product-img { width: 60px; height: 75px; border-radius: 8px; object-fit: cover; background: #eee; }
-            .product-info h6 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
-            .product-info p { font-size: 0.85rem; color: var(--text-light); margin: 0; }
-            .product-price { font-size: 0.95rem; font-weight: 700; white-space: nowrap; margin-left: auto; }
+            .product-item {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 15px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #f8f9fa;
+            }
+            .product-item:last-child {
+                border-bottom: none;
+            }
+            .product-img {
+                width: 60px;
+                height: 75px;
+                border-radius: 8px;
+                object-fit: cover;
+                background: #eee;
+            }
+            .product-info h6 {
+                font-size: 0.95rem;
+                font-weight: 600;
+                margin-bottom: 4px;
+                line-height: 1.3;
+            }
+            .product-info p {
+                font-size: 0.85rem;
+                color: var(--text-light);
+                margin: 0;
+            }
+            .product-price {
+                font-size: 0.95rem;
+                font-weight: 700;
+                white-space: nowrap;
+                margin-left: auto;
+            }
 
             /* PROMO CODE */
-            .voucher-container { margin-bottom: 20px; }
-            .btn-apply { background: var(--text-main); color: #fff; font-weight: 600; border-radius: 0 var(--border-radius) var(--border-radius) 0; }
-            .btn-apply:hover { background: #000; color: #fff; }
+            .voucher-container {
+                margin-bottom: 20px;
+            }
+            .btn-apply {
+                background: var(--text-main);
+                color: #fff;
+                font-weight: 600;
+                border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            }
+            .btn-apply:hover {
+                background: #000;
+                color: #fff;
+            }
 
             /* TOTALS */
-            .total-row { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-light); font-size: 0.95rem; }
-            .grand-total {
-                margin-top: 15px; padding-top: 15px; border-top: 2px dashed #eee; font-weight: 800; font-size: 1.2rem;
-                color: var(--text-main); display: flex; justify-content: space-between; align-items: center;
+            .total-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                color: var(--text-light);
+                font-size: 0.95rem;
             }
-            .grand-total .amount { color: #dc3545; font-size: 1.4rem; }
+            .grand-total {
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 2px dashed #eee;
+                font-weight: 800;
+                font-size: 1.2rem;
+                color: var(--text-main);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .grand-total .amount {
+                color: #dc3545;
+                font-size: 1.4rem;
+            }
 
             .btn-confirm {
-                width: 100%; padding: 15px; background: var(--primary-color); color: #fff; border: none; border-radius: 50px;
-                font-weight: 700; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 25px; transition: all 0.3s;
+                width: 100%;
+                padding: 15px;
+                background: var(--primary-color);
+                color: #fff;
+                border: none;
+                border-radius: 50px;
+                font-weight: 700;
+                font-size: 1.1rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-top: 25px;
+                transition: all 0.3s;
                 box-shadow: 0 4px 15px rgba(160, 129, 108, 0.3);
             }
-            .btn-confirm:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(160, 129, 108, 0.4); }
-            .btn-confirm:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+            .btn-confirm:hover:not(:disabled) {
+                background: var(--primary-dark);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(160, 129, 108, 0.4);
+            }
+            .btn-confirm:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
 
             @media (max-width: 992px) {
-                .checkout-steps { display: none; }
-                .row.g-5 { flex-direction: column-reverse; }
-                .summary-box { position: static; margin-bottom: 30px; }
+                .checkout-steps {
+                    display: none;
+                }
+                .row.g-5 {
+                    flex-direction: column-reverse;
+                }
+                .summary-box {
+                    position: static;
+                    margin-bottom: 30px;
+                }
             }
         </style>
     </head>
@@ -210,19 +420,21 @@
 
         <div class="container">
             <div class="checkout-steps">
-                <div class="step-item"><span class="step-count">1</span> Shopping Cart</div>
+
                 <div class="step-line"></div>
-                <div class="step-item active"><span class="step-count">2</span> Checkout</div>
+                <div class="step-item active">
+                    <span class="step-count"><i class="bi bi-credit-card"></i></span> Checkout
+                </div>
                 <div class="step-line"></div>
-                <div class="step-item"><span class="step-count">3</span> Order Complete</div>
+
             </div>
 
             <div class="row g-5">
                 <div class="col-lg-7">
                     <form action="${pageContext.request.contextPath}/insertOrders" method="post" id="payment-form">
-<c:forEach items="${requestScope.cartList}" var="c">
-        <input type="hidden" name="checkoutItems" value="${c.productID}::${c.size_name}">
-    </c:forEach>                        
+                        <c:forEach items="${requestScope.cartList}" var="c">
+                            <input type="hidden" name="checkoutItems" value="${c.productID}::${c.size_name}">
+                        </c:forEach>                        
 
                         <div class="section-card">
                             <div class="section-title"><i class="bi bi-person-vcard"></i> Contact Information</div>
@@ -230,7 +442,6 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                        <%-- Rule: Max 100 chars, Auto Capitalize --%>
                                         <input type="text" class="form-control capitalize-input" placeholder="Full Name" name="fullName" 
                                                value="${sessionScope.acc.fullName}" required minlength="2" maxlength="100" style="text-transform: capitalize;">
                                     </div>
@@ -238,7 +449,6 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                        <%-- Rule: Max 10 digits --%>
                                         <input type="tel" class="form-control" placeholder="Phone Number" name="phoneNumber" id="phoneNumber" 
                                                value="${sessionScope.acc.phoneNumber}" required maxlength="10">
                                     </div>
@@ -246,7 +456,6 @@
                                 <div class="col-12">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                        <%-- Rule: Max 50 chars --%>
                                         <input type="email" class="form-control" placeholder="Email Address (Optional)" name="email" 
                                                value="${sessionScope.acc.email}" required maxlength="50">
                                     </div>
@@ -258,7 +467,6 @@
                             <div class="section-title"><i class="bi bi-geo-alt"></i> Shipping Address</div>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-map"></i></span>
-                                <%-- Rule: Max 255 chars --%>
                                 <input type="text" class="form-control" placeholder="House number, Street, Ward, District, City..." name="address" 
                                        value="${sessionScope.acc.address}" required maxlength="255">
                             </div>
@@ -274,16 +482,14 @@
                             </div>
                         </div>
 
-                        <input type="hidden" name="size"             value="${param.size}">
-                        
-                        <input type="hidden" id="subtotalInput"      name="total"        value="${subtotal}">
-                        <input type="hidden" id="grandTotalInput"    name="grandTotal"   value="${grandTotal}">
-                        
-                        <input type="hidden" id="voucherCodeInput"   name="voucherCode"    value="${voucherCode}">
-                        <input type="hidden" id="voucherIdInput"     name="voucherId"      value="${voucherId}">
-                        <input type="hidden" id="voucherTypeInput"   name="voucherType"    value="${sessionScope.voucherType}">
-                        <input type="hidden" id="voucherValueInput"  name="voucherValue"   value="${voucherPercent}">
-                        <input type="hidden" id="discountInput"      name="discount"       value="${discount}">
+                        <input type="hidden" id="subtotalInput"       name="total"         value="${subtotal}">
+                        <input type="hidden" id="grandTotalInput"     name="grandTotal"    value="${grandTotal}">
+
+                        <input type="hidden" id="voucherCodeInput"    name="voucherCode"     value="${voucherCode}">
+                        <input type="hidden" id="voucherIdInput"      name="voucherId"       value="${voucherId}">
+                        <input type="hidden" id="voucherTypeInput"    name="voucherType"     value="${sessionScope.voucherType}">
+                        <input type="hidden" id="voucherValueInput"   name="voucherValue"    value="${voucherPercent}">
+                        <input type="hidden" id="discountInput"       name="discount"        value="${discount}">
                     </form>
                 </div>
 
@@ -317,7 +523,7 @@
                                 <input type="text" class="form-control" id="voucherInput" placeholder="Voucher Code" value="${voucherCode}">
                                 <button class="btn btn-apply" type="button" onclick="applyVoucher()">Apply</button>
                             </div>
-                            
+
                             <div id="voucherHint" class="mt-2 align-items-center" style="display: ${voucherPercent > 0 ? 'flex' : 'none'};">
                                 <span id="badgeVoucher" class="badge bg-success bg-opacity-75 text-white">Saved ${voucherPercent}%</span>
                                 <a href="javascript:void(0)" onclick="removeVoucher()" class="text-danger ms-2 small text-decoration-underline">Remove</a>
@@ -329,7 +535,7 @@
                             <span>Subtotal</span>
                             <span id="subtotalText" class="fw-bold text-dark">${subtotalFmt} VND</span>
                         </div>
-                        
+
                         <div class="total-row" id="discountRow" style="display: ${voucherPercent > 0 ? 'flex' : 'none'};">
                             <span class="text-success">Voucher</span>
                             <span id="discountValue" class="text-success fw-bold">-${discountFmt} VND</span>
@@ -379,224 +585,236 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
-            let subtotal = ${subtotal};
-            let appliedVoucher = {
-                value: ${voucherPercent}, 
-                id: ${voucherId}
-            };
-            let successModal, processingModal;
+                                    let subtotal = ${subtotal};
+                                    // [UPDATED] Thêm trường maxDiscount vào object
+                                    let appliedVoucher = {
+                                        value: ${voucherPercent},
+                                        id: ${voucherId},
+                                        maxDiscount: ${voucherMax}
+                                    };
+                                    let successModal, processingModal;
 
-            $(window).on('load', function () {
-                setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
-            });
+                                    $(window).on('load', function () {
+                                        setTimeout(() => $('#page-loader').fadeOut('slow'), 500);
+                                    });
 
-            // Hàm tự động viết hoa chữ cái đầu (Hỗ trợ tiếng Việt)
-            function toTitleCase(str) {
-                return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
-                    return l.toUpperCase();
-                });
-            }
+                                    // Hàm tự động viết hoa chữ cái đầu (Hỗ trợ tiếng Việt)
+                                    function toTitleCase(str) {
+                                        return str.toLowerCase().replace(/(^|\s)\S/g, function (l) {
+                                            return l.toUpperCase();
+                                        });
+                                    }
 
-            function fmt(n) {
-                return (n || 0).toLocaleString('vi-VN') + ' VND';
-            }
+                                    function fmt(n) {
+                                        return (n || 0).toLocaleString('vi-VN') + ' VND';
+                                    }
 
-            function recalcTotals() {
-                const discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
-                const grand = Math.max(0, subtotal - discount);
+                                    // [UPDATED] Logic tính toán lại tổng tiền với Max Discount
+                                    function recalcTotals() {
+                                        // 1. Tính toán giảm giá theo phần trăm
+                                        let discount = Math.round(subtotal * (appliedVoucher.value || 0) / 100.0);
 
-                $('#subtotalText').text(fmt(subtotal));
-                $('#grandTotalText').text(fmt(grand));
+                                        // 2. So sánh với Max Discount (nếu có)
+                                        if (appliedVoucher.maxDiscount > 0 && discount > appliedVoucher.maxDiscount) {
+                                            discount = appliedVoucher.maxDiscount;
+                                        }
 
-                // Update Inputs cho Form
-                $('#discountInput').val(discount);
-                $('#grandTotalInput').val(grand);
-                $('#subtotalInput').val(subtotal);
+                                        const grand = Math.max(0, subtotal - discount);
 
-                $('#voucherIdInput').val(appliedVoucher.id || '');
-                $('#voucherValueInput').val(appliedVoucher.value || 0);
-                
-                updateVoucherUI(discount);
-            }
+                                        $('#subtotalText').text(fmt(subtotal));
+                                        $('#grandTotalText').text(fmt(grand));
 
-            function updateVoucherUI(discount) {
-                if (appliedVoucher.value > 0) {
-                    $('#voucherError').hide().text('');
-                    $('#discountRow').css('display', 'flex');
-                    $('#discountValue').text('-' + fmt(discount));
-                    $('#voucherHint').css('display', 'flex');
-                    $('#badgeVoucher').text('Saved ' + appliedVoucher.value + '%');
-                } else {
-                    $('#discountRow').hide();
-                    $('#discountValue').text('-0 VND');
-                    $('#voucherHint').hide();
-                }
-            }
+                                        // Update Inputs cho Form
+                                        $('#discountInput').val(discount);
+                                        $('#grandTotalInput').val(grand);
+                                        $('#subtotalInput').val(subtotal);
 
-            function applyVoucher() {
-                const code = ($('#voucherInput').val() || '').trim();
-                const err = $('#voucherError');
-                err.hide().text('');
+                                        $('#voucherIdInput').val(appliedVoucher.id || '');
+                                        $('#voucherValueInput').val(appliedVoucher.value || 0);
 
-                if (!code) {
-                    err.text('Please enter a voucher code.').show();
-                    return;
-                }
+                                        updateVoucherUI(discount);
+                                    }
 
-                $.ajax({
-                    url: BASE + '/applyVoucher',
-                    method: 'POST',
-                    dataType: 'json',
-                    data: {code: code},
-                    success: function (res) {
-                        if (res && res.ok && res.type === 'percent') {
-                            appliedVoucher = {value: parseInt(res.value || 0, 10), id: parseInt(res.voucherId || 0, 10)};
-                            $('#voucherCodeInput').val(code);
-                            recalcTotals();
-                        } else {
-                            removeVoucher();
-                            err.text((res && res.message) ? res.message : 'Invalid voucher code.').show();
-                        }
-                    },
-                    error: function () {
-                        removeVoucher();
-                        err.text('Cannot apply voucher right now.').show();
-                    }
-                });
-            }
+                                    function updateVoucherUI(discount) {
+                                        if (appliedVoucher.value > 0) {
+                                            $('#voucherError').hide().text('');
+                                            $('#discountRow').css('display', 'flex');
+                                            $('#discountValue').text('-' + fmt(discount));
+                                            $('#voucherHint').css('display', 'flex');
 
-            function removeVoucher() {
-                appliedVoucher = {value: 0, id: 0};
-                $('#voucherInput').val('');
-                $('#voucherCodeInput').val('');
-                $('#voucherError').hide().text('');
-                recalcTotals();
-            }
+                                            // [UPDATED] Cập nhật badge (Optional: hiển thị Max nếu cần)
+                                            $('#badgeVoucher').text('Saved ' + appliedVoucher.value + '%');
+                                        } else {
+                                            $('#discountRow').hide();
+                                            $('#discountValue').text('-0 VND');
+                                            $('#voucherHint').hide();
+                                        }
+                                    }
 
-            $(document).ready(function () {
-                successModal = new bootstrap.Modal(document.getElementById('successModal'), {keyboard: false, backdrop: 'static'});
-                processingModal = new bootstrap.Modal(document.getElementById('processingModal'), {keyboard: false, backdrop: 'static'});
+                                    function applyVoucher() {
+                                        const code = ($('#voucherInput').val() || '').trim();
+                                        const err = $('#voucherError');
+                                        err.hide().text('');
 
-                $('#modalOkButton').on('click', function () {
-                    window.location.href = '${pageContext.request.contextPath}/orderView';
-                });
+                                        if (!code) {
+                                            err.text('Please enter a voucher code.').show();
+                                            return;
+                                        }
 
-                // --- 1. Auto Capitalize on Blur ---
-                $('.capitalize-input').on('blur', function() {
-                    var val = $(this).val();
-                    if(val) {
-                        $(this).val(toTitleCase(val));
-                    }
-                });
+                                        $.ajax({
+                                            url: BASE + '/applyVoucher',
+                                            method: 'POST',
+                                            dataType: 'json',
+                                            data: {code: code},
+                                            success: function (res) {
+                                                if (res && res.ok && res.type === 'percent') {
+                                                    // [UPDATED] Lấy maxDiscount từ response JSON
+                                                    appliedVoucher = {
+                                                        value: parseInt(res.value || 0, 10),
+                                                        id: parseInt(res.voucherId || 0, 10),
+                                                        maxDiscount: parseInt(res.maxDiscount || 0, 10)
+                                                    };
+                                                    $('#voucherCodeInput').val(code);
+                                                    recalcTotals();
+                                                } else {
+                                                    removeVoucher();
+                                                    err.text((res && res.message) ? res.message : 'Invalid voucher code.').show();
+                                                }
+                                            },
+                                            error: function () {
+                                                removeVoucher();
+                                                err.text('Cannot apply voucher right now.').show();
+                                            }
+                                        });
+                                    }
 
-                // --- 2. VALIDATION RULES DEFINITION ---
-                
-                // Rule: Phone (Bắt đầu bằng 0, đúng 10 số)
-                $.validator.addMethod("customPhone", function (value, element) {
-                    return this.optional(element) || /^0\d{9}$/.test(value);
-                }, "Phone must start with 0 and have exactly 10 digits.");
+                                    function removeVoucher() {
+                                        appliedVoucher = {value: 0, id: 0, maxDiscount: 0};
+                                        $('#voucherInput').val('');
+                                        $('#voucherCodeInput').val('');
+                                        $('#voucherError').hide().text('');
+                                        recalcTotals();
+                                    }
 
-                // Rule: Fullname (Chữ cái + khoảng trắng)
-                $.validator.addMethod("validName", function(value, element) {
-                    return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
-                }, "Name cannot contain numbers or special characters.");
+                                    $(document).ready(function () {
+                                        successModal = new bootstrap.Modal(document.getElementById('successModal'), {keyboard: false, backdrop: 'static'});
+                                        processingModal = new bootstrap.Modal(document.getElementById('processingModal'), {keyboard: false, backdrop: 'static'});
 
-                // Rule: Address (Chữ, số, khoảng trắng và , . / -)
-                $.validator.addMethod("validAddress", function(value, element) {
-                    return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
-                }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+                                        $('#modalOkButton').on('click', function () {
+                                            window.location.href = '${pageContext.request.contextPath}/orderView';
+                                        });
 
-                $("#payment-form").validate({
-                    rules: {
-                        fullName: {
-                            required: true,
-                            minlength: 2,
-                            maxlength: 100,
-                            validName: true
-                        },
-                        email: {
-                            required: true,
-                            email: true,
-                            maxlength: 50
-                        },
-                        phoneNumber: {
-                            required: true,
-                            digits: true,
-                            minlength: 10,
-                            maxlength: 10,
-                            customPhone: true
-                        },
-                        address: {
-                            required: true,
-                            maxlength: 255,
-                            validAddress: true
-                        }
-                    },
-                    messages: {
-                        fullName: {
-                            required: "Please enter your full name",
-                            minlength: "Name must be at least 2 characters",
-                            maxlength: "Name cannot exceed 100 characters",
-                            validName: "Name cannot contain numbers or special characters."
-                        },
-                        email: {
-                            required: "Please enter an email",
-                            maxlength: "Email cannot exceed 50 characters",
-                            email: "Please enter a valid email address"
-                        },
-                        phoneNumber: {
-                            required: "Please enter phone number",
-                            digits: "Only digits allowed",
-                            minlength: "Phone number must have exactly 10 digits",
-                            maxlength: "Phone number must have exactly 10 digits",
-                            customPhone: "Phone must start with 0 and have exactly 10 digits."
-                        },
-                        address: {
-                            required: "Please enter an address",
-                            maxlength: "Address cannot exceed 255 characters",
-                            validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
-                        }
-                    },
-                    errorElement: "div",
-                    errorPlacement: function (error, element) {
-                        error.addClass("error");
-                        element.closest('.input-group').after(error);
-                    },
-                    submitHandler: function (form) {
-                        $('#btnComplete').prop('disabled', true);
-                        processingModal.show();
+                                        // --- 1. Auto Capitalize on Blur ---
+                                        $('.capitalize-input').on('blur', function () {
+                                            var val = $(this).val();
+                                            if (val) {
+                                                $(this).val(toTitleCase(val));
+                                            }
+                                        });
 
-                        setTimeout(function () {
-                            const fd = new URLSearchParams(new FormData(form));
-                            // Format lại số điện thoại nếu cần (dù regex đã check)
-                            let phone = fd.get('phoneNumber');
-                            if (phone.startsWith('+84'))
-                                fd.set('phoneNumber', '0' + phone.substring(3));
+                                        // --- 2. VALIDATION RULES DEFINITION ---
+                                        $.validator.addMethod("customPhone", function (value, element) {
+                                            return this.optional(element) || /^0\d{9}$/.test(value);
+                                        }, "Phone must start with 0 and have exactly 10 digits.");
 
-                            $.ajax({
-                                url: form.action,
-                                type: 'POST',
-                                data: fd.toString(),
-                                headers: {'X-Requested-With': 'XMLHttpRequest'},
-                                success: function () {
-                                    processingModal.hide();
-                                    successModal.show();
-                                },
-                                error: function (jqXHR) {
-                                    processingModal.hide();
-                                    const msg = jqXHR?.responseJSON?.message || 'Order failed. Try again.';
-                                    alert(msg);
-                                    $('#btnComplete').prop('disabled', false);
-                                }
-                            });
-                        }, 800);
-                        return false;
-                    }
-                });
-                
-                // Khởi chạy tính toán ban đầu
-                recalcTotals();
-            });
+                                        $.validator.addMethod("validName", function (value, element) {
+                                            return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+                                        }, "Name cannot contain numbers or special characters.");
+
+                                        $.validator.addMethod("validAddress", function (value, element) {
+                                            return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+                                        }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+
+                                        $("#payment-form").validate({
+                                            rules: {
+                                                fullName: {
+                                                    required: true,
+                                                    minlength: 2,
+                                                    maxlength: 100,
+                                                    validName: true
+                                                },
+                                                email: {
+                                                    required: true,
+                                                    email: true,
+                                                    maxlength: 50
+                                                },
+                                                phoneNumber: {
+                                                    required: true,
+                                                    digits: true,
+                                                    minlength: 10,
+                                                    maxlength: 10,
+                                                    customPhone: true
+                                                },
+                                                address: {
+                                                    required: true,
+                                                    maxlength: 255,
+                                                    validAddress: true
+                                                }
+                                            },
+                                            messages: {
+                                                fullName: {
+                                                    required: "Please enter your full name",
+                                                    minlength: "Name must be at least 2 characters",
+                                                    maxlength: "Name cannot exceed 100 characters",
+                                                    validName: "Name cannot contain numbers or special characters."
+                                                },
+                                                email: {
+                                                    required: "Please enter an email",
+                                                    maxlength: "Email cannot exceed 50 characters",
+                                                    email: "Please enter a valid email address"
+                                                },
+                                                phoneNumber: {
+                                                    required: "Please enter phone number",
+                                                    digits: "Only digits allowed",
+                                                    minlength: "Phone number must have exactly 10 digits",
+                                                    maxlength: "Phone number must have exactly 10 digits",
+                                                    customPhone: "Phone must start with 0 and have exactly 10 digits."
+                                                },
+                                                address: {
+                                                    required: "Please enter an address",
+                                                    maxlength: "Address cannot exceed 255 characters",
+                                                    validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                                                }
+                                            },
+                                            errorElement: "div",
+                                            errorPlacement: function (error, element) {
+                                                error.addClass("error");
+                                                element.closest('.input-group').after(error);
+                                            },
+                                            submitHandler: function (form) {
+                                                $('#btnComplete').prop('disabled', true);
+                                                processingModal.show();
+
+                                                setTimeout(function () {
+                                                    const fd = new URLSearchParams(new FormData(form));
+                                                    let phone = fd.get('phoneNumber');
+                                                    if (phone.startsWith('+84'))
+                                                        fd.set('phoneNumber', '0' + phone.substring(3));
+
+                                                    $.ajax({
+                                                        url: form.action,
+                                                        type: 'POST',
+                                                        data: fd.toString(),
+                                                        headers: {'X-Requested-With': 'XMLHttpRequest'},
+                                                        success: function () {
+                                                            processingModal.hide();
+                                                            successModal.show();
+                                                        },
+                                                        error: function (jqXHR) {
+                                                            processingModal.hide();
+                                                            const msg = jqXHR?.responseJSON?.message || 'Order failed. Try again.';
+                                                            alert(msg);
+                                                            $('#btnComplete').prop('disabled', false);
+                                                        }
+                                                    });
+                                                }, 800);
+                                                return false;
+                                            }
+                                        });
+
+                                        // Khởi chạy tính toán ban đầu
+                                        recalcTotals();
+                                    });
         </script>
     </body>
 </html>

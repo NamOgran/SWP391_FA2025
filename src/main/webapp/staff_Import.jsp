@@ -277,7 +277,7 @@
                                                                                                     <small class="badge bg-light text-secondary border text-uppercase me-1" style="font-size: 0.7rem;">
                                                                                                         ${productCategoryMap[d.productID]}
                                                                                                     </small>
-                                                                                                    <span>Price: <fmt:formatNumber value="${d.price}" pattern="#,###"/></span>
+                                                                                                    <span><fmt:formatNumber value="${d.price}" pattern="#,###"/> VND</span>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>

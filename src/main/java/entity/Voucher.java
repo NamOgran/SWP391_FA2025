@@ -1,25 +1,43 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package entity;
+
 import java.util.Date;
 
 public class Voucher {
-    // [FIX] Đổi int -> String để khớp với DB varchar(50)
-    String voucherID; 
-    int voucherPercent;
-    Date startDate;
-    Date endDate;
 
-    // Sửa Constructor
-    public Voucher(String voucherID, int voucherPercent, Date startDate, Date endDate) {
+    private String voucherID;
+    private int voucherPercent;
+    private Date startDate;
+    private Date endDate;
+    // [MỚI] Thêm thuộc tính này
+    private int maxDiscountAmount;
+
+    public Voucher() {
+    }
+
+    // Cập nhật Constructor
+    public Voucher(String voucherID, int voucherPercent, Date startDate, Date endDate, int maxDiscountAmount) {
         this.voucherID = voucherID;
         this.voucherPercent = voucherPercent;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.maxDiscountAmount = maxDiscountAmount;
     }
 
+    // Giữ lại constructor cũ nếu cần (để tránh lỗi code cũ), hoặc gán max = 0 mặc định
+    public Voucher(String voucherID, int voucherPercent, Date startDate, Date endDate) {
+        this(voucherID, voucherPercent, startDate, endDate, 0);
+    }
+
+    // [MỚI] Getter & Setter
+    public int getMaxDiscountAmount() {
+        return maxDiscountAmount;
+    }
+
+    public void setMaxDiscountAmount(int maxDiscountAmount) {
+        this.maxDiscountAmount = maxDiscountAmount;
+    }
+
+    // ... (Các Getter/Setter cũ giữ nguyên)
     public String getVoucherID() {
         return voucherID;
     }
@@ -51,12 +69,4 @@ public class Voucher {
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
-
-
-
-    @Override
-    public String toString() {
-        return "voucher{" + "voucherID=" + voucherID + ", voucherPercent=" + voucherPercent + ", startDate=" + startDate + ", endDate=" + endDate + '}';
-    }
-    
 }

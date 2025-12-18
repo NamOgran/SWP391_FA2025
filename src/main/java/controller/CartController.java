@@ -347,36 +347,19 @@ public class CartController extends HttpServlet {
         }
     }
 
-    // [FIXED] Hàm tính giá cập nhật xử lý String voucherID
     private static int calcUnitPriceWithVoucher(ProductDAO productDAO, VoucherDAO voucherDAO, int productId) {
         Product p = productDAO.getProductById(productId);
         if (p == null) {
             return 0;
         }
 
-        int percent = 0;
+        // [SỬA] Lấy trực tiếp discount từ sản phẩm
+        int percent = p.getDiscount();
 
-        // Lấy voucherID từ Product. 
-        // Lưu ý: Nếu Product.getVoucherID() vẫn trả về int (ví dụ: 0 là không có voucher), 
-        // ta cần dùng String.valueOf() để chuyển nó thành String cho VoucherDAO dùng.
-        String voucherId = String.valueOf(p.getVoucherID());
-
-        // Kiểm tra điều kiện voucher hợp lệ với String
-        // (Khác null, khác rỗng, và khác "0" - trường hợp mặc định của int cũ)
-        if (voucherId != null && !voucherId.isBlank() && !voucherId.equals("0")) {
-
-            // Hàm getPercentById bây giờ nhận tham số String
-            Integer vPercent = voucherDAO.getPercentById(voucherId);
-
-            if (vPercent != null) {
-                percent = vPercent;
-            }
-        }
-
-        // Tính giá sau giảm và làm tròn
         float originalPrice = (float) p.getPrice();
         float discountedPrice = originalPrice - (originalPrice * percent / 100.0f);
 
         return Math.round(discountedPrice);
     }
+
 }

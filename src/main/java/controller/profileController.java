@@ -30,20 +30,20 @@ public class ProfileController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String urlPath = request.getServletPath();
-        
+
         // Chỉ xử lý hiển thị profile ở GET
         if ("/profile".equals(urlPath)) {
             viewProfile(request, response);
-        } 
+        }
         // Các action update/change pass phải dùng POST để bảo mật
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String urlPath = request.getServletPath();
-        
+
         // Điều hướng xử lý dựa trên URL
         if ("/changePassword".equals(urlPath)) {
             handleChangePasswordAjax(request, response);
@@ -76,13 +76,15 @@ public class ProfileController extends HttpServlet {
             if ("verify".equals(action)) {
                 // === BƯỚC 1: KIỂM TRA MẬT KHẨU CŨ ===
                 String currentPass = request.getParameter("currentPassword");
-                if(currentPass == null) currentPass = "";
-                
+                if (currentPass == null) {
+                    currentPass = "";
+                }
+
                 String currentPassHash = getMd5(currentPass);
-                
+
                 // Kiểm tra trong DB (Sử dụng username hoặc email từ session)
                 boolean isCorrect = daoCustomer.checkLogin(acc.getUsername(), currentPassHash);
-                
+
                 if (isCorrect) {
                     resData.setIsSuccess(true);
                     resData.setDescription("Password correct.");
@@ -94,7 +96,7 @@ public class ProfileController extends HttpServlet {
             } else if ("change".equals(action)) {
                 // === BƯỚC 2: ĐỔI MẬT KHẨU MỚI ===
                 String newPass = request.getParameter("newPassword");
-                
+
                 // Validate lại ở Server
                 if (newPass == null || !newPass.matches(PASS_REGEX)) {
                     resData.setIsSuccess(false);
@@ -102,11 +104,11 @@ public class ProfileController extends HttpServlet {
                 } else {
                     String newPassHash = getMd5(newPass);
                     boolean isSuccess = daoCustomer.updatePasswordByEmailOrUsername(newPassHash, acc.getUsername());
-                    
+
                     if (isSuccess) {
                         resData.setIsSuccess(true);
                         resData.setDescription("Password updated successfully.");
-                        
+
                         // (Tùy chọn) Cập nhật lại session nếu object session chứa pass
                         // acc.setPassword(newPassHash); 
                         // session.setAttribute("acc", acc);
@@ -131,7 +133,6 @@ public class ProfileController extends HttpServlet {
     }
 
     // --- CÁC HÀM HỖ TRỢ ---
-    
     public static String getMd5(String input) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -173,14 +174,14 @@ public class ProfileController extends HttpServlet {
             // Hãy dùng hàm 'getCustomerByEmailOrUsername' (Hàm có code thực thi trong DAO của bạn)
             // ĐỪNG dùng 'getCustomerByUsernameOrEmail' (Hàm đó đang trả về null trong file DAO bạn gửi)
             Customer updatedCustomer = daoCustomer.getCustomerByEmailOrUsername(currentAcc.getUsername());
-            
+
             if (updatedCustomer != null) {
                 // Cập nhật lại Session ngay lập tức
                 session.setAttribute("acc", updatedCustomer);
             } else {
                 System.out.println("Lỗi: Không lấy được thông tin mới sau khi update!");
             }
-            
+
             // Redirect về trang profile để hiển thị thông tin mới trong Session
             response.sendRedirect(request.getContextPath() + "/profile");
         } else {
@@ -188,7 +189,7 @@ public class ProfileController extends HttpServlet {
             viewProfile(request, response);
         }
     }
-    
+
     private void viewProfile(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         Customer loggedInCustomer = (session != null) ? (Customer) session.getAttribute("acc") : null;

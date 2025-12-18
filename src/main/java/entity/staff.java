@@ -5,6 +5,7 @@
 package entity;
 
 public class Staff {
+
     private int staff_id;
     private String username;
     private String email;
@@ -31,7 +32,7 @@ public class Staff {
 
     // Constructor không có staff_id (khi insert)
     public Staff(String username, String email, String password, String address,
-                 String phoneNumber, String fullName, String role) {
+            String phoneNumber, String fullName, String role) {
         this.username = username;
         this.email = email;
         this.password = password;

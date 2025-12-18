@@ -9,6 +9,7 @@ package entity;
  *
  */
 public class Category {
+
     private int category_id;
     private String type, gender;
 
@@ -44,5 +45,5 @@ public class Category {
     public void setGender(String gender) {
         this.gender = gender;
     }
-    
+
 }

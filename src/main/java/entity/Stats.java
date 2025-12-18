@@ -9,12 +9,14 @@ package entity;
  * @author Nguyen Trong Nhan - CE190493
  */
 public class Stats {
+
     private int totalProducts;
     private int totalOrders;
     private double totalRevenue;
     private int totalCustomers;
 
-    public Stats() {}
+    public Stats() {
+    }
 
     public Stats(int totalProducts, int totalOrders, double totalRevenue, int totalCustomers) {
         this.totalProducts = totalProducts;
@@ -55,4 +57,3 @@ public class Stats {
         this.totalCustomers = totalCustomers;
     }
 }
-

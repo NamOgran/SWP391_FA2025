@@ -1,3 +1,8 @@
+<%-- 
+    Document    : ordersHistory.jsp
+    Description : Order History - Logic Sync with Int Discount
+--%>
+
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -291,7 +296,7 @@
         <c:forEach items="${requestScope.ordersUserList}" var="o">
             <c:if test="${o.status eq 'Pending'}"><c:set var="countPending" value="${countPending + 1}" /></c:if>
             <c:if test="${o.status eq 'Delivering'}"><c:set var="countDelivering" value="${countDelivering + 1}" /></c:if>
-            <c:if test="${o.status eq 'Delivered'}"><c:set var="countDelivered" value="${countDelivered + 1}" /></c:if>
+            <c:if test="${o.status eq 'Delivered' || o.status eq 'Completed'}"><c:set var="countDelivered" value="${countDelivered + 1}" /></c:if>
             <c:if test="${o.status eq 'Cancelled'}"><c:set var="countCancelled" value="${countCancelled + 1}" /></c:if>
         </c:forEach>
         
@@ -335,7 +340,11 @@
                         <li>
                             <a href="${pageContext.request.contextPath}/orderHistoryView" class="account-nav-link active">
                                 <div><i class="fa-solid fa-clock-rotate-left"></i> Order History</div>
-                                
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/my-feedback" class="account-nav-link">
+                                <div><i class="fa-solid fa-star"></i> My Feedbacks</div>
                             </a>
                         </li>
                         <li>
@@ -385,7 +394,7 @@
                                 </c:if>
 
                                 <c:forEach items="${requestScope.ordersUserList}" var="o">
-                                    <c:if test="${o.status eq 'Delivered'}">
+                                    <c:if test="${o.status eq 'Delivered' || o.status eq 'Completed'}">
                                         <c:set var="searchString" value="${o.orderID}" />
                                         <c:forEach items="${orderDetailList}" var="d">
                                             <c:if test="${d.orderID eq o.orderID}">
@@ -417,7 +426,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-md-5 text-md-end text-start mt-2 mt-md-0">
-                                                        <span class="info-label d-block w-100 text-md-end text-start mb-1">Total Amount</span>
+                                                        <span class="info-label d-block w-100 text-md-end text-start mb-1">Amount Paid: </span>
                                                         <c:set var="formattedTotal"><fmt:formatNumber value="${o.total}" type="number"/></c:set>
                                                         <span class="total-price text-success">${formattedTotal} VND</span>
                                                     </div>
@@ -434,28 +443,46 @@
                                                 <c:forEach items="${requestScope.orderDetailList}" var="d">
                                                     <c:if test="${d.orderID eq o.orderID}">
                                                         <c:set var="pId" value="${d.productID}"/>
-                                                        <c:set var="pPrice" value="${priceP[pId]}"/>
-                                                        <c:set var="pVoucherId" value="${voucherID[pId]}"/>
-                                                        <c:set var="pVoucherPct" value="${voucherMap[pVoucherId] != null ? voucherMap[pVoucherId] : 0}"/>
-                                                        <c:set var="unitDisc" value="${pPrice - (pPrice * pVoucherPct)/100}"/>
-                                                        <c:set var="lineDisc" value="${unitDisc * d.quantity}"/>
-                                                        <c:set var="lineOrig" value="${pPrice * d.quantity}"/>
+                                                        
+                                                        <%-- [UPDATED] Use priceP as Final Unit Price (from Controller) --%>
+                                                        <c:set var="finalUnit" value="${priceP[pId]}"/>
+                                                        
+                                                        <%-- Get Discount --%>
+                                                        <c:set var="discountVal" value="${voucherID[pId]}"/> 
+                                                        <fmt:parseNumber var="discPercent" value="${discountVal}" integerOnly="true" />
+                                                        
+                                                        <%-- REVERSE CALCULATE ORIGINAL (for display purposes) --%>
+                                                        <c:choose>
+                                                            <c:when test="${discPercent > 0}">
+                                                                <c:set var="origUnit" value="${finalUnit * 100 / (100 - discPercent)}"/>
+                                                                <%-- Use pattern for integer rounding in display --%>
+                                                                <fmt:formatNumber var="fmtOrig" value="${origUnit}" maxFractionDigits="0" />
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <c:set var="origUnit" value="${finalUnit}"/>
+                                                            </c:otherwise>
+                                                        </c:choose>
 
                                                         <div class="product-item">
                                                             <div class="row align-items-center">
                                                                 <div class="col-auto">
                                                                     <img src="${picUrlMap[pId]}" class="product-img" alt="Product">
+
                                                                 </div>
                                                                 <div class="col">
-                                                                    <div class="product-name">${nameProduct[pId]}</div>
+                                                                    <div class="product-name text-muted">${nameProduct[pId]}</div>
                                                                     <div class="product-meta">Size: <strong>${d.size_name}</strong> | Qty: <strong>${d.quantity}</strong></div>
+                                                                    <c:if test="${discPercent > 0}">
+                                                                        <span class="badge bg-secondary text-white" style="font-size: 0.65rem;">-${discPercent}%</span>
+                                                                    </c:if>
                                                                 </div>
                                                                 <div class="col-auto text-end">
-                                                                    <c:if test="${lineOrig > lineDisc}">
-                                                                        <span class="price-old"><fmt:formatNumber value="${lineOrig}" type="number"/> VND</span>
+                                                                    <c:if test="${discPercent > 0}">
+                                                                        <span class="price-old">${fmtOrig} VND</span>
                                                                     </c:if>
-                                                                    <div class="price-new"><fmt:formatNumber value="${lineDisc}" type="number"/> VND</div>
+                                                                    <div class="price-new text-muted"><fmt:formatNumber value="${finalUnit * d.quantity}" type="number"/> VND</div>
                                                                     
+                                                                    <%-- REVIEW BUTTON --%>
                                                                     <div class="mt-2">
                                                                         <c:set var="mapKey" value="${o.orderID}_${d.productID}" />
                                                                         <c:choose>
@@ -542,7 +569,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-md-5 text-md-end text-start mt-2 mt-md-0">
-                                                        <span class="info-label d-block w-100 text-md-end text-start mb-1">Total Amount</span>
+                                                        <span class="info-label d-block w-100 text-md-end text-start mb-1">Amount Paid: </span>
                                                         <c:set var="formattedTotal"><fmt:formatNumber value="${o.total}" type="number"/></c:set>
                                                         <span class="total-price text-muted" style="text-decoration: line-through;">${formattedTotal} VND</span>
                                                     </div>
@@ -559,13 +586,10 @@
                                                 <c:forEach items="${requestScope.orderDetailList}" var="d">
                                                     <c:if test="${d.orderID eq o.orderID}">
                                                         <c:set var="pId" value="${d.productID}"/>
-                                                        <c:set var="pPrice" value="${priceP[pId]}"/>
-                                                        <c:set var="pVoucherId" value="${voucherID[pId]}"/>
-                                                        <c:set var="pVoucherPct" value="${voucherMap[pVoucherId] != null ? voucherMap[pVoucherId] : 0}"/>
-                                                        <c:set var="unitDisc" value="${pPrice - (pPrice * pVoucherPct)/100}"/>
-                                                        <c:set var="lineDisc" value="${unitDisc * d.quantity}"/>
-                                                        <c:set var="lineOrig" value="${pPrice * d.quantity}"/>
-
+                                                        <c:set var="finalUnit" value="${priceP[pId]}"/>
+                                                        <c:set var="discountVal" value="${voucherID[pId]}"/> 
+                                                        <fmt:parseNumber var="discPercent" value="${discountVal}" integerOnly="true" />
+                                                        
                                                         <div class="product-item">
                                                             <div class="row align-items-center">
                                                                 <div class="col-auto">
@@ -576,10 +600,7 @@
                                                                     <div class="product-meta">Size: <strong>${d.size_name}</strong> | Qty: <strong>${d.quantity}</strong></div>
                                                                 </div>
                                                                 <div class="col-auto text-end">
-                                                                    <c:if test="${lineOrig > lineDisc}">
-                                                                        <span class="price-old"><fmt:formatNumber value="${lineOrig}" type="number"/> VND</span>
-                                                                    </c:if>
-                                                                    <div class="price-new text-muted"><fmt:formatNumber value="${lineDisc}" type="number"/> VND</div>
+                                                                    <div class="price-new text-muted"><fmt:formatNumber value="${finalUnit * d.quantity}" type="number"/> VND</div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -624,7 +645,8 @@
                         
                         <div class="form-group mb-3">
                             <label for="comment" class="fw-bold text-muted mb-2">Your Review</label>
-                            <textarea id="comment" name="comment" class="form-control" rows="3" placeholder="Share your experience..."></textarea>
+                            <textarea id="comment" name="comment" class="form-control" rows="3" placeholder="Share your experience..." maxlength="255" required></textarea>
+
                         </div>
                         <div id="feedbackMessage" class="mt-2 text-center fw-bold"></div>
                     </form>
@@ -724,6 +746,10 @@
                     feedbackMessage.innerHTML = '<span class="text-danger">Please select a star rating.</span>';
                     return;
                 }
+                if (comment.trim() === '') {
+    feedbackMessage.innerHTML = '<span class="text-danger">Please enter your review.</span>';
+    return;
+}
 
                 const rating = ratingInput.value;
                 const data = { productId: parseInt(productId), orderId: parseInt(orderId), rating: parseInt(rating), comment: comment };

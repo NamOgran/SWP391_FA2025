@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package DAO;
+
 import entity.Customer;
 import entity.Staff;
 import java.sql.PreparedStatement;
@@ -10,9 +11,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  *
- * 
+ *
  */
 public class StaffDAO extends DBConnect.DBConnect {
 
@@ -78,10 +80,12 @@ public class StaffDAO extends DBConnect.DBConnect {
 
     // === START: UPDATED delete() METHOD ===
     /**
-     * Xóa một staff bằng username.
-     * Trả về false nếu có lỗi (ví dụ: vi phạm ràng buộc khóa ngoại).
+     * Xóa một staff bằng username. Trả về false nếu có lỗi (ví dụ: vi phạm ràng
+     * buộc khóa ngoại).
+     *
      * @param username Tên người dùng để xóa
-     * @return true nếu xóa thành công, false nếu thất bại (VD: còn orders, imports)
+     * @return true nếu xóa thành công, false nếu thất bại (VD: còn orders,
+     * imports)
      */
     public boolean delete(String username) {
         String sql = "delete from staff where username = ?";
@@ -101,7 +105,6 @@ public class StaffDAO extends DBConnect.DBConnect {
         return false; // Trả về false nếu có lỗi (bao gồm cả lỗi FK)
     }
     // === END: UPDATED delete() METHOD ===
-
 
     public boolean updateStaffProfile(String username, String email, String address, String phoneNumber, String fullName) {
         String sql = "update staff\n"
@@ -241,6 +244,7 @@ public class StaffDAO extends DBConnect.DBConnect {
         }
         return false;
     }
+
     /**
      * Cập nhật thông tin Staff theo ID (được gọi bởi AdminController)
      */
@@ -259,5 +263,21 @@ public class StaffDAO extends DBConnect.DBConnect {
             System.err.println("Error StaffDAO.updateStaffProfile: " + e.getMessage());
             return false;
         }
+    }
+
+    public boolean isEmailExistedExceptId(String email, int staffId) {
+        String sql = "SELECT COUNT(*) FROM staff WHERE email = ? AND staff_id <> ?";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setInt(2, staffId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

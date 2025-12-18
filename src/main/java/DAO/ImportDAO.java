@@ -23,11 +23,12 @@ public class ImportDAO extends DBConnect.DBConnect {
         ImportDetailDAO dao = new ImportDetailDAO();
 
         // === SỬA CÂU SQL: DÙNG JOIN ĐỂ LẤY USERNAME ===
-        String sql = "SELECT i.import_id, i.staff_id, i.status, i.importDate, s.username " +
-                     "FROM import i " +
-                     "JOIN staff s ON i.staff_id = s.staff_id " + // Nối bảng staff
-                     "ORDER BY i.status DESC";
-                     
+        String sql = "SELECT i.import_id, i.staff_id, i.status, i.importDate, s.username "
+                + "FROM import i "
+                + "JOIN staff s ON i.staff_id = s.staff_id "
+                + // Nối bảng staff
+                "ORDER BY i.status DESC";
+
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
@@ -35,11 +36,11 @@ public class ImportDAO extends DBConnect.DBConnect {
                 // === CẬP NHẬT CONSTRUCTOR MỚI ===
                 // Thêm tham số rs.getString("username") vào cuối
                 Imports o = new Imports(
-                        rs.getInt("import_id"), 
-                        dao.getQuantityByImportID(rs.getString("import_id")), 
-                        dao.getPriceByImportID(rs.getString("import_id")), 
-                        rs.getInt("staff_id"), 
-                        rs.getString("status"), 
+                        rs.getInt("import_id"),
+                        dao.getQuantityByImportID(rs.getString("import_id")),
+                        dao.getPriceByImportID(rs.getString("import_id")),
+                        rs.getInt("staff_id"),
+                        rs.getString("status"),
                         rs.getDate("importDate"),
                         rs.getString("username") // Lấy username từ kết quả JOIN
                 );
@@ -52,19 +53,19 @@ public class ImportDAO extends DBConnect.DBConnect {
     }
 
     // Trong ImportDAO.java
-public boolean updateStatus(int id, String newStatus) {
-    String sql = "UPDATE import SET status = ? WHERE import_id = ?";
-    try {
-        PreparedStatement st = connection.prepareStatement(sql);
-        st.setString(1, newStatus); // "Delivered" hoặc "Cancelled"
-        st.setInt(2, id);
-        int rows = st.executeUpdate();
-        return rows > 0;
-    } catch (Exception e) {
-        e.printStackTrace();
+    public boolean updateStatus(int id, String newStatus) {
+        String sql = "UPDATE import SET status = ? WHERE import_id = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, newStatus); // "Delivered" hoặc "Cancelled"
+            st.setInt(2, id);
+            int rows = st.executeUpdate();
+            return rows > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
-    return false;
-}
 
     public static void main(String[] args) {
         ImportDAO d = new ImportDAO();
@@ -102,7 +103,6 @@ public boolean updateStatus(int id, String newStatus) {
         return list;
     }
 
-
     public int insertImportAndGetId(Imports newImport) {
         // Câu lệnh SQL giữ nguyên
         String sql = "INSERT INTO import (importDate, staff_id, status) VALUES (?, ?, ?)";
@@ -132,6 +132,7 @@ public boolean updateStatus(int id, String newStatus) {
         }
         return 0; // Trả về 0 nếu lỗi
     }
+
     /**
      * [PAGINATION] Lấy tổng số lượng bản ghi Import để tính tổng số trang
      */
@@ -151,37 +152,39 @@ public boolean updateStatus(int id, String newStatus) {
 
     /**
      * [PAGINATION] Lấy danh sách Import theo phân trang
+     *
      * @param page Trang hiện tại (bắt đầu từ 1)
      * @param pageSize Số lượng item mỗi trang (10)
      */
     public List<Imports> getImportsByPage(int page, int pageSize) {
         List<Imports> list = new ArrayList<>();
         ImportDetailDAO dao = new ImportDetailDAO();
-        
+
         // Tính toán vị trí bắt đầu (Offset)
         int offset = (page - 1) * pageSize;
 
         // Sử dụng OFFSET FETCH của SQL Server (yêu cầu SQL Server 2012 trở lên)
         // Bắt buộc phải có ORDER BY khi dùng OFFSET
-        String sql = "SELECT i.import_id, i.staff_id, i.status, i.importDate, s.username " +
-                     "FROM import i " +
-                     "JOIN staff s ON i.staff_id = s.staff_id " +
-                     "ORDER BY i.status DESC, i.import_id DESC " + // Thêm ID để sắp xếp ổn định
-                     "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT i.import_id, i.staff_id, i.status, i.importDate, s.username "
+                + "FROM import i "
+                + "JOIN staff s ON i.staff_id = s.staff_id "
+                + "ORDER BY i.status DESC, i.import_id DESC "
+                + // Thêm ID để sắp xếp ổn định
+                "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, offset);
             st.setInt(2, pageSize);
-            
+
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 Imports o = new Imports(
-                        rs.getInt("import_id"), 
-                        dao.getQuantityByImportID(rs.getString("import_id")), 
-                        dao.getPriceByImportID(rs.getString("import_id")), 
-                        rs.getInt("staff_id"), 
-                        rs.getString("status"), 
+                        rs.getInt("import_id"),
+                        dao.getQuantityByImportID(rs.getString("import_id")),
+                        dao.getPriceByImportID(rs.getString("import_id")),
+                        rs.getInt("staff_id"),
+                        rs.getString("status"),
                         rs.getDate("importDate"),
                         rs.getString("username")
                 );
@@ -193,4 +196,3 @@ public boolean updateStatus(int id, String newStatus) {
         return list;
     }
 }
-

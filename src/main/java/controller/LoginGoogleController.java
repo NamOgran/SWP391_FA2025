@@ -9,7 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import entity.GooglePojo;
 import entity.Customer;
-import io.github.cdimascio.dotenv.Dotenv; 
+import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -31,7 +31,7 @@ public class LoginGoogleController extends HttpServlet {
         private static final String GOOGLE_CLIENT_ID = dotenv.get("GOOGLE_CLIENT_ID");
         private static final String GOOGLE_CLIENT_SECRET = dotenv.get("GOOGLE_CLIENT_SECRET");
         private static final String GOOGLE_REDIRECT_URI = dotenv.get("GOOGLE_REDIRECT_URI");
-        
+
         private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
         private static final String GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
@@ -78,7 +78,7 @@ public class LoginGoogleController extends HttpServlet {
             GooglePojo googleUser = GoogleUtils.getUserInfo(accessToken);
 
             CustomerDAO dao = new CustomerDAO();
-            
+
             // Luôn kiểm tra bằng Email
             boolean userExists = dao.checkEmail(googleUser.getEmail());
 
@@ -87,7 +87,7 @@ public class LoginGoogleController extends HttpServlet {
             if (userExists) {
                 // Email đã tồn tại -> Lấy thông tin
                 customerAccount = dao.getCustomerByEmailOrUsername(googleUser.getEmail());
-                
+
                 // (Tùy chọn) Cập nhật google_id nếu chưa có
                 if (customerAccount.getGoogle_id() == null || customerAccount.getGoogle_id().isEmpty()) {
                     // Logic cập nhật google_id có thể thêm ở đây
@@ -96,23 +96,23 @@ public class LoginGoogleController extends HttpServlet {
             } else {
                 // Email chưa tồn tại -> Đăng ký mới
                 String email = googleUser.getEmail();
-                String username = email.substring(0, email.indexOf('@')); 
-                String googleId = "gg_" + googleUser.getId(); 
-                
+                String username = email.substring(0, email.indexOf('@'));
+                String googleId = "gg_" + googleUser.getId();
+
                 // Lưu ý: Cần chắc chắn class CustomerController có phương thức getMd5 public static
                 // Nếu không, bạn cần import hoặc viết lại hàm md5 ở đây
-                String randomPassword = CustomerController.getMd5(googleUser.getId()); 
+                String randomPassword = CustomerController.getMd5(googleUser.getId());
                 String fullName = googleUser.getName();
 
                 // Tạo đối tượng Customer mới
                 Customer newCustomer = new Customer(
-                        username,       // 1. username
-                        email,          // 2. email
+                        username, // 1. username
+                        email, // 2. email
                         randomPassword, // 3. password
-                        "",             // 4. address
-                        "",             // 5. phoneNumber
-                        fullName,       // 6. fullName
-                        googleId        // 7. google_id
+                        "", // 4. address
+                        "", // 5. phoneNumber
+                        fullName, // 6. fullName
+                        googleId // 7. google_id
                 );
 
                 dao.signUp(newCustomer);
@@ -123,14 +123,14 @@ public class LoginGoogleController extends HttpServlet {
 
             // Lưu vào session và chuyển hướng
             HttpSession session = request.getSession();
-            session.setAttribute("acc", customerAccount); 
-            response.sendRedirect(request.getContextPath()); 
+            session.setAttribute("acc", customerAccount);
+            response.sendRedirect(request.getContextPath());
 
         } catch (Exception e) {
             e.printStackTrace();
             // In lỗi chi tiết ra để debug nếu file .env không load được
             System.err.println("Google Login Error: " + e.getMessage());
-            
+
             request.setAttribute("message", "Login error: " + e.getMessage());
             request.getRequestDispatcher("/login.jsp").forward(request, response);
         }

@@ -5,7 +5,6 @@ import DAO.FeedBackDAO;
 import DAO.ImportDetailDAO;
 import DAO.OrderDAO;
 import DAO.ProductDAO;
-import DAO.VoucherDAO;
 import DAO.Size_detailDAO;
 import entity.Product;
 import entity.Staff;
@@ -28,7 +27,6 @@ import static url.ProductURL.*;
 @WebServlet({UPDATE_JSP_PRODUCT, DELETE_PRODUCT, UPDATE_PRODUCT, ADD_PRODUCT, SEARCH_PRODUCT, SEARCH_PRODUCT_AJAX})
 public class CRUDproduct extends HttpServlet {
 
-    // ... (Helper Methods giữ nguyên) ...
     private int parseIntSafe(String value, int defaultValue) {
         try {
             return (value == null || value.trim().isEmpty()) ? defaultValue : Integer.parseInt(value.trim());
@@ -38,7 +36,9 @@ public class CRUDproduct extends HttpServlet {
     }
 
     private String encode(String value) {
-        if (value == null) return "";
+        if (value == null) {
+            return "";
+        }
         try {
             return URLEncoder.encode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -54,11 +54,21 @@ public class CRUDproduct extends HttpServlet {
         String status = request.getParameter("current_status");
         StringBuilder url = new StringBuilder(request.getContextPath() + "/admin");
         url.append("?tab=product&msg=").append(encode(msg));
-        if (page != null && !page.isEmpty()) url.append("&page=").append(encode(page));
-        if (sort != null && !sort.isEmpty()) url.append("&sort=").append(encode(sort));
-        if (search != null && !search.isEmpty()) url.append("&search=").append(encode(search));
-        if (category != null && !category.isEmpty() && !category.equals("0")) url.append("&category=").append(encode(category));
-        if (status != null && !status.isEmpty() && !status.equals("all")) url.append("&status=").append(encode(status));
+        if (page != null && !page.isEmpty()) {
+            url.append("&page=").append(encode(page));
+        }
+        if (sort != null && !sort.isEmpty()) {
+            url.append("&sort=").append(encode(sort));
+        }
+        if (search != null && !search.isEmpty()) {
+            url.append("&search=").append(encode(search));
+        }
+        if (category != null && !category.isEmpty() && !category.equals("0")) {
+            url.append("&category=").append(encode(category));
+        }
+        if (status != null && !status.isEmpty() && !status.equals("all")) {
+            url.append("&status=").append(encode(status));
+        }
         return url.toString();
     }
 
@@ -66,7 +76,6 @@ public class CRUDproduct extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // ... (Giữ nguyên) ...
         HttpSession session = request.getSession(false);
         Staff s = (session != null) ? (Staff) session.getAttribute("staff") : null;
         if (s == null || !"admin".equalsIgnoreCase(s.getRole())) {
@@ -77,8 +86,8 @@ public class CRUDproduct extends HttpServlet {
         String urlPath = request.getServletPath();
         ProductDAO daoProduct = new ProductDAO();
         Size_detailDAO daoSize_detail = new Size_detailDAO();
-        VoucherDAO daoVoucher = new VoucherDAO();
 
+        // [XÓA] VoucherDAO daoVoucher = new VoucherDAO(); // Không cần nữa
         switch (urlPath) {
             case UPDATE_PRODUCT:
                 int idInt = parseIntSafe(request.getParameter("id"), 0);
@@ -87,18 +96,9 @@ public class CRUDproduct extends HttpServlet {
                 int categoryInt = parseIntSafe(request.getParameter("category"), 1);
                 String pic = request.getParameter("pic");
                 String des = request.getParameter("des");
-                
-                // [FIX] Update logic for String Voucher ID
-                String voucherParam = request.getParameter("voucher");
-                String voucherId = null;
-                try {
-                    int voucherPercent = Integer.parseInt(voucherParam);
-                    String autoId = "V" + voucherPercent;
-                    daoVoucher.addIfNotExist(autoId, voucherPercent);
-                    voucherId = daoVoucher.getIdVoucher(voucherPercent);
-                } catch (Exception e) {
-                     // Handle invalid voucher input
-                }
+
+                // [CẬP NHẬT] Lấy trực tiếp discount từ input (tên input bên frontend vẫn là "voucher")
+                int discount = parseIntSafe(request.getParameter("voucher"), 0);
 
                 if (idInt == 0) {
                     response.sendRedirect(buildProductRedirectUrl(request, "update_failed"));
@@ -106,9 +106,9 @@ public class CRUDproduct extends HttpServlet {
                 }
                 Product existing = daoProduct.getProductById(idInt);
                 boolean isActive = (existing != null) ? existing.isIs_active() : true;
-                
-                // [FIX] Use String voucherId
-                Product p = new Product(idInt, priceInt, categoryInt, voucherId, name, des, pic, isActive);
+
+                // [CẬP NHẬT] Constructor dùng int discount
+                Product p = new Product(idInt, priceInt, categoryInt, discount, name, des, pic, isActive);
                 daoProduct.update(p);
                 response.sendRedirect(buildProductRedirectUrl(request, "updated"));
                 break;
@@ -119,21 +119,12 @@ public class CRUDproduct extends HttpServlet {
                 int catAdd = parseIntSafe(request.getParameter("category"), 1);
                 String picAdd = request.getParameter("pic");
                 String desAdd = request.getParameter("des");
-                
-                // [FIX] Update logic for String Voucher ID
-                String voucherValAddParam = request.getParameter("voucher");
-                String voucherIdAdd = null;
-                try {
-                    int voucherPercent = Integer.parseInt(voucherValAddParam);
-                    String autoId = "V" + voucherPercent;
-                    daoVoucher.addIfNotExist(autoId, voucherPercent);
-                    voucherIdAdd = daoVoucher.getIdVoucher(voucherPercent);
-                } catch (Exception e) {
-                     // Handle invalid voucher input
-                }
 
-                // [FIX] Use String voucherId
-                Product pAdd = new Product(priceAdd, catAdd, voucherIdAdd, nameAdd, desAdd, picAdd);
+                // [CẬP NHẬT] Lấy trực tiếp discount
+                int discountAdd = parseIntSafe(request.getParameter("voucher"), 0);
+
+                // [CẬP NHẬT] Constructor dùng int discount
+                Product pAdd = new Product(priceAdd, catAdd, discountAdd, nameAdd, desAdd, picAdd);
                 boolean isSuccess = daoProduct.insert(pAdd);
                 if (isSuccess) {
                     List<Product> newProducts = daoProduct.sortNew();
@@ -153,31 +144,30 @@ public class CRUDproduct extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         response.setContentType("text/html;charset=UTF-8");
         String urlPath = request.getServletPath();
         ProductDAO dao = new ProductDAO();
-        Size_detailDAO size_detailDAO = new Size_detailDAO(); // Cần DAO này
-        
+        Size_detailDAO size_detailDAO = new Size_detailDAO();
+
         switch (urlPath) {
             case DELETE_PRODUCT:
                 // Bảo mật
                 HttpSession session = request.getSession(false);
                 Staff s = (session != null) ? (Staff) session.getAttribute("staff") : null;
                 if (s == null || !"admin".equalsIgnoreCase(s.getRole())) {
-                     response.sendRedirect(request.getContextPath() + "/login.jsp");
-                     return;
+                    response.sendRedirect(request.getContextPath() + "/login.jsp");
+                    return;
                 }
 
                 int id = parseIntSafe(request.getParameter("id"), 0);
                 String result = "";
 
-                // [UPDATED] Check constraints manually before delete
                 OrderDAO orderDAO = new OrderDAO();
                 CartDAO cartDAO = new CartDAO();
                 ImportDetailDAO importDetailDAO = new ImportDetailDAO();
                 FeedBackDAO feedBackDAO = new FeedBackDAO();
-                
+
                 boolean hasOrders = !orderDAO.getOrderDetailsByProductId(id).isEmpty();
                 boolean hasCarts = !cartDAO.getCartItemsByProductId(id).isEmpty();
                 boolean hasImports = !importDetailDAO.getImportDetailsByProductId(id).isEmpty();
@@ -188,16 +178,18 @@ public class CRUDproduct extends HttpServlet {
                 } else {
                     List<Size_detail> sizes = size_detailDAO.getSizesByProductId(id);
                     int totalStock = 0;
-                    for (Size_detail sd : sizes) totalStock += sd.getQuantity();
+                    for (Size_detail sd : sizes) {
+                        totalStock += sd.getQuantity();
+                    }
 
                     if (totalStock > 0) {
                         result = "Cannot delete: Product has stock.";
                     } else {
-                        // [CRITICAL] Clean up sizes first
                         try {
-                            size_detailDAO.deleteByProductId(id); // Giả định DAO có hàm này
-                        } catch (Exception e) {}
-                        
+                            size_detailDAO.deleteByProductId(id);
+                        } catch (Exception e) {
+                        }
+
                         // Delete product
                         result = dao.deleteProductWithChecks(id);
                     }
@@ -216,45 +208,43 @@ public class CRUDproduct extends HttpServlet {
             case SEARCH_PRODUCT_AJAX:
                 String txt = request.getParameter("txt");
                 List<Product> listAjax = dao.search("%" + txt + "%");
-                VoucherDAO voucherDAO = new VoucherDAO();
+                // [XÓA] VoucherDAO voucherDAO = new VoucherDAO();
                 PrintWriter out = response.getWriter();
                 NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
 
                 if (listAjax.isEmpty()) {
-                     out.println("<div class='no-products-found'>");
-                     out.println("<i class='bi bi-box-seam no-products-icon'></i>");
-                     out.println("Opps! There are no products that match your needs...");
-                     out.println("</div>");
+                    out.println("<div class='no-products-found'>");
+                    out.println("<i class='bi bi-box-seam no-products-icon'></i>");
+                    out.println("Opps! There are no products that match your needs...");
+                    out.println("</div>");
                 } else {
                     for (Product o : listAjax) {
                         double originalPrice = o.getPrice();
                         double salePrice = originalPrice;
-                        int voucherPercent = 0;
-                        // [FIX] check if voucherID is not null and not empty
-                        if(o.getVoucherID() != null && !o.getVoucherID().isEmpty()){
-                            Integer vp = voucherDAO.getPercentById(o.getVoucherID());
-                            if (vp != null) voucherPercent = vp;
-                            
-                            if(voucherPercent > 0){
-                                salePrice = originalPrice * (1 - voucherPercent / 100.0);
-                            }
+
+                        // [CẬP NHẬT] Lấy discount trực tiếp từ Product
+                        int discount = o.getDiscount();
+
+                        if (discount > 0) {
+                            salePrice = originalPrice * (1 - discount / 100.0);
                         }
-                        String formattedSalePrice = numberFormat.format((int)Math.ceil(salePrice));
-                        String formattedOriginalPrice = numberFormat.format((int)originalPrice); 
+
+                        String formattedSalePrice = numberFormat.format((int) Math.ceil(salePrice));
+                        String formattedOriginalPrice = numberFormat.format((int) originalPrice);
 
                         out.println("<div class=\"search-card\">");
                         out.println("   <a href=\"productDetail?id=" + o.getId() + "\" class=\"search-card-link\">");
                         out.println("       <div class=\"search-card-image\">");
                         out.println("           <img src=\"" + o.getPicURL() + "\" alt=\"" + o.getName() + "\">");
-                        if (voucherPercent > 0) {
-                            out.println("       <span class=\"search-card-badge\">-" + voucherPercent + "%</span>");
+                        if (discount > 0) {
+                            out.println("       <span class=\"search-card-badge\">-" + discount + "%</span>");
                         }
                         out.println("       </div>");
                         out.println("       <div class=\"search-card-info\">");
                         out.println("           <div class=\"search-card-name\">" + o.getName() + "</div>");
                         out.println("           <div class=\"search-card-price\">");
                         out.println("               <span class=\"search-card-sale-price\">" + formattedSalePrice + " VND</span>");
-                        if (voucherPercent > 0) {
+                        if (discount > 0) {
                             out.println("           <span class=\"search-card-original-price\">" + formattedOriginalPrice + " VND</span>");
                         }
                         out.println("           </div>");
@@ -273,7 +263,7 @@ public class CRUDproduct extends HttpServlet {
                 break;
         }
     }
-    
+
     @Override
     public String getServletInfo() {
         return "CRUD Product Controller";

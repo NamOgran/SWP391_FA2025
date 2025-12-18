@@ -9,6 +9,7 @@ package url;
  *
  */
 public class CartURL {
+
     public static final String URL_CART_LIST = "/cart";
     public static final String URL_CART_INSERT = "/cartInsert";
     public static final String URL_CART_INCREASE = "/cartIncrease";

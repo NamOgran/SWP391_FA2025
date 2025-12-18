@@ -1,9 +1,7 @@
 package controller;
 
 import DAO.ProductDAO;
-import DAO.VoucherDAO;
 import entity.Product;
-import entity.Voucher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,9 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @WebServlet(name = "sortProduct", urlPatterns = {"/sortProduct"})
 public class SortProductController extends HttpServlet {
@@ -31,41 +27,35 @@ public class SortProductController extends HttpServlet {
         String categoryFilter = request.getParameter("categoryFilter");
 
         // Xử lý null
-        if (sort1 == null) sort1 = "";
-        if (sort2 == null) sort2 = "";
-        if (priceRange == null) priceRange = "";
+        if (sort1 == null) {
+            sort1 = "";
+        }
+        if (sort2 == null) {
+            sort2 = "";
+        }
+        if (priceRange == null) {
+            priceRange = "";
+        }
 
         // 2. Gọi DAO lấy danh sách sản phẩm (Lọc sơ bộ)
         ProductDAO dao = new ProductDAO();
         List<Product> productList = dao.getPublicProducts(context, sort1, sort2, priceRange, categoryFilter);
 
-        // 3. Lấy thông tin Khuyến mãi (Voucher) để tính giá thật
-        VoucherDAO voucherDAO = new VoucherDAO();
-        List<Voucher> voucherListFull = voucherDAO.getAll();
-        
-        // [FIX] Tạo Map với key là String (VoucherID)
-        Map<String, Integer> voucherMap = new HashMap<>(); 
-        for (Voucher voucher : voucherListFull) {
-            voucherMap.put(voucher.getVoucherID(), voucher.getVoucherPercent());
-        }
-
-        // 4. LOGIC SẮP XẾP THEO GIÁ ĐÃ GIẢM (QUAN TRỌNG)
+        // 3. [LOẠI BỎ] Không cần VoucherDAO hay voucherMap nữa
+        // 4. LOGIC SẮP XẾP THEO GIÁ ĐÃ GIẢM
         if ("Increase".equals(sort2) || "Decrease".equals(sort2)) {
-            
+
             Collections.sort(productList, new Comparator<Product>() {
                 @Override
                 public int compare(Product p1, Product p2) {
-                    // Tính giá thực tế sản phẩm 1
-                    // [FIX] p1.getVoucherID() trả về String, map cũng dùng key String -> OK
-                    int discountPercent1 = voucherMap.getOrDefault(p1.getVoucherID(), 0);
-                    double finalPrice1 = p1.getPrice() * (1.0 - (discountPercent1 / 100.0));
+                    // Tính giá thực tế sản phẩm 1 dùng int discount
+                    double price1 = p1.getPrice() * (1.0 - (p1.getDiscount() / 100.0));
 
-                    // Tính giá thực tế sản phẩm 2
-                    int discountPercent2 = voucherMap.getOrDefault(p2.getVoucherID(), 0);
-                    double finalPrice2 = p2.getPrice() * (1.0 - (discountPercent2 / 100.0));
+                    // Tính giá thực tế sản phẩm 2 dùng int discount
+                    double price2 = p2.getPrice() * (1.0 - (p2.getDiscount() / 100.0));
 
                     // So sánh 2 giá thực tế
-                    return Double.compare(finalPrice1, finalPrice2);
+                    return Double.compare(price1, price2);
                 }
             });
 
@@ -78,8 +68,8 @@ public class SortProductController extends HttpServlet {
         // 5. Gửi dữ liệu về JSP
         request.setAttribute("pageContext", context); // Để giữ Breadcrumb đúng
         request.setAttribute("productList", productList);
-        request.setAttribute("voucherMap", voucherMap);
 
+        // [CẬP NHẬT] Không gửi voucherMap nữa vì JSP nên dùng p.discount
         // Giữ trạng thái filter trên UI
         request.setAttribute("param.sort1", sort1);
         request.setAttribute("param.sort2", sort2);

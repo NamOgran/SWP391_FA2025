@@ -22,9 +22,8 @@ public class Size_detailDAO extends DBConnect.DBConnect {
         List<Size_detail> list = new ArrayList<>();
         String sql = "select * from size_detail";
         // [FIX] Dùng try-with-resources để tự động đóng kết nối
-        try (PreparedStatement st = connection.prepareStatement(sql);
-             ResultSet rs = st.executeQuery()) {
-            
+        try (PreparedStatement st = connection.prepareStatement(sql); ResultSet rs = st.executeQuery()) {
+
             while (rs.next()) {
                 Size_detail s = new Size_detail(rs.getString("size_name"), rs.getInt("product_id"), rs.getInt("quantity"));
                 list.add(s);
@@ -93,8 +92,8 @@ public class Size_detailDAO extends DBConnect.DBConnect {
     }
 
     /**
-     * Kiểm tra xem một sản phẩm có tồn tại trong size_detail không.
-     * Note: "TOP 1" dùng cho SQL Server. Nếu dùng MySQL hãy đổi thành "LIMIT 1"
+     * Kiểm tra xem một sản phẩm có tồn tại trong size_detail không. Note: "TOP
+     * 1" dùng cho SQL Server. Nếu dùng MySQL hãy đổi thành "LIMIT 1"
      */
     public boolean hasDataForProduct(int productId) {
         String sql = "SELECT TOP 1 1 FROM size_detail WHERE product_id = ?";
@@ -185,7 +184,7 @@ public class Size_detailDAO extends DBConnect.DBConnect {
             st.setInt(1, productId);
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1); 
+                    return rs.getInt(1);
                 }
             }
         } catch (SQLException e) {

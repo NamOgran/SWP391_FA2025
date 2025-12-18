@@ -7,6 +7,7 @@ import DAO.Size_detailDAO;
 import entity.Size_detail;
 import entity.Customer;
 import entity.Product;
+import entity.Voucher;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -108,18 +109,14 @@ public class LoadController extends HttpServlet {
 
             int unitPrice = product.getPrice();
 
-            String voucherId = String.valueOf(product.getVoucherID());
-            if (voucherId != null && !voucherId.isBlank()
-                    && !voucherId.equals("0") && !voucherId.equals("null")) {
-
-                Integer percentObj = voucherDao.getPercentById(voucherId);
-                if (percentObj != null && percentObj > 0) {
-                    int percent = percentObj;
-                    float originalPrice = (float) product.getPrice();
-                    float discountedPrice = originalPrice - (originalPrice * percent / 100.0f);
-                    unitPrice = Math.round(discountedPrice);
-                }
+            int percent = product.getDiscount();
+            if (percent > 0) {
+                float originalPrice = (float) product.getPrice();
+                // Nếu logic của bạn chỉ là phần trăm:
+                float discountedPrice = originalPrice - (originalPrice * percent / 100.0f);
+                unitPrice = Math.round(discountedPrice);
             }
+
             priceP.put(id, unitPrice);
         }
 
@@ -170,7 +167,7 @@ public class LoadController extends HttpServlet {
                 // NEW: receive selected items from cart.jsp
                 String[] selectedItems = request.getParameterValues("selectedItems");
 
-                List<entity.Cart> paymentList = cartList; 
+                List<entity.Cart> paymentList = cartList;
                 boolean isSelectionMode = (selectedItems != null && selectedItems.length > 0);
 
                 if (isSelectionMode) {
@@ -196,12 +193,12 @@ public class LoadController extends HttpServlet {
                 for (entity.Cart c : paymentList) {
                     // Lấy giá hiện tại từ Map priceP đã load ở đầu doGet
                     Integer currentPrice = priceP.get(c.getProductID());
-                    
+
                     // Nếu không tìm thấy giá mới (trường hợp hiếm), dùng giá cũ trong cart
                     if (currentPrice == null) {
                         currentPrice = c.getPrice();
                     }
-                    
+
                     freshSum += currentPrice * c.getQuantity();
                 }
                 // ================================================================
@@ -256,7 +253,6 @@ public class LoadController extends HttpServlet {
     }
 
     // ---------- Helpers (NEW) ----------
-
     private static int calcSum(List<entity.Cart> list) {
         int sum = 0;
         if (list != null) {
@@ -271,18 +267,26 @@ public class LoadController extends HttpServlet {
     private static Set<String> parseSelectedKeys(String[] selectedItems) {
         Set<String> keys = new HashSet<>();
         for (String raw : selectedItems) {
-            if (raw == null) continue;
+            if (raw == null) {
+                continue;
+            }
             String v = raw.trim();
-            if (v.isEmpty()) continue;
+            if (v.isEmpty()) {
+                continue;
+            }
 
             // expected: productId::size
             int idx = v.indexOf("::");
-            if (idx <= 0 || idx >= v.length() - 2) continue;
+            if (idx <= 0 || idx >= v.length() - 2) {
+                continue;
+            }
 
             String pidStr = v.substring(0, idx).trim();
             String size = v.substring(idx + 2).trim();
 
-            if (pidStr.isEmpty() || size.isEmpty()) continue;
+            if (pidStr.isEmpty() || size.isEmpty()) {
+                continue;
+            }
 
             try {
                 int pid = Integer.parseInt(pidStr);
@@ -297,7 +301,9 @@ public class LoadController extends HttpServlet {
 
     private static List<entity.Cart> filterCartBySelected(List<entity.Cart> cartList, Set<String> selectedKeys) {
         List<entity.Cart> result = new ArrayList<>();
-        if (cartList == null || selectedKeys == null || selectedKeys.isEmpty()) return result;
+        if (cartList == null || selectedKeys == null || selectedKeys.isEmpty()) {
+            return result;
+        }
 
         for (entity.Cart c : cartList) {
             String key = c.getProductID() + "::" + c.getSize_name();
@@ -309,12 +315,12 @@ public class LoadController extends HttpServlet {
     }
 
     /**
-     * Return null if OK. Otherwise return a short error string.
-     * Validation is done only for items that will be paid.
+     * Return null if OK. Otherwise return a short error string. Validation is
+     * done only for items that will be paid.
      */
     private static String validatePaymentItems(List<entity.Cart> paymentList,
-                                              ProductDAO productDao,
-                                              Size_detailDAO sizeDao) {
+            ProductDAO productDao,
+            Size_detailDAO sizeDao) {
         if (paymentList == null || paymentList.isEmpty()) {
             return "No items selected.";
         }

@@ -17,7 +17,7 @@
         } else {
             response.sendRedirect(request.getContextPath() + "/");
         }
-        return; 
+        return;
     }
 %>
 
@@ -31,7 +31,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <script src="https://kit.fontawesome.com/1bd876819f.js" crossorigin="anonymous"></script>
-        
+
         <link href='https://fonts.googleapis.com/css?family=Quicksand:400,500,600,700&display=swap' rel='stylesheet'> 
         <link rel="icon" href="${pageContext.request.contextPath}/images/LG2.png" type="image/x-icon"> 
 
@@ -47,117 +47,360 @@
                 --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
             }
 
-            body { font-family: 'Quicksand', sans-serif; background-color: var(--light-bg); color: #5a5c69; }
+            body {
+                font-family: 'Quicksand', sans-serif;
+                background-color: var(--light-bg);
+                color: #5a5c69;
+            }
 
             /* --- CARD & GENERAL --- */
-            .main-content { padding: 20px; }
-            .card-modern { background: #fff; border: none; border-radius: 15px; box-shadow: var(--card-shadow); margin-bottom: 25px; overflow: hidden; }
-            .card-header-modern { background: #fff; padding: 20px 25px; border-bottom: 1px solid #e3e6f0; display: flex; justify-content: space-between; align-items: center; }
-            .page-title { font-weight: 700; color: var(--primary-color); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
-            .stat-badge { background: rgba(78, 115, 223, 0.1); color: var(--primary-color); padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; }
-            
+            .main-content {
+                padding: 20px;
+            }
+            .card-modern {
+                background: #fff;
+                border: none;
+                border-radius: 15px;
+                box-shadow: var(--card-shadow);
+                margin-bottom: 25px;
+                overflow: hidden;
+            }
+            .card-header-modern {
+                background: #fff;
+                padding: 20px 25px;
+                border-bottom: 1px solid #e3e6f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .page-title {
+                font-weight: 700;
+                color: var(--primary-color);
+                font-size: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .stat-badge {
+                background: rgba(78, 115, 223, 0.1);
+                color: var(--primary-color);
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-weight: 600;
+                font-size: 0.9rem;
+            }
+
             /* --- FILTER --- */
-            .filter-container { padding: 20px 25px; background-color: #fff; border-bottom: 1px solid #f0f0f0; }
-            .search-input-group .input-group-text { background: transparent; border-right: none; color: #aaa; }
-            .search-input-group .form-control { border-left: none; box-shadow: none; }
-            .search-input-group .form-control:focus { border-color: #ced4da; }
+            .filter-container {
+                padding: 20px 25px;
+                background-color: #fff;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .search-input-group .input-group-text {
+                background: transparent;
+                border-right: none;
+                color: #aaa;
+            }
+            .search-input-group .form-control {
+                border-left: none;
+                box-shadow: none;
+            }
+            .search-input-group .form-control:focus {
+                border-color: #ced4da;
+            }
 
             /* --- TABLE STYLES --- */
-            .table-modern { width: 100%; margin-bottom: 0; table-layout: fixed; }
-            .table-modern thead th { background-color: #f8f9fc; color: #858796; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; border-bottom: 2px solid #e3e6f0; padding: 15px; border-top: none; }
-            .table-modern tbody td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #e3e6f0; color: #5a5c69; font-size: 0.95rem; }
-            .table-modern tbody tr:hover { background-color: #fcfcfc; }
-            
+            .table-modern {
+                width: 100%;
+                margin-bottom: 0;
+                table-layout: fixed;
+            }
+            .table-modern thead th {
+                background-color: #f8f9fc;
+                color: #858796;
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.85rem;
+                border-bottom: 2px solid #e3e6f0;
+                padding: 15px;
+                border-top: none;
+            }
+            .table-modern tbody td {
+                padding: 15px;
+                vertical-align: middle;
+                border-bottom: 1px solid #e3e6f0;
+                color: #5a5c69;
+                font-size: 0.95rem;
+            }
+            .table-modern tbody tr:hover {
+                background-color: #fcfcfc;
+            }
+
             /* Blur Effect for Data Loading */
-            .table-blur { opacity: 0.5; pointer-events: none; transition: opacity 0.2s ease; }
+            .table-blur {
+                opacity: 0.5;
+                pointer-events: none;
+                transition: opacity 0.2s ease;
+            }
 
             /* --- TRUNCATION HELPERS --- */
-            .cell-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 100%; }
-            
+            .cell-truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: block;
+                max-width: 100%;
+            }
+
             /* Address max 2 lines */
-            .text-truncate-2 { 
-                display: -webkit-box; 
-                -webkit-line-clamp: 2; 
-                -webkit-box-orient: vertical; 
-                overflow: hidden; 
-                text-overflow: ellipsis; 
+            .text-truncate-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 white-space: normal;
                 line-height: 1.4;
             }
 
             /* --- AVATAR & INFO --- */
-            .avatar-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; margin-right: 15px; text-transform: uppercase; flex-shrink: 0; }
-            .user-profile { display: flex; align-items: center; overflow: hidden; }
-            .user-info { overflow: hidden; width: 100%; }
-            .user-info .name { font-weight: 700; color: #4e73df; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .user-info .sub-text { font-size: 0.85rem; color: #858796; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .avatar-circle {
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 1.2rem;
+                margin-right: 15px;
+                text-transform: uppercase;
+                flex-shrink: 0;
+            }
+            .user-profile {
+                display: flex;
+                align-items: center;
+                overflow: hidden;
+            }
+            .user-info {
+                overflow: hidden;
+                width: 100%;
+            }
+            .user-info .name {
+                font-weight: 700;
+                color: #4e73df;
+                font-size: 1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .user-info .sub-text {
+                font-size: 0.85rem;
+                color: #858796;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
 
             /* --- BUTTONS --- */
-            .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(32px, 1fr)); gap: 5px; max-width: 120px; margin: 0 auto; }
-            .btn-soft { border: none; border-radius: 6px; width: 100%; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
-            
-            .btn-soft-primary { background: rgba(78, 115, 223, 0.1); color: #4e73df; }
-            .btn-soft-primary:hover { background: #4e73df; color: #fff; }
-            
-            .btn-soft-info { background: rgba(54, 185, 204, 0.1); color: #36b9cc; }
-            .btn-soft-info:hover { background: #36b9cc; color: #fff; }
-            
-            .btn-soft-danger { background: rgba(231, 74, 59, 0.1); color: #e74a3b; }
-            .btn-soft-danger:hover { background: #e74a3b; color: #fff; }
+            .action-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(32px, 1fr));
+                gap: 5px;
+                max-width: 120px;
+                margin: 0 auto;
+            }
+            .btn-soft {
+                border: none;
+                border-radius: 6px;
+                width: 100%;
+                height: 32px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            }
 
-            .btn-add-new { background: linear-gradient(45deg, #1cc88a, #13855c); border: none; box-shadow: 0 4px 10px rgba(28, 200, 138, 0.3); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 600; transition: transform 0.2s; }
-            .btn-add-new:hover { transform: translateY(-2px); color: whitesmoke !important; }
+            .btn-soft-primary {
+                background: rgba(78, 115, 223, 0.1);
+                color: #4e73df;
+            }
+            .btn-soft-primary:hover {
+                background: #4e73df;
+                color: #fff;
+            }
+
+            .btn-soft-info {
+                background: rgba(54, 185, 204, 0.1);
+                color: #36b9cc;
+            }
+            .btn-soft-info:hover {
+                background: #36b9cc;
+                color: #fff;
+            }
+
+            .btn-soft-danger {
+                background: rgba(231, 74, 59, 0.1);
+                color: #e74a3b;
+            }
+            .btn-soft-danger:hover {
+                background: #e74a3b;
+                color: #fff;
+            }
+
+            .btn-add-new {
+                background: linear-gradient(45deg, #1cc88a, #13855c);
+                border: none;
+                box-shadow: 0 4px 10px rgba(28, 200, 138, 0.3);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 10px;
+                font-weight: 600;
+                transition: transform 0.2s;
+            }
+            .btn-add-new:hover {
+                transform: translateY(-2px);
+                color: whitesmoke !important;
+            }
 
             /* --- MODAL --- */
-            .modal-content-modern { border-radius: 15px; border: none; overflow: hidden; }
-            .modal-header-modern { padding: 15px 20px; border-bottom: 1px solid #eee; }
-            .modal-header-modern.bg-green { background: #d4edda; color: #155724; }
-            .modal-header-modern.bg-blue { background: #d1ecf1; color: #0c5460; }
-            
+            .modal-content-modern {
+                border-radius: 15px;
+                border: none;
+                overflow: hidden;
+            }
+            .modal-header-modern {
+                padding: 15px 20px;
+                border-bottom: 1px solid #eee;
+            }
+            .modal-header-modern.bg-green {
+                background: #d4edda;
+                color: #155724;
+            }
+            .modal-header-modern.bg-blue {
+                background: #d1ecf1;
+                color: #0c5460;
+            }
+
             /* Input Groups & Floating Labels */
-            .input-group .form-floating { flex-grow: 1; }
-            .input-group .form-floating > .form-control { border-radius: 0 10px 10px 0; border-left: none; }
-            .input-group .input-group-text { border-radius: 10px 0 0 10px; background-color: #f8f9fc; border-right: none; color: var(--primary-color); min-width: 45px; justify-content: center; }
+            .input-group .form-floating {
+                flex-grow: 1;
+            }
+            .input-group .form-floating > .form-control {
+                border-radius: 0 10px 10px 0;
+                border-left: none;
+            }
+            .input-group .input-group-text {
+                border-radius: 10px 0 0 10px;
+                background-color: #f8f9fc;
+                border-right: none;
+                color: var(--primary-color);
+                min-width: 45px;
+                justify-content: center;
+            }
 
             /* [UPDATED] Validation Error Style */
-            label.error { 
-                color: #e74a3b; 
-                font-size: 0.85rem; 
-                margin-top: 5px; 
-                display: block; 
-                margin-left: 5px; 
-                font-weight: 600; 
+            label.error {
+                color: #e74a3b;
+                font-size: 0.85rem;
+                margin-top: 5px;
+                display: block;
+                margin-left: 5px;
+                font-weight: 600;
                 white-space: normal;
                 line-height: 1.2;
             }
-            .form-control.error { 
-                border-color: #e74a3b !important; 
+            .form-control.error {
+                border-color: #e74a3b !important;
                 background-color: #fff8f8 !important;
             }
-            .input-group > .form-floating > .form-control.error { 
-                z-index: 3; 
+            .input-group > .form-floating > .form-control.error {
+                z-index: 3;
             }
 
             /* Delete Modal List */
-            .list-group-item { border: 1px solid #e3e6f0; font-size: 0.95rem; }
-            .list-group-item span.badge { font-size: 0.85rem; }
+            .list-group-item {
+                border: 1px solid #e3e6f0;
+                font-size: 0.95rem;
+            }
+            .list-group-item span.badge {
+                font-size: 0.85rem;
+            }
 
             /* --- TOAST & PAGINATION --- */
-            .toast-notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1060; padding: 12px 20px; border-radius: 10px; background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); display: none; align-items: center; gap: 10px; border-left: 4px solid #4e73df; animation: slideDown 0.4s ease; }
-            @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
+            .toast-notification {
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1060;
+                padding: 12px 20px;
+                border-radius: 10px;
+                background: #fff;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+                display: none;
+                align-items: center;
+                gap: 10px;
+                border-left: 4px solid #4e73df;
+                animation: slideDown 0.4s ease;
+            }
+            @keyframes slideDown {
+                from {
+                    top: -50px;
+                    opacity: 0;
+                }
+                to {
+                    top: 20px;
+                    opacity: 1;
+                }
+            }
 
-            .pagination-wrapper { margin-top: 20px; display: flex; justify-content: flex-end; }
-            .custom-pagination { display: flex; list-style: none; gap: 5px; padding: 0; }
-            .custom-page-link { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #fff; border: 1px solid #e3e6f0; color: #858796; text-decoration: none; transition: all 0.2s; cursor: pointer; }
-            .custom-page-link:hover { background: #f8f9fc; }
-            .custom-page-item.active .custom-page-link { background: var(--primary-color); color: white; border-color: var(--primary-color); }
-            
-            #table-loader { min-height: 200px; display: flex; align-items: center; justify-content: center; }
+            .pagination-wrapper {
+                margin-top: 20px;
+                display: flex;
+                justify-content: flex-end;
+            }
+            .custom-pagination {
+                display: flex;
+                list-style: none;
+                gap: 5px;
+                padding: 0;
+            }
+            .custom-page-link {
+                width: 35px;
+                height: 35px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                background: #fff;
+                border: 1px solid #e3e6f0;
+                color: #858796;
+                text-decoration: none;
+                transition: all 0.2s;
+                cursor: pointer;
+            }
+            .custom-page-link:hover {
+                background: #f8f9fc;
+            }
+            .custom-page-item.active .custom-page-link {
+                background: var(--primary-color);
+                color: white;
+                border-color: var(--primary-color);
+            }
+
+            #table-loader {
+                min-height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
         </style>
     </head>
 
     <body id="admin-body">
-        
+
         <div id="toast-message" class="toast-notification">
             <i class="bi bi-info-circle-fill text-primary"></i>
             <span id="toast-text" class="fw-bold text-dark">Notification</span>
@@ -166,7 +409,7 @@
         <jsp:include page="admin_header-sidebar.jsp" />
 
         <div class="main-content">
-            
+
             <div class="card-modern">
                 <div class="card-header-modern">
                     <div class="page-title">
@@ -199,15 +442,15 @@
                             </div>
                         </div>
                         <div class="col-md-2">
-                             <div class="input-group search-input-group">
+                            <div class="input-group search-input-group">
                                 <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                 <input type="text" id="sPhone" class="form-control" placeholder="Phone...">
                             </div>
                         </div>
                         <div class="col-md-1 text-end">
-                             <button class="btn btn-light w-100 text-muted border" onclick="resetFilters()" title="Reset">
-                                 <i class="bi bi-arrow-counterclockwise"></i>
-                             </button>
+                            <button class="btn btn-light w-100 text-muted border" onclick="resetFilters()" title="Reset">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -270,7 +513,7 @@
                                                             data-address="${staff.address}" title="Edit">
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </button>
-                                                    
+
                                                     <button type="button" class="btn-soft btn-soft-danger"
                                                             data-bs-toggle="modal" data-bs-target="#deleteAccountModal"
                                                             data-username="${staff.username}" data-type="staff"
@@ -278,7 +521,7 @@
                                                         <i class="bi bi-trash-fill"></i>
                                                     </button>
                                                 </c:if>
-                                                
+
                                                 <button type="button" class="btn-soft btn-soft-info"
                                                         data-bs-toggle="modal" data-bs-target="#viewStaffModal"
                                                         data-id="${staff.staff_id}" data-username="${staff.username}"
@@ -355,8 +598,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                         <div class="form-floating">
-                                            <%-- Validation: Max 50 chars --%>
-                                            <input type="email" class="form-control" name="email" placeholder="Email" required maxlength="50">
+                                            <input type="email" class="form-control" id="add_email" name="email" placeholder="Email" required maxlength="50">
                                             <label>Email</label>
                                         </div>
                                     </div>
@@ -366,11 +608,11 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                         <div class="form-floating">
-                                            <%-- Validation: Max 10 digits --%>
-                                            <input type="text" class="form-control" name="phone" placeholder="Phone" required maxlength="10">
+                                            <input type="text" class="form-control" id="add_phone" name="phone" placeholder="Phone" required maxlength="10">
                                             <label>Phone</label>
                                         </div>
                                     </div>
+                                    <label id="add_staff_phone_error" class="error text-danger small mt-1" style="display: none;"></label>
                                 </div>
                                 <div class="col-12">
                                     <div class="input-group">
@@ -405,7 +647,7 @@
                             <input type="hidden" name="action" value="update_account">
                             <input type="hidden" id="upd_id" name="id">
                             <input type="hidden" id="upd_type" name="type" value="staff"> 
-                            
+
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="input-group">
@@ -433,6 +675,7 @@
                                             <label>Email</label>
                                         </div>
                                     </div>
+                                    <label id="upd_staff_email_error" class="error text-danger small mt-1" style="display: none;"></label>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="input-group">
@@ -442,6 +685,7 @@
                                             <label>Phone</label>
                                         </div>
                                     </div>
+                                    <label id="upd_staff_phone_error" class="error text-danger small mt-1" style="display: none;"></label>
                                 </div>
                                 <div class="col-12">
                                     <div class="input-group">
@@ -496,7 +740,7 @@
                     </div>
                     <div class="modal-body">
                         <p class="text-center mb-4">Checking dependencies for staff: <strong id="del_user_display" class="text-dark bg-light px-2 py-1 rounded"></strong></p>
-                        
+
                         <div id="accountDataLoading" class="text-center py-3">
                             <div class="spinner-border text-danger"></div>
                             <div class="small mt-2 text-muted">Scanning orders & imports...</div>
@@ -541,214 +785,221 @@
         <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
 
         <script>
-            // --- UTILS ---
-            function showToast(msg, type = 'success') {
-                const toast = $('#toast-message');
-                const icon = toast.find('i');
-                toast.find('#toast-text').text(msg);
-                toast.css('border-left-color', type === 'error' ? '#e74a3b' : '#1cc88a');
-                icon.attr('class', type === 'error' ? 'bi bi-exclamation-circle-fill text-danger' : 'bi bi-check-circle-fill text-success');
-                toast.fadeIn().delay(3000).fadeOut();
-            }
+                                // --- UTILS ---
+                                function showToast(msg, type = 'success') {
+                                    const toast = $('#toast-message');
+                                    const icon = toast.find('i');
+                                    toast.find('#toast-text').text(msg);
+                                    toast.css('border-left-color', type === 'error' ? '#e74a3b' : '#1cc88a');
+                                    icon.attr('class', type === 'error' ? 'bi bi-exclamation-circle-fill text-danger' : 'bi bi-check-circle-fill text-success');
+                                    toast.fadeIn().delay(3000).fadeOut();
+                                }
 
-            function stringToColor(str) {
-                var hash = 0;
-                for (var i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); }
-                var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-                return "#" + "00000".substring(0, 6 - c.length) + c;
-            }
+                                function stringToColor(str) {
+                                    var hash = 0;
+                                    for (var i = 0; i < str.length; i++) {
+                                        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                                    }
+                                    var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+                                    return "#" + "00000".substring(0, 6 - c.length) + c;
+                                }
 
-            function initAvatars() {
-                $('.avatar-circle').each(function() {
-                    var name = $(this).data('name') || "U";
-                    var initial = name.charAt(0).toUpperCase();
-                    $(this).css('background-color', stringToColor(name)).text(initial);
-                });
-            }
+                                function initAvatars() {
+                                    $('.avatar-circle').each(function () {
+                                        var name = $(this).data('name') || "U";
+                                        var initial = name.charAt(0).toUpperCase();
+                                        $(this).css('background-color', stringToColor(name)).text(initial);
+                                    });
+                                }
 
-            // Hàm viết hoa chữ cái đầu (Auto-capitalize)
-            function toTitleCase(str) {
-                return str.toLowerCase().replace(/(^|\s)\S/g, function(l) {
-                    return l.toUpperCase();
-                });
-            }
+                                // Hàm viết hoa chữ cái đầu (Auto-capitalize)
+                                function toTitleCase(str) {
+                                    return str.toLowerCase().replace(/(^|\s)\S/g, function (l) {
+                                        return l.toUpperCase();
+                                    });
+                                }
 
-            // Toggle table blur effect
-            function toggleTableBlur(active) {
-                if(active) $('#accountTableMain tbody').addClass('table-blur');
-                else $('#accountTableMain tbody').removeClass('table-blur');
-            }
+                                // Toggle table blur effect
+                                function toggleTableBlur(active) {
+                                    if (active)
+                                        $('#accountTableMain tbody').addClass('table-blur');
+                                    else
+                                        $('#accountTableMain tbody').removeClass('table-blur');
+                                }
 
-            // --- VALIDATION SETUP ---
-            const validationConfig = {
-                errorElement: "label",
-                errorClass: "error",
-                errorPlacement: function (error, element) {
-                    if (element.closest('.input-group').length) {
-                        error.insertAfter(element.closest('.input-group'));
-                    } else {
-                        error.insertAfter(element);
-                    }
-                }
-            };
+                                // --- VALIDATION SETUP ---
+                                const validationConfig = {
+                                    errorElement: "label",
+                                    errorClass: "error",
+                                    errorPlacement: function (error, element) {
+                                        if (element.closest('.input-group').length) {
+                                            error.insertAfter(element.closest('.input-group'));
+                                        } else {
+                                            error.insertAfter(element);
+                                        }
+                                    }
+                                };
 
-            // Rule 1: Username (Letters & Numbers only)
-            $.validator.addMethod("validUsername", function(value, element) {
-                return this.optional(element) || /^[a-zA-Z0-9]+$/.test(value);
-            }, "Username must contain only letters and numbers (no special characters).");
+                                // Rule 1: Username (Letters & Numbers only)
+                                $.validator.addMethod("validUsername", function (value, element) {
+                                    return this.optional(element) || /^[a-zA-Z0-9]+$/.test(value);
+                                }, "Username must contain only letters and numbers (no special characters).");
 
-            // Rule 2: Fullname (Letters, Spaces, Vietnamese Chars)
-            $.validator.addMethod("validName", function(value, element) {
-                return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
-            }, "Name cannot contain numbers or special characters.");
+                                // Rule 2: Fullname (Letters, Spaces, Vietnamese Chars)
+                                $.validator.addMethod("validName", function (value, element) {
+                                    return this.optional(element) || /^[a-zA-ZÀ-ỹ\s]+$/.test(value);
+                                }, "Name cannot contain numbers or special characters.");
 
-            // Rule 3: Phone (Start with 0, Exactly 10 digits)
-            $.validator.addMethod("validPhone", function(value, element) {
-                return this.optional(element) || /^0\d{9}$/.test(value);
-            }, "Phone must start with 0 and have exactly 10 digits.");
+                                // Rule 3: Phone (Start with 0, Exactly 10 digits)
+                                $.validator.addMethod("validPhone", function (value, element) {
+                                    return this.optional(element) || /^0\d{9}$/.test(value);
+                                }, "Phone must start with 0 and have exactly 10 digits.");
 
-            // Rule 4: Address (Alphanumeric + , . / -)
-            $.validator.addMethod("validAddress", function(value, element) {
-                return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
-            }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
+                                // Rule 4: Address (Alphanumeric + , . / -)
+                                $.validator.addMethod("validAddress", function (value, element) {
+                                    return this.optional(element) || /^[a-zA-Z0-9À-ỹ\s,\/.-]+$/.test(value);
+                                }, "Address cannot contain special characters (except comma, dot, slash, hyphen).");
 
-            // Rule 5: Password Complexity (1 Upper, 1 Special)
-            $.validator.addMethod("complexPassword", function(value, element) {
-                return this.optional(element) || /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>_+\-=\[\]{};':"\\|\/]).*$/.test(value);
-            }, "Password must have at least 1 Uppercase & 1 Special char.");
+                                // Rule 5: Password Complexity (1 Upper, 1 Special)
+                                $.validator.addMethod("complexPassword", function (value, element) {
+                                    return this.optional(element) || /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>_+\-=\[\]{};':"\\|\/]).*$/.test(value);
+                                }, "Password must have at least 1 Uppercase & 1 Special char.");
 
 
-            // --- SEARCH & PAGINATION & LOCAL DATA ---
-            let allStaffData = [], filteredStaff = [], currentPage = 1, perPage = 8;
+                                // --- SEARCH & PAGINATION & LOCAL DATA ---
+                                let allStaffData = [], filteredStaff = [], currentPage = 1, perPage = 8;
 
-            $(document).ready(function() {
-                setTimeout(function() {
-                    $('#table-loader').fadeOut(200, function() {
-                        $('#account-content-container').fadeIn(200);
-                        initStaffPagination(); 
-                    });
-                }, 400);
+                                $(document).ready(function () {
+                                    setTimeout(function () {
+                                        $('#table-loader').fadeOut(200, function () {
+                                            $('#account-content-container').fadeIn(200);
+                                            initStaffPagination();
+                                        });
+                                    }, 400);
 
-                // Auto Capitalize on Blur
-                $('.capitalize-input').on('blur', function() {
-                    var val = $(this).val();
-                    if(val) {
-                        $(this).val(toTitleCase(val));
-                    }
-                });
+                                    // Auto Capitalize on Blur
+                                    $('.capitalize-input').on('blur', function () {
+                                        var val = $(this).val();
+                                        if (val) {
+                                            $(this).val(toTitleCase(val));
+                                        }
+                                    });
 
-                $('#sUser, #sName, #sEmail, #sPhone').on('input', function() {
-                    toggleTableBlur(true);
-                    setTimeout(() => {
-                        applyStaffFilters();
-                        toggleTableBlur(false);
-                    }, 200);
-                });
-            });
+                                    $('#sUser, #sName, #sEmail, #sPhone').on('input', function () {
+                                        toggleTableBlur(true);
+                                        setTimeout(() => {
+                                            applyStaffFilters();
+                                            toggleTableBlur(false);
+                                        }, 200);
+                                    });
+                                });
 
-            function initStaffPagination() {
-                let rows = document.querySelectorAll('.staff-row');
-                allStaffData = [];
-                
-                rows.forEach(r => {
-                    let cols = r.querySelectorAll('td');
-                    let dID = cols[0].innerText.replace('S-','').toLowerCase();
-                    let dUser = r.querySelector('.name').innerText;
-                    let dName = r.querySelector('.sub-text').innerText;
-                    let contactDiv = cols[2];
-                    let dEmail = contactDiv.innerText.toLowerCase(); 
-                    let dPhone = contactDiv.innerText.toLowerCase(); 
-                    let dAddr = cols[3].innerText.toLowerCase();
-                    let dRole = r.querySelector('.badge.bg-danger') ? 'admin' : 'staff';
+                                function initStaffPagination() {
+                                    let rows = document.querySelectorAll('.staff-row');
+                                    allStaffData = [];
 
-                    let cleanEmail = r.querySelector('.bi-envelope').nextSibling.nodeValue.trim();
-                    let cleanPhone = r.querySelector('.bi-telephone').nextSibling.nodeValue.trim();
-                    let cleanAddr = r.querySelector('.text-truncate-2').innerText.trim();
+                                    rows.forEach(r => {
+                                        let cols = r.querySelectorAll('td');
+                                        let dID = cols[0].innerText.replace('S-', '').toLowerCase();
+                                        let dUser = r.querySelector('.name').innerText;
+                                        let dName = r.querySelector('.sub-text').innerText;
+                                        let contactDiv = cols[2];
+                                        let dEmail = contactDiv.innerText.toLowerCase();
+                                        let dPhone = contactDiv.innerText.toLowerCase();
+                                        let dAddr = cols[3].innerText.toLowerCase();
+                                        let dRole = r.querySelector('.badge.bg-danger') ? 'admin' : 'staff';
 
-                    allStaffData.push({ 
-                        data: { id: dID, user: dUser, name: dName, email: cleanEmail, phone: cleanPhone, addr: cleanAddr, role: dRole }
-                    });
-                });
-                
-                allStaffData.sort((a, b) => a.data.user.localeCompare(b.data.user));
-                filteredStaff = allStaffData;
-                renderStaffPage(1);
-            }
+                                        let cleanEmail = r.querySelector('.bi-envelope').nextSibling.nodeValue.trim();
+                                        let cleanPhone = r.querySelector('.bi-telephone').nextSibling.nodeValue.trim();
+                                        let cleanAddr = r.querySelector('.text-truncate-2').innerText.trim();
 
-            function applyStaffFilters() {
-                let vUser = $('#sUser').val().toLowerCase();
-                let vName = $('#sName').val().toLowerCase();
-                let vEmail = $('#sEmail').val().toLowerCase();
-                let vPhone = $('#sPhone').val().toLowerCase();
+                                        allStaffData.push({
+                                            data: {id: dID, user: dUser, name: dName, email: cleanEmail, phone: cleanPhone, addr: cleanAddr, role: dRole}
+                                        });
+                                    });
 
-                filteredStaff = allStaffData.filter(item => {
-                    let d = item.data;
-                    return (!vUser || d.user.toLowerCase().includes(vUser)) &&
-                           (!vName || d.name.toLowerCase().includes(vName)) &&
-                           (!vEmail || d.email.toLowerCase().includes(vEmail)) &&
-                           (!vPhone || d.phone.includes(vPhone));
-                });
-                renderStaffPage(1);
-            }
+                                    allStaffData.sort((a, b) => a.data.user.localeCompare(b.data.user));
+                                    filteredStaff = allStaffData;
+                                    renderStaffPage(1);
+                                }
 
-            function resetFilters() {
-                toggleTableBlur(true);
-                setTimeout(() => {
-                    $('.filter-container input').val('');
-                    applyStaffFilters();
-                    toggleTableBlur(false);
-                }, 200);
-            }
+                                function applyStaffFilters() {
+                                    let vUser = $('#sUser').val().toLowerCase();
+                                    let vName = $('#sName').val().toLowerCase();
+                                    let vEmail = $('#sEmail').val().toLowerCase();
+                                    let vPhone = $('#sPhone').val().toLowerCase();
 
-            function renderStaffPage(page) {
-                currentPage = page;
-                let start = (page - 1) * perPage;
-                let end = start + perPage;
-                let pageItems = filteredStaff.slice(start, end);
+                                    filteredStaff = allStaffData.filter(item => {
+                                        let d = item.data;
+                                        return (!vUser || d.user.toLowerCase().includes(vUser)) &&
+                                                (!vName || d.name.toLowerCase().includes(vName)) &&
+                                                (!vEmail || d.email.toLowerCase().includes(vEmail)) &&
+                                                (!vPhone || d.phone.includes(vPhone));
+                                    });
+                                    renderStaffPage(1);
+                                }
 
-                let tbody = $('#staff-table-body');
-                tbody.empty();
+                                function resetFilters() {
+                                    toggleTableBlur(true);
+                                    setTimeout(() => {
+                                        $('.filter-container input').val('');
+                                        applyStaffFilters();
+                                        toggleTableBlur(false);
+                                    }, 200);
+                                }
 
-                if(pageItems.length > 0) {
-                    pageItems.forEach(item => {
-                        tbody.append(renderRowHtml(item.data));
-                    });
-                    initAvatars();
-                }
+                                function renderStaffPage(page) {
+                                    currentPage = page;
+                                    let start = (page - 1) * perPage;
+                                    let end = start + perPage;
+                                    let pageItems = filteredStaff.slice(start, end);
 
-                let total = Math.ceil(filteredStaff.length / perPage);
-                let html = '<ul class="custom-pagination">';
-                
-                if(total > 1) {
-                    if(page > 1) html += `<li class="custom-page-item"><a class="custom-page-link" onclick="changePage(\${page-1})"><i class="bi bi-chevron-left"></i></a></li>`;
-                    for(let i=1; i<=total; i++) {
-                        if (i === 1 || i === total || (i >= page - 1 && i <= page + 1)) {
-                            html += `<li class="custom-page-item \${i===currentPage?'active':''}"><a class="custom-page-link" onclick="changePage(\${i})">\${i}</a></li>`;
-                        } else if (i === page - 2 || i === page + 2) {
-                            html += `<li class="custom-page-item"><span class="custom-page-link border-0">...</span></li>`;
-                        }
-                    }
-                    if(page < total) html += `<li class="custom-page-item"><a class="custom-page-link" onclick="changePage(\${page+1})"><i class="bi bi-chevron-right"></i></a></li>`;
-                }
-                html += '</ul>';
-                if(filteredStaff.length === 0) html = '<div class="text-center text-muted w-100 py-3">No results found.</div>';
-                document.getElementById('staff-pagination').innerHTML = html;
-            }
+                                    let tbody = $('#staff-table-body');
+                                    tbody.empty();
 
-            function changePage(page) {
-                toggleTableBlur(true);
-                setTimeout(() => {
-                    renderStaffPage(page);
-                    toggleTableBlur(false);
-                }, 150);
-            }
+                                    if (pageItems.length > 0) {
+                                        pageItems.forEach(item => {
+                                            tbody.append(renderRowHtml(item.data));
+                                        });
+                                        initAvatars();
+                                    }
 
-            function renderRowHtml(d) {
-                let adminBadge = d.role === 'admin' ? '<span class="badge bg-danger rounded-pill px-2 mt-1" style="font-size: 0.7rem;">Admin</span>' : '';
-                let actions = '';
-                
-                if (d.role !== 'admin') {
-                    actions += `
+                                    let total = Math.ceil(filteredStaff.length / perPage);
+                                    let html = '<ul class="custom-pagination">';
+
+                                    if (total > 1) {
+                                        if (page > 1)
+                                            html += `<li class="custom-page-item"><a class="custom-page-link" onclick="changePage(\${page-1})"><i class="bi bi-chevron-left"></i></a></li>`;
+                                        for (let i = 1; i <= total; i++) {
+                                            if (i === 1 || i === total || (i >= page - 1 && i <= page + 1)) {
+                                                html += `<li class="custom-page-item \${i===currentPage?'active':''}"><a class="custom-page-link" onclick="changePage(\${i})">\${i}</a></li>`;
+                                            } else if (i === page - 2 || i === page + 2) {
+                                                html += `<li class="custom-page-item"><span class="custom-page-link border-0">...</span></li>`;
+                                            }
+                                        }
+                                        if (page < total)
+                                            html += `<li class="custom-page-item"><a class="custom-page-link" onclick="changePage(\${page+1})"><i class="bi bi-chevron-right"></i></a></li>`;
+                                    }
+                                    html += '</ul>';
+                                    if (filteredStaff.length === 0)
+                                        html = '<div class="text-center text-muted w-100 py-3">No results found.</div>';
+                                    document.getElementById('staff-pagination').innerHTML = html;
+                                }
+
+                                function changePage(page) {
+                                    toggleTableBlur(true);
+                                    setTimeout(() => {
+                                        renderStaffPage(page);
+                                        toggleTableBlur(false);
+                                    }, 150);
+                                }
+
+                                function renderRowHtml(d) {
+                                    let adminBadge = d.role === 'admin' ? '<span class="badge bg-danger rounded-pill px-2 mt-1" style="font-size: 0.7rem;">Admin</span>' : '';
+                                    let actions = '';
+
+                                    if (d.role !== 'admin') {
+                                        actions += `
                         <button type="button" class="btn-soft btn-soft-primary btn-edit"
                                 data-bs-toggle="modal" data-bs-target="#updateAccountModal"
                                 data-id="\${d.id}" data-type="staff"
@@ -764,9 +1015,9 @@
                             <i class="bi bi-trash-fill"></i>
                         </button>
                     `;
-                }
+                                    }
 
-                return `
+                                    return `
                     <tr class="staff-row">
                         <td class="text-muted fw-bold">S-\${d.id}</td>
                         <td>
@@ -807,320 +1058,366 @@
                         </td>
                     </tr>
                 `;
-            }
+                                }
 
-            function updateLocalData(action, data) {
-                if (action === 'add') {
-                    // Force reload for Add to sync IDs
-                    location.reload(); 
-                } else if (action === 'update') {
-                    let idx = allStaffData.findIndex(i => i.data.id == data.id);
-                    if (idx !== -1) {
-                        allStaffData[idx].data.name = data.fullName;
-                        allStaffData[idx].data.email = data.email;
-                        allStaffData[idx].data.phone = data.phone;
-                        allStaffData[idx].data.addr = data.address;
-                        applyStaffFilters(); 
-                    }
-                } else if (action === 'delete') {
-                    allStaffData = allStaffData.filter(i => i.data.id != data.id);
-                    applyStaffFilters(); 
-                }
-            }
+                                function updateLocalData(action, data) {
+                                    if (action === 'add') {
+                                        // Force reload for Add to sync IDs
+                                        location.reload();
+                                    } else if (action === 'update') {
+                                        let idx = allStaffData.findIndex(i => i.data.id == data.id);
+                                        if (idx !== -1) {
+                                            allStaffData[idx].data.name = data.fullName;
+                                            allStaffData[idx].data.email = data.email;
+                                            allStaffData[idx].data.phone = data.phone;
+                                            allStaffData[idx].data.addr = data.address;
+                                            applyStaffFilters();
+                                        }
+                                    } else if (action === 'delete') {
+                                        allStaffData = allStaffData.filter(i => i.data.id != data.id);
+                                        applyStaffFilters();
+                                    }
+                                }
 
-            // --- MODALS ---
-            var viewStaffModal = document.getElementById('viewStaffModal');
-            if (viewStaffModal) {
-                viewStaffModal.addEventListener('show.bs.modal', function (event) {
-                    var button = event.relatedTarget;
-                    var name = button.getAttribute('data-username');
-                    
-                    document.getElementById('view_staff_id').textContent = 'S-' + button.getAttribute('data-id');
-                    document.getElementById('view_staff_username').textContent = name;
-                    document.getElementById('view_staff_fullname').textContent = button.getAttribute('data-fullname');
-                    document.getElementById('view_staff_email').textContent = button.getAttribute('data-email');
-                    document.getElementById('view_staff_phone').textContent = button.getAttribute('data-phone');
-                    document.getElementById('view_staff_address').textContent = button.getAttribute('data-address');
-                    document.getElementById('view_staff_role').textContent = button.getAttribute('data-role');
+                                // --- MODALS ---
+                                var viewStaffModal = document.getElementById('viewStaffModal');
+                                if (viewStaffModal) {
+                                    viewStaffModal.addEventListener('show.bs.modal', function (event) {
+                                        var button = event.relatedTarget;
+                                        var name = button.getAttribute('data-username');
 
-                    var avatar = document.getElementById('view_avatar');
-                    avatar.textContent = name.charAt(0).toUpperCase();
-                    avatar.style.backgroundColor = stringToColor(name);
-                });
-            }
+                                        document.getElementById('view_staff_id').textContent = 'S-' + button.getAttribute('data-id');
+                                        document.getElementById('view_staff_username').textContent = name;
+                                        document.getElementById('view_staff_fullname').textContent = button.getAttribute('data-fullname');
+                                        document.getElementById('view_staff_email').textContent = button.getAttribute('data-email');
+                                        document.getElementById('view_staff_phone').textContent = button.getAttribute('data-phone');
+                                        document.getElementById('view_staff_address').textContent = button.getAttribute('data-address');
+                                        document.getElementById('view_staff_role').textContent = button.getAttribute('data-role');
 
-            var updateAccountModal = document.getElementById('updateAccountModal');
-            if (updateAccountModal) {
-                updateAccountModal.addEventListener('show.bs.modal', function (event) {
-                    var button = event.relatedTarget;
-                    $('#upd_id').val(button.getAttribute('data-id'));
-                    $('#upd_username').val(button.getAttribute('data-username'));
-                    $('#upd_email').val(button.getAttribute('data-email'));
-                    $('#upd_fullName').val(button.getAttribute('data-fullname'));
-                    $('#upd_phone').val(button.getAttribute('data-phone'));
-                    $('#upd_address').val(button.getAttribute('data-address'));
-                });
-            }
+                                        var avatar = document.getElementById('view_avatar');
+                                        avatar.textContent = name.charAt(0).toUpperCase();
+                                        avatar.style.backgroundColor = stringToColor(name);
+                                    });
+                                }
 
-            // Add Staff Form (Validation Configured)
-            $("#addStaffForm").validate({
-                ...validationConfig,
-                rules: {
-                    username: {
-                        required: true,
-                        minlength: 6,
-                        maxlength: 20,
-                        validUsername: true
-                    },
-                    fullName: {
-                        required: true,
-                        minlength: 2,
-                        maxlength: 100,
-                        validName: true
-                    },
-                    password: {
-                        required: true,
-                        minlength: 8,
-                        maxlength: 24,
-                        complexPassword: true
-                    },
-                    confirmPassword: {
-                        required: true,
-                        minlength: 8,
-                        maxlength: 24,
-                        equalTo: "#add_staff_password"
-                    },
-                    email: {
-                        required: true,
-                        email: true,
-                        maxlength: 50
-                    },
-                    phone: {
-                        required: true,
-                        digits: true,
-                        minlength: 10,
-                        maxlength: 10,
-                        validPhone: true
-                    },
-                    address: {
-                        required: true,
-                        maxlength: 255,
-                        validAddress: true
-                    }
-                },
-                messages: {
-                    username: {
-                        required: "Please enter a username",
-                        minlength: "Username must be 6-20 characters",
-                        maxlength: "Username must be 6-20 characters",
-                        validUsername: "Username must contain only letters and numbers (no special characters)."
-                    },
-                    fullName: {
-                        required: "Please enter full name",
-                        minlength: "Name must be 2-100 characters",
-                        maxlength: "Name must be 2-100 characters",
-                        validName: "Name cannot contain numbers or special characters."
-                    },
-                    password: {
-                        required: "Please provide a password",
-                        minlength: "Password must be 8-24 characters",
-                        maxlength: "Password must be 8-24 characters",
-                        complexPassword: "Password must have at least 1 Uppercase & 1 Special char."
-                    },
-                    confirmPassword: {
-                        required: "Please confirm password",
-                        equalTo: "Passwords do not match"
-                    },
-                    email: {
-                        required: "Please enter an email",
-                        maxlength: "Email cannot exceed 50 characters",
-                        email: "Please enter a valid email address (e.g. abc@domain.com)"
-                    },
-                    phone: {
-                        required: "Please enter phone number",
-                        digits: "Only digits allowed",
-                        minlength: "Phone number must have exactly 10 digits",
-                        maxlength: "Phone number must have exactly 10 digits",
-                        validPhone: "Phone must start with 0 and have exactly 10 digits."
-                    },
-                    address: {
-                        required: "Please enter an address",
-                        maxlength: "Address cannot exceed 255 characters",
-                        validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
-                    }
-                },
-                submitHandler: function (form) {
-                    var $btn = $(form).find('.submit-btn');
-                    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
-                    toggleTableBlur(true);
+                                var updateAccountModal = document.getElementById('updateAccountModal');
+                                if (updateAccountModal) {
+                                    updateAccountModal.addEventListener('show.bs.modal', function (event) {
+                                        var button = event.relatedTarget;
+                                        $('#upd_id').val(button.getAttribute('data-id'));
+                                        $('#upd_username').val(button.getAttribute('data-username'));
+                                        $('#upd_email').val(button.getAttribute('data-email'));
+                                        $('#upd_fullName').val(button.getAttribute('data-fullname'));
+                                        $('#upd_phone').val(button.getAttribute('data-phone'));
+                                        $('#upd_address').val(button.getAttribute('data-address'));
+                                    });
+                                }
 
-                    $.ajax({
-                        url: $(form).attr('action'), type: 'POST', data: $(form).serialize(), dataType: 'json',
-                        success: function (data) {
-                            if (data.isSuccess) { 
-                                showToast('Staff added successfully!'); 
-                                $('#addStaffModal').modal('hide');
-                                setTimeout(() => location.reload(), 500); 
-                            } else {
-                                if (data.description.includes("Username")) $("#add_staff_username_error").text("Username existed.").show();
-                                else if (data.description.includes("Email")) $("#add_staff_email_error").text("Email used.").show();
-                                else showToast(data.description, 'error');
-                                $btn.prop('disabled', false).html('Add Staff');
-                                toggleTableBlur(false);
-                            }
-                        }
-                    });
-                }
-            });
+                                // Add Staff Form (Validation Configured)
+                                $("#addStaffForm").validate({
+                                    ...validationConfig,
+                                    rules: {
+                                        username: {
+                                            required: true,
+                                            minlength: 6,
+                                            maxlength: 20,
+                                            validUsername: true
+                                        },
+                                        fullName: {
+                                            required: true,
+                                            minlength: 2,
+                                            maxlength: 100,
+                                            validName: true
+                                        },
+                                        password: {
+                                            required: true,
+                                            minlength: 8,
+                                            maxlength: 24,
+                                            complexPassword: true
+                                        },
+                                        confirmPassword: {
+                                            required: true,
+                                            minlength: 8,
+                                            maxlength: 24,
+                                            equalTo: "#add_staff_password"
+                                        },
+                                        email: {
+                                            required: true,
+                                            email: true,
+                                            maxlength: 50
+                                        },
+                                        phone: {
+                                            required: true,
+                                            digits: true,
+                                            minlength: 10,
+                                            maxlength: 10,
+                                            validPhone: true
+                                        },
+                                        address: {
+                                            required: true,
+                                            maxlength: 255,
+                                            validAddress: true
+                                        }
+                                    },
+                                    messages: {
+                                        username: {
+                                            required: "Please enter a username",
+                                            minlength: "Username must be 6-20 characters",
+                                            maxlength: "Username must be 6-20 characters",
+                                            validUsername: "Username must contain only letters and numbers (no special characters)."
+                                        },
+                                        fullName: {
+                                            required: "Please enter full name",
+                                            minlength: "Name must be 2-100 characters",
+                                            maxlength: "Name must be 2-100 characters",
+                                            validName: "Name cannot contain numbers or special characters."
+                                        },
+                                        password: {
+                                            required: "Please provide a password",
+                                            minlength: "Password must be 8-24 characters",
+                                            maxlength: "Password must be 8-24 characters",
+                                            complexPassword: "Password must have at least 1 Uppercase & 1 Special char."
+                                        },
+                                        confirmPassword: {
+                                            required: "Please confirm password",
+                                            equalTo: "Passwords do not match"
+                                        },
+                                        email: {
+                                            required: "Please enter an email",
+                                            maxlength: "Email cannot exceed 50 characters",
+                                            email: "Please enter a valid email address (e.g. abc@domain.com)"
+                                        },
+                                        phone: {
+                                            required: "Please enter phone number",
+                                            digits: "Only digits allowed",
+                                            minlength: "Phone number must have exactly 10 digits",
+                                            maxlength: "Phone number must have exactly 10 digits",
+                                            validPhone: "Phone must start with 0 and have exactly 10 digits."
+                                        },
+                                        address: {
+                                            required: "Please enter an address",
+                                            maxlength: "Address cannot exceed 255 characters",
+                                            validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                                        }
+                                    },
+                                    submitHandler: function (form) {
+                                        var $btn = $(form).find('.submit-btn');
+                                        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
 
-            // Update Form (Validation Configured)
-            $("#updateAccountForm").validate({
-                ...validationConfig,
-                rules: { 
-                    fullName: {
-                        required: true,
-                        minlength: 2,
-                        maxlength: 100,
-                        validName: true
-                    },
-                    email: {
-                        required: true,
-                        email: true,
-                        maxlength: 50
-                    },
-                    phone: {
-                        required: true,
-                        digits: true,
-                        minlength: 10,
-                        maxlength: 10,
-                        validPhone: true
-                    },
-                    address: {
-                        required: true,
-                        maxlength: 255,
-                        validAddress: true
-                    }
-                },
-                messages: {
-                    fullName: {
-                        required: "Please enter full name",
-                        minlength: "Name must be 2-100 characters",
-                        maxlength: "Name must be 2-100 characters",
-                        validName: "Name cannot contain numbers or special characters."
-                    },
-                    email: {
-                        required: "Please enter an email",
-                        maxlength: "Email cannot exceed 50 characters",
-                        email: "Please enter a valid email address"
-                    },
-                    phone: {
-                        required: "Please enter phone number",
-                        digits: "Only digits allowed",
-                        minlength: "Phone number must have exactly 10 digits",
-                        maxlength: "Phone number must have exactly 10 digits",
-                        validPhone: "Phone must start with 0 and have exactly 10 digits."
-                    },
-                    address: {
-                        required: "Please enter an address",
-                        maxlength: "Address cannot exceed 255 characters",
-                        validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
-                    }
-                },
-                submitHandler: function (form) {
-                    var $btn = $(form).find('.submit-btn');
-                    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
-                    toggleTableBlur(true);
+                                        // Reset thông báo lỗi
+                                        $(".error.text-danger").hide();
+                                        $(".form-control").removeClass("is-invalid");
 
-                    $.ajax({
-                        url: $(form).attr('action'), type: 'POST', data: $(form).serialize(), dataType: 'json',
-                        success: function (data) {
-                            if (data.isSuccess) { 
-                                showToast('Staff updated!');
-                                let formData = {};
-                                $(form).serializeArray().forEach(item => formData[item.name] = item.value);
-                                updateLocalData('update', formData);
-                                $('#updateAccountModal').modal('hide');
-                            } else { 
-                                showToast(data.description, 'error'); 
-                            }
-                        },
-                        complete: function() {
-                            $btn.prop('disabled', false).html('Save Changes');
-                            toggleTableBlur(false);
-                        }
-                    });
-                }
-            });
+                                        $.ajax({
+                                            url: $(form).attr('action'),
+                                            type: 'POST',
+                                            data: $(form).serialize(),
+                                            dataType: 'json',
+                                            success: function (data) {
+                                                if (data.isSuccess) {
+                                                    showToast('Staff added successfully!');
+                                                    $('#addStaffModal').modal('hide');
+                                                    setTimeout(() => location.reload(), 800);
+                                                } else {
+                                                    // Bắt lỗi trùng từ Backend trả về
+                                                    if (data.description.includes("Username")) {
+                                                        $("#add_staff_username_error").text(data.description).show();
+                                                    } else if (data.description.includes("Email")) {
+                                                        $("#add_staff_email_error").text(data.description).show();
+                                                        $("#add_email").addClass("is-invalid");
+                                                    } else {
+                                                        showToast(data.description, 'error');
+                                                    }
+                                                }
+                                            },
+                                            error: function () {
+                                                showToast('Server connection error', 'error');
+                                            },
+                                            complete: function () {
+                                                $btn.prop('disabled', false).html('Add Staff');
+                                            }
+                                        });
+                                    }
+                                });
 
-            // Delete Logic
-            var deleteAccountModal = document.getElementById('deleteAccountModal');
-            var confirmDeleteButton = document.getElementById('confirmAccountDeleteButton');
-            
-            if (deleteAccountModal) {
-                deleteAccountModal.addEventListener('show.bs.modal', function (event) {
-                    var button = event.relatedTarget;
-                    var accountId = button.getAttribute('data-id');
-                    var username = button.getAttribute('data-username');
-                    
-                    $('#del_user_display').text(username);
-                    $(confirmDeleteButton).data('id', accountId).data('username', username);
 
-                    $('#accountDataLoading').show(); 
-                    $('#accountDataContent, #deleteAccountWarning, #deleteAccountSuccess').hide();
-                    $(confirmDeleteButton).prop('disabled', true);
-                    
-                    $.ajax({
-                        url: '${BASE_URL}/admin/accountRelatedData',
-                        type: 'GET', data: {id: accountId, type: 'staff'}, dataType: 'json',
-                        success: function (data) {
-                            $('#accountDataLoading').hide();
-                            
-                            var orders = (data.orders && data.orders.length > 0) ? data.orders.length : 0;
-                            var imports = (data.imports && data.imports.length > 0) ? data.imports.length : 0;
-                            
-                            $('#staff-orders-count').text(orders).attr('class', 'badge rounded-pill ' + (orders > 0 ? 'bg-danger' : 'bg-secondary'));
-                            $('#imports-count').text(imports).attr('class', 'badge rounded-pill ' + (imports > 0 ? 'bg-danger' : 'bg-secondary'));
+                                // Update Form (Validation Configured)
+                                $("#updateAccountForm").validate({
+                                    ...validationConfig,
+                                    rules: {
+                                        fullName: {
+                                            required: true,
+                                            minlength: 2,
+                                            maxlength: 100,
+                                            validName: true
+                                        },
+                                        email: {
+                                            required: true,
+                                            email: true,
+                                            maxlength: 50
+                                        },
+                                        phone: {
+                                            required: true,
+                                            digits: true,
+                                            minlength: 10,
+                                            maxlength: 10,
+                                            validPhone: true
+                                        },
+                                        address: {
+                                            required: true,
+                                            maxlength: 255,
+                                            validAddress: true
+                                        }
+                                    },
+                                    messages: {
+                                        fullName: {
+                                            required: "Please enter full name",
+                                            minlength: "Name must be 2-100 characters",
+                                            maxlength: "Name must be 2-100 characters",
+                                            validName: "Name cannot contain numbers or special characters."
+                                        },
+                                        email: {
+                                            required: "Please enter an email",
+                                            maxlength: "Email cannot exceed 50 characters",
+                                            email: "Please enter a valid email address"
+                                        },
+                                        phone: {
+                                            required: "Please enter phone number",
+                                            digits: "Only digits allowed",
+                                            minlength: "Phone number must have exactly 10 digits",
+                                            maxlength: "Phone number must have exactly 10 digits",
+                                            validPhone: "Phone must start with 0 and have exactly 10 digits."
+                                        },
+                                        address: {
+                                            required: "Please enter an address",
+                                            maxlength: "Address cannot exceed 255 characters",
+                                            validAddress: "Address cannot contain special characters (except comma, dot, slash, hyphen)."
+                                        }
+                                    },
+                                    submitHandler: function (form) {
+                                        var $btn = $(form).find('.submit-btn');
+                                        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
 
-                            $('#accountDataContent').fadeIn();
-                            
-                            if (orders > 0 || imports > 0) {
-                                $('#deleteAccountSuccess').hide();
-                                $('#deleteAccountWarning').fadeIn();
-                                $(confirmDeleteButton).prop('disabled', true);
-                            } else {
-                                $('#deleteAccountWarning').hide();
-                                $('#deleteAccountSuccess').fadeIn();
-                                $(confirmDeleteButton).prop('disabled', false);
-                            }
-                        }
-                    });
-                });
-            }
+                                        // Reset lỗi
+                                        $("#upd_staff_email_error, #upd_staff_phone_error").hide();
+                                        $("#upd_email, #upd_phone").removeClass("is-invalid");
 
-            $(confirmDeleteButton).on('click', function () {
-                var btn = $(this);
-                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Deleting...');
-                toggleTableBlur(true);
+                                        $.ajax({
+                                            url: $(form).attr('action'),
+                                            type: 'POST',
+                                            data: $(form).serialize(),
+                                            dataType: 'json',
+                                            success: function (data) {
+                                                if (data.isSuccess) {
+                                                    showToast('Staff information updated!');
+                                                    $('#updateAccountModal').modal('hide');
+                                                    // Cập nhật dữ liệu tại chỗ hoặc reload
+                                                    setTimeout(() => location.reload(), 800);
+                                                } else {
+                                                    // Xử lý lỗi trùng lặp email/phone từ handleAccountAction
+                                                    if (data.description.includes("Email")) {
+                                                        $("#upd_staff_email_error").text(data.description).show();
+                                                        $("#upd_email").addClass("is-invalid");
+                                                    } else if (data.description.includes("Phone")) {
+                                                        $("#upd_staff_phone_error").text(data.description).show();
+                                                        $("#upd_phone").addClass("is-invalid");
+                                                    } else {
+                                                        showToast(data.description, 'error');
+                                                    }
+                                                }
+                                            },
+                                            error: function () {
+                                                showToast('Could not connect to server', 'error');
+                                            },
+                                            complete: function () {
+                                                $btn.prop('disabled', false).html('Save Changes');
+                                            }
+                                        });
+                                    }
+                                });
 
-                $.ajax({
-                    url: '${BASE_URL}/admin', type: 'POST', 
-                    data: { action: 'delete_account', id: btn.data('id'), username: btn.data('username'), type: 'staff' },
-                    dataType: 'json',
-                    success: function (data) {
-                        if (data.isSuccess) { 
-                            showToast('Staff deleted!');
-                            updateLocalData('delete', {id: btn.data('id')});
-                            $('#deleteAccountModal').modal('hide');
-                        } else { 
-                            showToast(data.description, 'error'); 
-                        }
-                    },
-                    complete: function() {
-                        btn.prop('disabled', false).html('Confirm Delete');
-                        toggleTableBlur(false);
-                    }
-                });
-            });
+                                // Delete Logic
+                                var deleteAccountModal = document.getElementById('deleteAccountModal');
+                                var confirmDeleteButton = document.getElementById('confirmAccountDeleteButton');
+
+                                if (deleteAccountModal) {
+                                    deleteAccountModal.addEventListener('show.bs.modal', function (event) {
+                                        var button = event.relatedTarget;
+                                        var accountId = button.getAttribute('data-id');
+                                        var username = button.getAttribute('data-username');
+
+                                        $('#del_user_display').text(username);
+                                        $(confirmDeleteButton).data('id', accountId).data('username', username);
+
+                                        $('#accountDataLoading').show();
+                                        $('#accountDataContent, #deleteAccountWarning, #deleteAccountSuccess').hide();
+                                        $(confirmDeleteButton).prop('disabled', true);
+
+                                        $.ajax({
+                                            url: '${BASE_URL}/admin', // Sửa lại URL trỏ về Servlet Admin
+                                            type: 'GET',
+                                            data: {
+                                                action: 'get_account_related_data', // Thêm tham số action để Controller nhận diện
+                                                id: accountId,
+                                                type: 'staff'
+                                            },
+                                            dataType: 'json',
+                                            success: function (data) {
+                                                $('#accountDataLoading').hide();
+
+                                                // Logic xử lý dữ liệu trả về giữ nguyên
+                                                var orders = (data.orders && data.orders.length > 0) ? data.orders.length : 0;
+                                                var imports = (data.imports && data.imports.length > 0) ? data.imports.length : 0;
+
+                                                $('#staff-orders-count').text(orders).attr('class', 'badge rounded-pill ' + (orders > 0 ? 'bg-danger' : 'bg-secondary'));
+                                                $('#imports-count').text(imports).attr('class', 'badge rounded-pill ' + (imports > 0 ? 'bg-danger' : 'bg-secondary'));
+
+                                                $('#accountDataContent').fadeIn();
+
+                                                if (orders > 0 || imports > 0) {
+                                                    $('#deleteAccountSuccess').hide();
+                                                    $('#deleteAccountWarning').fadeIn();
+                                                    $(confirmDeleteButton).prop('disabled', true);
+                                                } else {
+                                                    $('#deleteAccountWarning').hide();
+                                                    $('#deleteAccountSuccess').fadeIn();
+                                                    $(confirmDeleteButton).prop('disabled', false);
+                                                }
+                                            },
+                                            error: function (xhr, status, error) {
+                                                console.error("AJAX Error:", error);
+                                                // Tắt loading nếu lỗi để tránh treo modal
+                                                $('#accountDataLoading').hide();
+                                                alert("Error loading data check console.");
+                                            }
+                                        });
+                                    });
+                                }
+
+                                $(confirmDeleteButton).on('click', function () {
+                                    var btn = $(this);
+                                    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Deleting...');
+                                    toggleTableBlur(true);
+
+                                    $.ajax({
+                                        url: '${BASE_URL}/admin', type: 'POST',
+                                        data: {action: 'delete_account', id: btn.data('id'), username: btn.data('username'), type: 'staff'},
+                                        dataType: 'json',
+                                        success: function (data) {
+                                            if (data.isSuccess) {
+                                                showToast('Staff deleted!');
+                                                updateLocalData('delete', {id: btn.data('id')});
+                                                $('#deleteAccountModal').modal('hide');
+                                            } else {
+                                                showToast(data.description, 'error');
+                                            }
+                                        },
+                                        complete: function () {
+                                            btn.prop('disabled', false).html('Confirm Delete');
+                                            toggleTableBlur(false);
+                                        }
+                                    });
+                                });
         </script>
     </body>
 </html>

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package entity;
 
 import java.util.Date;
@@ -17,36 +13,41 @@ public class Orders {
     private int customer_id;
     private int staff_id;
     private int total;
-    private List<OrderDetail> orderDetails; // liên kết 1-n
-    // Constructor mới với staff_id (int)
+    private String voucherID; // [NEW] Added field
 
-    public Orders(int orderID, String address, Date date, String status, String phoneNumber, int customer_id, int staff_id, int total) {
+    private List<OrderDetail> orderDetails;
+
+    public Orders() {
+    }
+
+    // Update Constructor to include voucherID
+    public Orders(int orderID, String address, Date date, String status, String phoneNumber, int customer_id, int staff_id, int total, String voucherID) {
         this.order_id = orderID;
         this.address = address;
         this.date = date;
         this.status = status;
-        this.phone_number = phone_number;
+        this.phone_number = phoneNumber;
         this.customer_id = customer_id;
         this.staff_id = staff_id;
         this.total = total;
+        this.voucherID = voucherID;
     }
 
-    // Constructor khi insert (orderID tự tăng)
-    public Orders(String address, Date date, String status, String phoneNumber, int customer_id, int staff_id, int total) {
-        this.address = address;
-        this.date = date;
-        this.status = status;
-        this.phone_number = phone_number;
-        this.customer_id = customer_id;
-        this.staff_id = staff_id;
-        this.total = total;
+    // [NEW] Getter & Setter
+    public String getVoucherID() {
+        return voucherID;
     }
 
+    public void setVoucherID(String voucherID) {
+        this.voucherID = voucherID;
+    }
+
+    // ... (Keep existing Getters/Setters for other fields)
     public int getOrderID() {
         return order_id;
     }
 
-    public void setOrderID(int orderID) {
+    public void setOrderID(int order_id) {
         this.order_id = order_id;
     }
 
@@ -78,7 +79,7 @@ public class Orders {
         return phone_number;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
+    public void setPhoneNumber(String phone_number) {
         this.phone_number = phone_number;
     }
 
@@ -90,12 +91,10 @@ public class Orders {
         this.customer_id = customer_id;
     }
 
-    // Getter cho staff_id (int)
     public int getStaff_id() {
         return staff_id;
     }
 
-    // Setter cho staff_id (int)
     public void setStaff_id(int staff_id) {
         this.staff_id = staff_id;
     }
@@ -106,10 +105,5 @@ public class Orders {
 
     public void setTotal(int total) {
         this.total = total;
-    }
-
-    @Override
-    public String toString() {
-        return "orders{" + "orderID=" + order_id + ", address=" + address + ", date=" + date + ", status=" + status + ", phoneNumber=" + phone_number + ", customer_id=" + customer_id + ", staff_id=" + staff_id + ", total=" + total + '}';
     }
 }

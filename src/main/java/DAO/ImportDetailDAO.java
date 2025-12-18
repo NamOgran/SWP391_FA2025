@@ -1,4 +1,5 @@
 package DAO;
+
 import entity.ImportDetail;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,22 +32,23 @@ public class ImportDetailDAO extends DBConnect.DBConnect {
 
     /**
      * Lấy danh sách chi tiết nhập hàng theo Import ID.
+     *
      * @param id Import ID (Integer)
      * @return List<ImportDetail>
      */
     public List<ImportDetail> getListToImport(int id) {
         List<ImportDetail> list = new ArrayList<>();
         // [FIX] Changed 'size_detail' to 'size_detail'
-        String sql = "SELECT id.product_id, p.name, sd.size_name, id.quantity, p.price " +
-                      "FROM importDetails id " +
-                      "JOIN size_detail sd ON id.product_id = sd.product_id AND id.size_name = sd.size_name " +
-                      "JOIN product p ON id.product_id = p.product_id " +
-                      "WHERE id.import_id = ?";
+        String sql = "SELECT id.product_id, p.name, sd.size_name, id.quantity, p.price "
+                + "FROM importDetails id "
+                + "JOIN size_detail sd ON id.product_id = sd.product_id AND id.size_name = sd.size_name "
+                + "JOIN product p ON id.product_id = p.product_id "
+                + "WHERE id.import_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, id);
             ResultSet rs = st.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 ImportDetail i = new ImportDetail();
                 i.setImportID(id);
                 i.setProductID(rs.getInt("product_id"));
@@ -101,7 +103,7 @@ public class ImportDetailDAO extends DBConnect.DBConnect {
         }
         return price;
     }
-    
+
     public boolean hasDataForProduct(int productId) {
         String sql = "SELECT TOP 1 1 FROM importDetails WHERE product_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
@@ -114,7 +116,7 @@ public class ImportDetailDAO extends DBConnect.DBConnect {
             return true;
         }
     }
-    
+
     public List<ImportDetail> getImportDetailsByProductId(int productId) {
         List<ImportDetail> list = new ArrayList<>();
         String sql = "SELECT * FROM importDetails WHERE product_id = ?";
@@ -135,17 +137,17 @@ public class ImportDetailDAO extends DBConnect.DBConnect {
         }
         return list;
     }
-    
+
     public boolean insertImportDetail(ImportDetail detail) {
-        String sql = "INSERT INTO importDetails (import_id, product_id, size_name, quantity) " +
-                        "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO importDetails (import_id, product_id, size_name, quantity) "
+                + "VALUES (?, ?, ?, ?)";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, detail.getImportID());
             st.setInt(2, detail.getProductID());
             st.setString(3, detail.getSizeName());
             st.setInt(4, detail.getQuantity());
-            
+
             return st.executeUpdate() > 0;
         } catch (Exception e) {
             System.err.println("Lỗi ImportDetailDAO.insertImportDetail: " + e.getMessage());

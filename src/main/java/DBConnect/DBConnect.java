@@ -21,9 +21,9 @@ public class DBConnect {
 
             // 🔹 Cấu hình chuỗi kết nối JDBC
             String url = "jdbc:sqlserver://" + host + ":" + port
-                       + ";databaseName=" + database
-                       + ";encrypt=true"
-                       + ";trustServerCertificate=true"; // nếu dùng local hoặc Docker
+                    + ";databaseName=" + database
+                    + ";encrypt=true"
+                    + ";trustServerCertificate=true"; // nếu dùng local hoặc Docker
 
             // 🔹 Kết nối
             connection = DriverManager.getConnection(url, username, password);

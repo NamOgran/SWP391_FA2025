@@ -15,22 +15,20 @@ import jakarta.mail.internet.MimeMessage;
 
 public class EmailUtil {
 
-    
     private static final String FROM_EMAIL = "gioshop.system@gmail.com";
     private static final String APP_PASSWORD = "eljfdrdvdvvvouwm";
 
     public static void sendEmail(String toEmail, String subject, String content) throws MessagingException {
-        
+
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.port", "587"); 
+        props.put("mail.smtp.port", "587");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-        
-        
+
         props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-        
+
         props.put("mail.debug", "true");
 
         Session mailSession = Session.getInstance(props, new jakarta.mail.Authenticator() {
@@ -50,7 +48,7 @@ public class EmailUtil {
         // Gửi mail
         // Transport.send sẽ tự connect, gửi và close
         Transport.send(message);
-        
+
         System.out.println("Email sent successfully to " + toEmail);
     }
 }

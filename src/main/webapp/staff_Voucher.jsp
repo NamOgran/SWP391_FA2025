@@ -1,6 +1,6 @@
 <%-- 
     Document   : staff_Voucher.jsp
-    Description: Voucher Management for Staff (View Only with Date Filters)
+    Description: Voucher Management for Staff (View Only with Date Filters + Max Discount)
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="entity.Staff" %>
@@ -12,7 +12,7 @@
     Staff s = (Staff) session.getAttribute("staff");
     if (s == null || !"staff".equalsIgnoreCase(s.getRole())) {
         response.sendRedirect(request.getContextPath() + (s == null ? "/login.jsp" : "/"));
-        return; 
+        return;
     }
 %>
 
@@ -41,39 +41,187 @@
                 --light-bg: #f4f7f6;
                 --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
             }
-            body { font-family: 'Quicksand', sans-serif; background-color: var(--light-bg); color: #5a5c69; }
+            body {
+                font-family: 'Quicksand', sans-serif;
+                background-color: var(--light-bg);
+                color: #5a5c69;
+            }
 
-            .main-content { padding: 20px; }
-            .card-modern { background: #fff; border: none; border-radius: 15px; box-shadow: var(--card-shadow); margin-bottom: 25px; overflow: hidden; }
-            .card-header-modern { background: #fff; padding: 20px 25px; border-bottom: 1px solid #e3e6f0; display: flex; justify-content: space-between; align-items: center; }
-            .page-title { font-weight: 700; color: var(--primary-color); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
-            .stat-badge { background: var(--primary-light); color: var(--primary-color); padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; }
-            
-            .filter-container { padding: 20px 25px; background-color: #fff; border-bottom: 1px solid #f0f0f0; }
-            .search-input-group .input-group-text { background: transparent; border-right: none; color: #aaa; }
-            .search-input-group .form-control { border-left: none; box-shadow: none; }
-            .search-input-group .form-control:focus { border-color: #d1d1d1; }
-            .filter-label { font-size: 0.75rem; font-weight: 700; color: #b7b9cc; text-transform: uppercase; margin-bottom: 4px; display: block; }
+            .main-content {
+                padding: 20px;
+            }
+            .card-modern {
+                background: #fff;
+                border: none;
+                border-radius: 15px;
+                box-shadow: var(--card-shadow);
+                margin-bottom: 25px;
+                overflow: hidden;
+            }
+            .card-header-modern {
+                background: #fff;
+                padding: 20px 25px;
+                border-bottom: 1px solid #e3e6f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .page-title {
+                font-weight: 700;
+                color: var(--primary-color);
+                font-size: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .stat-badge {
+                background: var(--primary-light);
+                color: var(--primary-color);
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-weight: 600;
+                font-size: 0.9rem;
+            }
 
-            .table-modern { width: 100%; margin-bottom: 0; }
-            .table-modern thead th { background-color: #f8f9fc; color: #858796; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; border-bottom: 2px solid #e3e6f0; padding: 15px; border-top: none; }
-            .table-modern tbody td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #e3e6f0; color: #5a5c69; font-size: 0.95rem; }
-            .table-modern tbody tr:hover { background-color: #fcfcfc; }
-            .table-blur { opacity: 0.5; pointer-events: none; transition: opacity 0.2s ease; }
-            #table-loader { min-height: 200px; display: flex; align-items: center; justify-content: center; }
+            .filter-container {
+                padding: 20px 25px;
+                background-color: #fff;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .search-input-group .input-group-text {
+                background: transparent;
+                border-right: none;
+                color: #aaa;
+            }
+            .search-input-group .form-control {
+                border-left: none;
+                box-shadow: none;
+            }
+            .search-input-group .form-control:focus {
+                border-color: #d1d1d1;
+            }
+            .filter-label {
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: #b7b9cc;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+                display: block;
+            }
 
-            .voucher-badge { background-color: #ffeeba; color: #856404; font-weight: 700; padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #ffe8a1; }
-            
-            .pagination-wrapper { margin-top: 20px; display: flex; justify-content: flex-end; }
-            .custom-pagination { display: flex; list-style: none; gap: 5px; padding: 0; }
-            .custom-page-link { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #fff; border: 1px solid #e3e6f0; color: #858796; text-decoration: none; transition: all 0.2s; cursor: pointer; }
-            .custom-page-link:hover { background: #f8f9fc; }
-            .custom-page-item.active .custom-page-link { background: var(--primary-color); color: white; border-color: var(--primary-color); }
-            
-            .toast-notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1060; padding: 12px 20px; border-radius: 10px; background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); display: none; align-items: center; gap: 10px; border-left: 4px solid var(--primary-color); animation: slideDown 0.4s ease; }
-            .toast-icon { font-size: 1.4rem; }
-            .toast-text { color: #333; flex-grow: 1; }
-            @keyframes slideDown { from { top: -60px; opacity: 0; } to { top: 20px; opacity: 1; } }
+            .table-modern {
+                width: 100%;
+                margin-bottom: 0;
+            }
+            .table-modern thead th {
+                background-color: #f8f9fc;
+                color: #858796;
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.85rem;
+                border-bottom: 2px solid #e3e6f0;
+                padding: 15px;
+                border-top: none;
+            }
+            .table-modern tbody td {
+                padding: 15px;
+                vertical-align: middle;
+                border-bottom: 1px solid #e3e6f0;
+                color: #5a5c69;
+                font-size: 0.95rem;
+            }
+            .table-modern tbody tr:hover {
+                background-color: #fcfcfc;
+            }
+            .table-blur {
+                opacity: 0.5;
+                pointer-events: none;
+                transition: opacity 0.2s ease;
+            }
+            #table-loader {
+                min-height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .voucher-badge {
+                background-color: #ffeeba;
+                color: #856404;
+                font-weight: 700;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 0.9rem;
+                border: 1px solid #ffe8a1;
+            }
+
+            .pagination-wrapper {
+                margin-top: 20px;
+                display: flex;
+                justify-content: flex-end;
+            }
+            .custom-pagination {
+                display: flex;
+                list-style: none;
+                gap: 5px;
+                padding: 0;
+            }
+            .custom-page-link {
+                width: 35px;
+                height: 35px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                background: #fff;
+                border: 1px solid #e3e6f0;
+                color: #858796;
+                text-decoration: none;
+                transition: all 0.2s;
+                cursor: pointer;
+            }
+            .custom-page-link:hover {
+                background: #f8f9fc;
+            }
+            .custom-page-item.active .custom-page-link {
+                background: var(--primary-color);
+                color: white;
+                border-color: var(--primary-color);
+            }
+
+            .toast-notification {
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1060;
+                padding: 12px 20px;
+                border-radius: 10px;
+                background: #fff;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+                display: none;
+                align-items: center;
+                gap: 10px;
+                border-left: 4px solid var(--primary-color);
+                animation: slideDown 0.4s ease;
+            }
+            .toast-icon {
+                font-size: 1.4rem;
+            }
+            .toast-text {
+                color: #333;
+                flex-grow: 1;
+            }
+            @keyframes slideDown {
+                from {
+                    top: -60px;
+                    opacity: 0;
+                }
+                to {
+                    top: 20px;
+                    opacity: 1;
+                }
+            }
         </style>
     </head>
 
@@ -106,19 +254,19 @@
                             </div>
                         </div>
 
-                        <%-- [NEW] Start Date Filter --%>
+                        <%-- Start Date Filter --%>
                         <div class="col-md-3">
                             <span class="filter-label">Start From</span>
                             <input type="date" id="startDateFilter" class="form-control">
                         </div>
 
-                        <%-- [NEW] End Date Filter --%>
+                        <%-- End Date Filter --%>
                         <div class="col-md-3">
                             <span class="filter-label">End To</span>
                             <input type="date" id="endDateFilter" class="form-control">
                         </div>
 
-                        <%-- [NEW] Reset Button --%>
+                        <%-- Reset Button --%>
                         <div class="col-md-2">
                             <button onclick="resetFilters()" class="btn btn-light border w-100 text-muted" title="Reset Filters">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>
@@ -136,10 +284,11 @@
                         <table class="table table-modern align-middle" id="voucherTableMain">
                             <thead>
                                 <tr>
-                                    <th width="30%">Code (ID)</th>
-                                    <th width="20%">Discount</th>
-                                    <th width="25%">Start Date</th>
-                                    <th width="25%">End Date</th>
+                                    <th width="25%">Code (ID)</th>
+                                    <th width="15%">Discount</th>
+                                    <th width="20%">Max Amount</th> <%-- [MỚI] --%>
+                                    <th width="20%">Start Date</th>
+                                    <th width="20%">End Date</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody"></tbody>
@@ -154,153 +303,169 @@
         <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
         <script>
-            const BASE_URL = '${BASE_URL}';
-            let currentPage = 1;
-            let currentSearch = "";
-            // [NEW] Date Variables
-            let currentStart = "";
-            let currentEnd = "";
+                                const BASE_URL = '${BASE_URL}';
+                                let currentPage = 1;
+                                let currentSearch = "";
+                                let currentStart = "";
+                                let currentEnd = "";
 
-            function toggleTableBlur(active) {
-                if(active) $('#voucherTableMain tbody').addClass('table-blur');
-                else $('#voucherTableMain tbody').removeClass('table-blur');
-            }
+                                function toggleTableBlur(active) {
+                                    if (active)
+                                        $('#voucherTableMain tbody').addClass('table-blur');
+                                    else
+                                        $('#voucherTableMain tbody').removeClass('table-blur');
+                                }
 
-            function showToast(message) {
-                const toast = $('#toast-message');
-                const text = $('#toast-text');
-                text.text(message);
-                toast.addClass('active');
-                setTimeout(() => { toast.removeClass('active'); }, 3000);
-            }
+                                function showToast(message) {
+                                    const toast = $('#toast-message');
+                                    const text = $('#toast-text');
+                                    text.text(message);
+                                    toast.addClass('active');
+                                    setTimeout(() => {
+                                        toast.removeClass('active');
+                                    }, 3000);
+                                }
 
-            function formatDateForDisplay(dateString) {
-                if (!dateString) return "";
-                const d = new Date(dateString);
-                if (isNaN(d.getTime())) return "";
-                return d.toLocaleDateString('en-GB'); 
-            }
+                                function formatDateForDisplay(dateString) {
+                                    if (!dateString)
+                                        return "";
+                                    const d = new Date(dateString);
+                                    if (isNaN(d.getTime()))
+                                        return "";
+                                    return d.toLocaleDateString('en-GB');
+                                }
 
-            function fetchVouchers(page = 1) {
-                currentPage = page;
-                toggleTableBlur(true);
+                                // [MỚI] Hàm format tiền tệ
+                                function formatCurrency(amount) {
+                                    if (!amount)
+                                        return "0";
+                                    return new Intl.NumberFormat('vi-VN').format(amount);
+                                }
 
-                $.ajax({
-                    url: BASE_URL + '/staff/voucher/data',
-                    type: 'GET',
-                    // [NEW] Added startDate and endDate parameters
-                    data: { 
-                        page: page, 
-                        search: currentSearch,
-                        startDate: currentStart,
-                        endDate: currentEnd
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        renderTable(response.list);
-                        renderPagination(response.totalPages, response.currentPage);
-                        $('#totalVouchersBadge').text(response.totalItems + " Vouchers");
-                        setTimeout(() => { toggleTableBlur(false); }, 150);
-                    },
-                    error: function() {
-                        showToast('Failed to load data');
-                        toggleTableBlur(false);
-                    }
-                });
-            }
+                                function fetchVouchers(page = 1) {
+                                    currentPage = page;
+                                    toggleTableBlur(true);
 
-            function renderTable(list) {
-                const tbody = $('#tableBody');
-                tbody.empty();
-                if (!list || list.length === 0) {
-                    tbody.append('<tr><td colspan="4" class="text-center py-4 text-muted">No vouchers found.</td></tr>');
-                    return;
-                }
-                
-                list.forEach(p => {
-                    const displayStart = formatDateForDisplay(p.startDate);
-                    const displayEnd = formatDateForDisplay(p.endDate);
+                                    $.ajax({
+                                        url: BASE_URL + '/staff/voucher/data',
+                                        type: 'GET',
+                                        data: {
+                                            page: page,
+                                            search: currentSearch,
+                                            startDate: currentStart,
+                                            endDate: currentEnd
+                                        },
+                                        dataType: 'json',
+                                        success: function (response) {
+                                            renderTable(response.list);
+                                            renderPagination(response.totalPages, response.currentPage);
+                                            $('#totalVouchersBadge').text(response.totalItems + " Vouchers");
+                                            setTimeout(() => {
+                                                toggleTableBlur(false);
+                                            }, 150);
+                                        },
+                                        error: function () {
+                                            showToast('Failed to load data');
+                                            toggleTableBlur(false);
+                                        }
+                                    });
+                                }
 
-                    const row = `
+                                function renderTable(list) {
+                                    const tbody = $('#tableBody');
+                                    tbody.empty();
+                                    if (!list || list.length === 0) {
+                                        tbody.append('<tr><td colspan="5" class="text-center py-4 text-muted">No vouchers found.</td></tr>');
+                                        return;
+                                    }
+
+                                    list.forEach(p => {
+                                        const displayStart = formatDateForDisplay(p.startDate);
+                                        const displayEnd = formatDateForDisplay(p.endDate);
+
+                                        // [MỚI] Xử lý hiển thị Max Discount
+                                        const maxDiscountVal = p.maxDiscountAmount || 0;
+                                        const displayMax = maxDiscountVal > 0 ? formatCurrency(maxDiscountVal) + ' VND' : '<span class="text-success small">Unlimited</span>';
+
+                                        const row = `
                         <tr>
                             <td class="fw-bold" style="color: var(--primary-color);">\${p.voucherID}</td>
                             <td><span class="voucher-badge">\${p.voucherPercent}% OFF</span></td>
+                            <td>\${displayMax}</td> <%-- [MỚI] --%>
                             <td><i class="bi bi-calendar-event me-2 text-muted"></i>\${displayStart}</td>
                             <td><i class="bi bi-calendar-check me-2 text-muted"></i>\${displayEnd}</td>
                         </tr>
                     `;
-                    tbody.append(row);
-                });
-            }
+                                        tbody.append(row);
+                                    });
+                                }
 
-            function renderPagination(totalPages, current) {
-                const container = $('#paginationContainer');
-                container.empty();
-                if (totalPages <= 1) return;
+                                function renderPagination(totalPages, current) {
+                                    const container = $('#paginationContainer');
+                                    container.empty();
+                                    if (totalPages <= 1)
+                                        return;
 
-                let html = '<ul class="custom-pagination">';
-                html += `<li class="custom-page-item \${current == 1 ? 'disabled' : ''}">
+                                    let html = '<ul class="custom-pagination">';
+                                    html += `<li class="custom-page-item \${current == 1 ? 'disabled' : ''}">
                             <a class="custom-page-link" onclick="fetchVouchers(\${current - 1})"><i class="bi bi-chevron-left"></i></a>
                          </li>`;
-                
-                for (let i = 1; i <= totalPages; i++) {
-                    html += `<li class="custom-page-item \${i == current ? 'active' : ''}">
+
+                                    for (let i = 1; i <= totalPages; i++) {
+                                        html += `<li class="custom-page-item \${i == current ? 'active' : ''}">
                                 <a class="custom-page-link" onclick="fetchVouchers(\${i})">\${i}</a>
                              </li>`;
-                }
+                                    }
 
-                html += `<li class="custom-page-item \${current == totalPages ? 'disabled' : ''}">
+                                    html += `<li class="custom-page-item \${current == totalPages ? 'disabled' : ''}">
                             <a class="custom-page-link" onclick="fetchVouchers(\${current + 1})"><i class="bi bi-chevron-right"></i></a>
                          </li>`;
-                
-                html += '</ul>';
-                container.html(html);
-            }
 
-            // [NEW] Reset function
-            function resetFilters() {
-                $('#liveSearchInput').val('');
-                $('#startDateFilter').val('');
-                $('#endDateFilter').val('');
-                
-                currentSearch = "";
-                currentStart = "";
-                currentEnd = "";
-                
-                fetchVouchers(1);
-            }
+                                    html += '</ul>';
+                                    container.html(html);
+                                }
 
-            document.addEventListener("DOMContentLoaded", function () {
-                setTimeout(function() {
-                    $('#table-loader').fadeOut(200, function() {
-                        $('#voucher-content-container').fadeIn(200);
-                        fetchVouchers(1);
-                    });
-                }, 400);
+                                function resetFilters() {
+                                    $('#liveSearchInput').val('');
+                                    $('#startDateFilter').val('');
+                                    $('#endDateFilter').val('');
 
-                let searchTimeout;
-                $('#liveSearchInput').on('input', function() {
-                    currentSearch = $(this).val();
-                    toggleTableBlur(true);
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => { fetchVouchers(1); }, 300);
-                });
+                                    currentSearch = "";
+                                    currentStart = "";
+                                    currentEnd = "";
 
-                // [NEW] Date filter listeners
-                $('#startDateFilter, #endDateFilter').on('change', function() {
-                    currentStart = $('#startDateFilter').val();
-                    currentEnd = $('#endDateFilter').val();
-                    toggleTableBlur(true);
-                    fetchVouchers(1); // Reset to page 1 on filter change
-                });
-            });
-                        $(document).ready(function() {
-                // 1. Xóa class active ở các li khác (nếu cần thiết, để tránh duplicate)
-                $('.nav-list li').removeClass('active');
-                
-                // 2. Tìm thẻ li có data-target='product-manage' và thêm class active
-                $('.nav-list li[data-target="voucher-list"]').addClass('active');
-            });
+                                    fetchVouchers(1);
+                                }
+
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    setTimeout(function () {
+                                        $('#table-loader').fadeOut(200, function () {
+                                            $('#voucher-content-container').fadeIn(200);
+                                            fetchVouchers(1);
+                                        });
+                                    }, 400);
+
+                                    let searchTimeout;
+                                    $('#liveSearchInput').on('input', function () {
+                                        currentSearch = $(this).val();
+                                        toggleTableBlur(true);
+                                        clearTimeout(searchTimeout);
+                                        searchTimeout = setTimeout(() => {
+                                            fetchVouchers(1);
+                                        }, 300);
+                                    });
+
+                                    $('#startDateFilter, #endDateFilter').on('change', function () {
+                                        currentStart = $('#startDateFilter').val();
+                                        currentEnd = $('#endDateFilter').val();
+                                        toggleTableBlur(true);
+                                        fetchVouchers(1);
+                                    });
+
+                                    // Active menu item
+                                    $('.nav-list li').removeClass('active');
+                                    $('.nav-list li[data-target="voucher-list"]').addClass('active');
+                                });
         </script>
     </body>
 </html>

@@ -7,15 +7,14 @@ public class ResponseData {
     private Object data;
 
     /**
-     * Hàm khởi tạo rỗng (no-argument constructor)
-     * Trình biên dịch yêu cầu hàm này.
+     * Hàm khởi tạo rỗng (no-argument constructor) Trình biên dịch yêu cầu hàm
+     * này.
      */
     public ResponseData() {
     }
 
     /**
-     * Hàm khởi tạo 3 tham số
-     * Đây là hàm mà StaffController đang cố gắng gọi.
+     * Hàm khởi tạo 3 tham số Đây là hàm mà StaffController đang cố gắng gọi.
      */
     public ResponseData(boolean isSuccess, String description, Object data) {
         this.isSuccess = isSuccess;

@@ -8,10 +8,10 @@
     /* === FOOTER STYLES === */
     footer {
         background-color: #f5f5f5;
-        padding-bottom: 0px; 
+        padding-bottom: 0px;
         margin-top: 50px;
         /* ĐÃ SỬA: Thay viền xám mỏng thành đường nâu sữa dày 5px */
-        border-top: 5px solid #b59a7c; 
+        border-top: 5px solid #b59a7c;
     }
     .content-footer {
         text-align: center;
@@ -28,7 +28,7 @@
         color: #555;
         margin: 0;
     }
-    
+
     /* Gallery Images */
     #img-footer {
         margin: 0 auto;
@@ -72,10 +72,10 @@
         transition: color 0.2s;
     }
     .items-footer ul.CS li a:hover {
-        color: #b59a7c; 
+        color: #b59a7c;
         text-decoration: underline;
     }
-    
+
     /* BCT Logo */
     .bct {
         max-width: 150px;
@@ -135,11 +135,11 @@
     .contact-link i {
         font-size: 1.1rem;
     }
-    
+
     /* Copyright Section */
     .footer-copyright {
         background-color: #b59a7c; /* Nền xám đậm */
-        color: whitesmoke; 
+        color: whitesmoke;
         font-size: 0.85rem;
         padding: 15px 0;
         margin-top: 20px;
@@ -199,7 +199,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="text-center footer-copyright w-100">
         &copy; 2025 GIO Shop. All rights reserved.
     </div>

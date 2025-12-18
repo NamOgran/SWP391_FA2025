@@ -7,7 +7,7 @@ package url;
 
 /**
  *
- * 
+ *
  */
 public class ProductURL {
 

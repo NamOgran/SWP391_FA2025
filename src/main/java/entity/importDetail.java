@@ -8,7 +8,7 @@ import java.util.Date;
 
 /**
  *
- * 
+ *
  */
 public class ImportDetail {
 
@@ -30,8 +30,6 @@ public class ImportDetail {
         this.quantity = quantity;
         this.sizeName = sizeName;
     }
-    
-    
 
     public int getImportID() {
         return importID;
@@ -40,8 +38,6 @@ public class ImportDetail {
     public void setImportID(int importID) {
         this.importID = importID;
     }
-
-
 
     public ImportDetail() {
     }

@@ -1,3 +1,7 @@
+<%-- 
+    Document    : viewOrder.jsp (Renamed from order.jsp to match Controller)
+    Description : My Orders Logic Fixed for Int Discount Column
+--%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -108,10 +112,10 @@
             font-weight: 600;
             transition: all 0.3s ease;
             border-left: 4px solid transparent;
-            justify-content: space-between; /* Đẩy badge sang phải */
+            justify-content: space-between; 
         }
 
-        .account-nav-link > div { display: flex; align-items: center; } /* Wrapper cho icon + text */
+        .account-nav-link > div { display: flex; align-items: center; } 
         .account-nav-link i { margin-right: 15px; width: 20px; text-align: center; font-size: 1.1rem; }
         
         .account-nav-link:hover {
@@ -183,10 +187,10 @@
         }
         .form-control-date { border-radius: 20px; border: 1px solid #ddd; width: auto; }
 
-        /* === OLD ORDER CARD STYLE === */
+        /* === ORDER CARD STYLE === */
         .order-card {
             background: #fff;
-            border: 1px solid #ced4da; /* Viền xám rõ ràng */
+            border: 1px solid #ced4da;
             border-radius: 12px;
             margin-bottom: 20px;
             overflow: hidden;
@@ -220,7 +224,7 @@
         .status-Pending { background-color: #fff8e1; color: #f57c00; border: 1px solid #ffe0b2; }
         .status-Delivering { background-color: #e0f2f1; color: #00897b; border: 1px solid #b2dfdb; }
 
-        /* Order Body (Giao diện cũ) */
+        /* Order Body */
         .order-body { padding: 15px 20px; }
         .info-row { display: flex; margin-bottom: 8px; font-size: 0.95rem; }
         .info-label { color: #888; font-weight: 500; width: 80px; flex-shrink: 0; }
@@ -245,7 +249,6 @@
         }
         .btn-detail:hover { background: #f5f5f5; color: var(--primary-color); border-color: var(--primary-color); }
         
-        /* STYLE CHO NÚT CANCEL */
         .btn-cancel {
             border: 1px solid #dc3545;
             background: white;
@@ -254,7 +257,7 @@
             padding: 6px 15px;
             font-size: 0.9rem;
             transition: all 0.2s;
-            text-decoration: none; /* Vì là thẻ a */
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 5px;
@@ -263,18 +266,6 @@
             background: #dc3545;
             color: white;
         }
-
-        .btn-received {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 15px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .btn-received:hover { background-color: var(--primary-hover); color: white; }
 
         /* Dropdown Details */
         .order-details-dropdown {
@@ -315,17 +306,16 @@
 
     <main class="main-content-wrapper">
         
-        <%-- POPUP MESSAGE (nếu có từ controller trả về) --%>
+        <%-- POPUP MESSAGE --%>
         <c:if test="${not empty sessionScope.popupMessage}">
             <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
                 ${sessionScope.popupMessage}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <%-- Xóa session message sau khi hiển thị --%>
             <c:remove var="popupMessage" scope="session"/>
         </c:if>
 
-        <%-- 1. PRE-CALCULATE COUNTS --%>
+        <%-- 1. CALCULATE COUNTS --%>
         <c:set var="countPending" value="0" />
         <c:set var="countDelivering" value="0" />
         <c:set var="countDelivered" value="0" /> 
@@ -334,20 +324,15 @@
         <c:forEach items="${requestScope.ordersUserList}" var="o">
             <c:if test="${o.status eq 'Pending'}"><c:set var="countPending" value="${countPending + 1}" /></c:if>
             <c:if test="${o.status eq 'Delivering'}"><c:set var="countDelivering" value="${countDelivering + 1}" /></c:if>
-            
             <c:if test="${o.status eq 'Delivered' || o.status eq 'Completed'}"><c:set var="countDelivered" value="${countDelivered + 1}" /></c:if>
             <c:if test="${o.status eq 'Cancelled'}"><c:set var="countCancelled" value="${countCancelled + 1}" /></c:if>
         </c:forEach>
         
-        <%-- TÍNH TỔNG ĐƠN ĐANG XỬ LÝ (MY ORDERS) --%>
         <c:set var="totalActive" value="${countPending + countDelivering}" />
-        
-        <%-- TÍNH TỔNG ĐƠN LỊCH SỬ (ORDER HISTORY) --%>
-        <c:set var="totalHistory" value="${countDelivered + countCancelled}" />
 
         <div class="row g-4">
             
-            <%-- === LEFT COLUMN: SIDEBAR (STICKY) === --%>
+            <%-- === SIDEBAR === --%>
             <div class="col-lg-4 col-md-5">
                 <div class="account-nav-card">
                     <div class="account-user-mini">
@@ -375,7 +360,6 @@
                         <li>
                             <a href="${pageContext.request.contextPath}/orderView" class="account-nav-link active">
                                 <div><i class="fa-solid fa-box"></i> My Orders</div>
-                                <%-- SIDEBAR COUNT (ACTIVE) --%>
                                 <c:if test="${totalActive > 0}">
                                     <span class="badge-sidebar">${totalActive}</span>
                                 </c:if>
@@ -387,6 +371,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="${pageContext.request.contextPath}/my-feedback" class="account-nav-link">
+                                <div><i class="fa-solid fa-star"></i> My Feedbacks</div>
+                            </a>
+                        </li>
+                        <li>
                             <a href="${pageContext.request.contextPath}/cookieHandle" class="account-nav-link text-danger" onclick="return confirm('Do you want to sign out?')">
                                 <div><i class="fa-solid fa-right-from-bracket"></i> Sign Out</div>
                             </a>
@@ -395,7 +384,7 @@
                 </div>
             </div>
 
-            <%-- === RIGHT COLUMN: ORDER CONTENT === --%>
+            <%-- === ORDER CONTENT === --%>
             <div class="col-lg-8 col-md-7">
                 <div class="orders-wrapper">
                     
@@ -418,7 +407,6 @@
                         <%-- TAB 1: PENDING --%>
                         <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
                             
-                            <%-- SEARCH BAR PENDING --%>
                             <div class="filter-bar">
                                 <div class="search-input-group">
                                     <i class="bi bi-search"></i>
@@ -438,7 +426,6 @@
 
                                 <c:forEach items="${requestScope.ordersUserList}" var="o">
                                     <c:if test="${o.status eq 'Pending'}">
-                                        <%-- DATA ATTRIBUTE ĐỂ SEARCH: ID + TÊN SP --%>
                                         <c:set var="searchString" value="${o.orderID}" />
                                         <c:forEach items="${orderDetailList}" var="d">
                                             <c:if test="${d.orderID eq o.orderID}">
@@ -470,7 +457,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-md-5 text-md-end text-start mt-2 mt-md-0">
-                                                        <span class="info-label d-block w-100 text-md-end text-start mb-1">Total Amount</span>
+                                                        <span class="info-label d-block w-100 text-md-end text-start mb-1">Amount Paid: </span>
                                                         <c:set var="formattedTotal"><fmt:formatNumber value="${o.total}" type="number"/></c:set>
                                                         <span class="total-price">${formattedTotal} VND</span>
                                                     </div>
@@ -478,7 +465,6 @@
                                             </div>
 
                                             <div class="order-actions">
-                                                <%-- [ADDED] BUTTON CANCEL FOR PENDING --%>
                                                 <a href="${pageContext.request.contextPath}/cancelOrder?orderId=${o.orderID}" 
                                                    class="btn-cancel" 
                                                    onclick="return confirm('Are you sure you want to cancel Order #${o.orderID}?');">
@@ -496,11 +482,25 @@
                                                     <c:if test="${d.orderID eq o.orderID}">
                                                         <c:set var="pId" value="${d.productID}"/>
                                                         <c:set var="pPrice" value="${priceP[pId]}"/>
-                                                        <c:set var="pVoucherId" value="${voucherID[pId]}"/>
-                                                        <c:set var="pVoucherPct" value="${voucherMap[pVoucherId] != null ? voucherMap[pVoucherId] : 0}"/>
-                                                        <c:set var="unitDisc" value="${pPrice - (pPrice * pVoucherPct)/100}"/>
-                                                        <c:set var="lineDisc" value="${unitDisc * d.quantity}"/>
+                                                        
+                                                        <%-- [UPDATED] Lấy trực tiếp Discount (Int) từ Map --%>
+                                                        <c:set var="discountVal" value="${voucherID[pId]}"/> 
+                                                        
+                                                        <%-- Chuyển string sang số để tính toán --%>
+                                                        <fmt:parseNumber var="discPercent" value="${discountVal}" integerOnly="true" />
+                                                        
+                                                        <%-- Tính giá sau khi giảm --%>
                                                         <c:set var="lineOrig" value="${pPrice * d.quantity}"/>
+                                                        
+                                                        <c:choose>
+                                                            <c:when test="${discPercent > 0}">
+                                                                <c:set var="unitDisc" value="${pPrice - (pPrice * discPercent / 100)}"/>
+                                                                <c:set var="lineDisc" value="${unitDisc * d.quantity}"/>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <c:set var="lineDisc" value="${lineOrig}"/>
+                                                            </c:otherwise>
+                                                        </c:choose>
 
                                                         <div class="product-item">
                                                             <div class="row align-items-center">
@@ -509,10 +509,14 @@
                                                                 </div>
                                                                 <div class="col">
                                                                     <div class="product-name">${nameProduct[pId]}</div>
-                                                                    <div class="product-meta">Size: <strong>${d.size_name}</strong> | Qty: <strong>${d.quantity}</strong></div>
+                                                                    <div class="product-meta">Size: <strong>${d.size_name}</strong> | Quantity: <strong>${d.quantity}</strong></div>
+                                                                    <%-- Hiển thị Badge giảm giá nếu có --%>
+                                                                    <c:if test="${discPercent > 0}">
+                                                                        <span class="badge bg-danger">-${discPercent}%</span>
+                                                                    </c:if>
                                                                 </div>
                                                                 <div class="col-auto text-end">
-                                                                    <c:if test="${lineOrig > lineDisc}">
+                                                                    <c:if test="${discPercent > 0}">
                                                                         <span class="price-old"><fmt:formatNumber value="${lineOrig}" type="number"/> VND</span>
                                                                     </c:if>
                                                                     <div class="price-new"><fmt:formatNumber value="${lineDisc}" type="number"/> VND</div>
@@ -529,10 +533,8 @@
                             </div>
                         </div>
 
-                        <%-- TAB 2: DELIVERING --%>
+                        <%-- TAB 2: DELIVERING (Logic tương tự) --%>
                         <div class="tab-pane fade" id="delivering" role="tabpanel" aria-labelledby="delivering-tab">
-                            
-                            <%-- SEARCH BAR DELIVERING --%>
                             <div class="filter-bar">
                                 <div class="search-input-group">
                                     <i class="bi bi-search"></i>
@@ -552,7 +554,6 @@
 
                                 <c:forEach items="${requestScope.ordersUserList}" var="o">
                                     <c:if test="${o.status eq 'Delivering'}">
-                                        <%-- DATA ATTRIBUTE ĐỂ SEARCH --%>
                                         <c:set var="searchStringDel" value="${o.orderID}" />
                                         <c:forEach items="${orderDetailList}" var="d">
                                             <c:if test="${d.orderID eq o.orderID}">
@@ -584,7 +585,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-md-5 text-md-end text-start mt-2 mt-md-0">
-                                                        <span class="info-label d-block w-100 text-md-end text-start mb-1">Total Amount</span>
+                                                        <span class="info-label d-block w-100 text-md-end text-start mb-1">Amount Paid: </span>
                                                         <c:set var="formattedTotal"><fmt:formatNumber value="${o.total}" type="number"/></c:set>
                                                         <span class="total-price">${formattedTotal} VND</span>
                                                     </div>
@@ -592,24 +593,29 @@
                                             </div>
 
                                             <div class="order-actions">
-                                                <%-- [REMOVED] Nút Received đã bị xóa theo yêu cầu --%>
-                                                
                                                 <button class="btn-detail" id="btn-${o.orderID}" onclick="toggleDetails(${o.orderID})">
                                                     Detail <i class="bi bi-chevron-down"></i>
                                                 </button>
                                             </div>
 
-                                            <%-- Dropdown Details --%>
+                                            <%-- Dropdown Details (COPY LOGIC TỪ TAB PENDING) --%>
                                             <div class="order-details-dropdown" id="dd-${o.orderID}">
                                                 <c:forEach items="${orderDetailList}" var="d">
                                                     <c:if test="${d.orderID eq o.orderID}">
                                                         <c:set var="pId" value="${d.productID}"/>
                                                         <c:set var="pPrice" value="${priceP[pId]}"/>
-                                                        <c:set var="pVoucherId" value="${voucherID[pId]}"/>
-                                                        <c:set var="pVoucherPct" value="${voucherMap[pVoucherId] != null ? voucherMap[pVoucherId] : 0}"/>
-                                                        <c:set var="unitDisc" value="${pPrice - (pPrice * pVoucherPct)/100}"/>
-                                                        <c:set var="lineDisc" value="${unitDisc * d.quantity}"/>
+                                                        <c:set var="discountVal" value="${voucherID[pId]}"/> 
+                                                        <fmt:parseNumber var="discPercent" value="${discountVal}" integerOnly="true" />
                                                         <c:set var="lineOrig" value="${pPrice * d.quantity}"/>
+                                                        <c:choose>
+                                                            <c:when test="${discPercent > 0}">
+                                                                <c:set var="unitDisc" value="${pPrice - (pPrice * discPercent / 100)}"/>
+                                                                <c:set var="lineDisc" value="${unitDisc * d.quantity}"/>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <c:set var="lineDisc" value="${lineOrig}"/>
+                                                            </c:otherwise>
+                                                        </c:choose>
 
                                                         <div class="product-item">
                                                             <div class="row align-items-center">
@@ -618,10 +624,13 @@
                                                                 </div>
                                                                 <div class="col">
                                                                     <div class="product-name">${nameProduct[pId]}</div>
-                                                                    <div class="product-meta">Size: <strong>${d.size_name}</strong> | Qty: <strong>${d.quantity}</strong></div>
+                                                                    <div class="product-meta">Size: <strong>${d.size_name}</strong> | Quantity: <strong>${d.quantity}</strong></div>
+                                                                    <c:if test="${discPercent > 0}">
+                                                                        <span class="badge bg-danger">-${discPercent}%</span>
+                                                                    </c:if>
                                                                 </div>
                                                                 <div class="col-auto text-end">
-                                                                    <c:if test="${lineOrig > lineDisc}">
+                                                                    <c:if test="${discPercent > 0}">
                                                                         <span class="price-old"><fmt:formatNumber value="${lineOrig}" type="number"/> VND</span>
                                                                     </c:if>
                                                                     <div class="price-new"><fmt:formatNumber value="${lineDisc}" type="number"/> VND</div>
@@ -669,7 +678,7 @@
             }
         }
 
-        // --- FILTER FUNCTION (Client-Side) ---
+        // --- FILTER FUNCTION ---
         function filterOrders(searchInputId, dateInputId, itemClass) {
             const searchText = $(searchInputId).val().toLowerCase();
             const searchDate = $(dateInputId).val(); // yyyy-mm-dd
@@ -694,12 +703,11 @@
             });
         }
 
-        // Attach Events for Pending Tab
+        // Attach Events
         $('#searchPending, #datePending').on('input change', function() {
             filterOrders('#searchPending', '#datePending', '.order-item-pending');
         });
 
-        // Attach Events for Delivering Tab
         $('#searchDelivering, #dateDelivering').on('input change', function() {
             filterOrders('#searchDelivering', '#dateDelivering', '.order-item-delivering');
         });

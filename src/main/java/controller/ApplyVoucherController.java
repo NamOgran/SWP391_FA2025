@@ -3,6 +3,7 @@ package controller;
 import DAO.VoucherDAO;
 import entity.Voucher;
 import com.google.gson.Gson; // [RECOMMENDED] Dùng Gson để tạo JSON an toàn
+import entity.Customer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,72 +30,66 @@ public class ApplyVoucherController extends HttpServlet {
         request.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType("application/json; charset=UTF-8");
-        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-
         PrintWriter out = response.getWriter();
         Gson gson = new Gson();
         Map<String, Object> jsonRes = new HashMap<>();
 
         try {
             String code = request.getParameter("code");
-
-            // 1. Validate input
             if (code == null || code.trim().isEmpty()) {
                 jsonRes.put("ok", false);
                 jsonRes.put("message", "Please enter a voucher ID.");
                 out.write(gson.toJson(jsonRes));
                 return;
             }
-
-            // [FIX] Lấy ID dạng String (Không ép sang int)
-            String voucherId = code.trim(); 
-
+            String voucherId = code.trim();
             VoucherDAO dao = new VoucherDAO();
-            
-            // 2. Tìm voucher trong DB (ưu tiên active)
+
+            // 1. Lấy thông tin Voucher
             Voucher voucher = dao.getActiveByIdDb(voucherId);
 
-            // Fallback nếu DB trả null (do múi giờ/driver...)
-            if (voucher == null) {
-                voucher = dao.getActiveById(voucherId);
-            }
-
-            // 3. Kiểm tra kết quả
             if (voucher == null) {
                 jsonRes.put("ok", false);
                 jsonRes.put("message", "Voucher not found or expired.");
             } else {
-                int percent = voucher.getVoucherPercent();
-                if (percent <= 0 || percent > 100) {
-                    jsonRes.put("ok", false);
-                    jsonRes.put("message", "Invalid voucher percentage.");
-                } else {
-                    // Lưu session
-                    HttpSession session = request.getSession(true);
-                    session.setAttribute("voucherId", voucher.getVoucherID()); // Lưu String
-                    session.setAttribute("voucherPercent", percent);
-                    session.setAttribute("voucherCode", voucher.getVoucherID()); // Lưu String
+                // 2. [MỚI] Kiểm tra user đã dùng chưa
+                HttpSession session = request.getSession(false);
+                Customer acc = (session != null) ? (Customer) session.getAttribute("acc") : null;
 
-                    // Trả về JSON thành công
-                    jsonRes.put("ok", true);
-                    jsonRes.put("type", "percent");
-                    jsonRes.put("voucherId", voucher.getVoucherID()); // Trả về String
-                    jsonRes.put("value", percent);
+                if (acc != null) {
+                    boolean isUsed = dao.hasUsedVoucher(acc.getCustomer_id(), voucher.getVoucherID());
+                    if (isUsed) {
+                        jsonRes.put("ok", false);
+                        jsonRes.put("message", "You have already used this voucher. This voucher can only be used once per account.");
+                        out.write(gson.toJson(jsonRes));
+                        return;
+                    }
+                } else {
+                    // Nếu chưa login thì có thể tạm cho áp dụng để xem giá, 
+                    // nhưng khi thanh toán (Checkout) phải bắt login và check lại.
                 }
+
+                // 3. Xử lý thành công
+                int percent = voucher.getVoucherPercent();
+                int maxDiscount = voucher.getMaxDiscountAmount(); // [MỚI]
+
+                session.setAttribute("voucherId", voucher.getVoucherID());
+                session.setAttribute("voucherPercent", percent);
+                session.setAttribute("maxDiscount", maxDiscount); // [MỚI] Lưu max discount vào session
+
+                jsonRes.put("ok", true);
+                jsonRes.put("type", "percent");
+                jsonRes.put("voucherId", voucher.getVoucherID());
+                jsonRes.put("value", percent);
+                jsonRes.put("maxDiscount", maxDiscount); // [MỚI] Trả về cho Frontend hiển thị
+                jsonRes.put("message", "Voucher applied! Discount: " + percent + "% (Max: " + maxDiscount + "đ)");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
             jsonRes.put("ok", false);
             jsonRes.put("message", "Server error: " + ex.getMessage());
         }
-        
         out.write(gson.toJson(jsonRes));
         out.flush();
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        doPost(req, resp);
     }
 }

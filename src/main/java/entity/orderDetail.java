@@ -5,6 +5,7 @@
 package entity;
 
 public class OrderDetail {
+
     private int orderDetailID;
     private int quantity;
     private String size_name;
@@ -14,7 +15,7 @@ public class OrderDetail {
     public OrderDetail() {
         // Constructor mặc định
     }
-    
+
     // Constructor DÙNG KHI ĐỌC TỪ DB (có orderDetailID)
     public OrderDetail(int orderDetailID, int quantity, String size_name, int productID, int orderID) {
         this.orderDetailID = orderDetailID;

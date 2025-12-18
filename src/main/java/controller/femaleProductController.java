@@ -27,17 +27,17 @@ public class FemaleProductController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String urlPath = request.getServletPath();
-        
+
         VoucherDAO voucher2 = new VoucherDAO();
         List<Voucher> voucherList = voucher2.getAll();
-        
+
         // [FIX] Map key changed to String for VoucherID
         Map<String, Integer> voucherMap = new HashMap<>();
         for (Voucher voucher : voucherList) {
             voucherMap.put(voucher.getVoucherID(), voucher.getVoucherPercent());
         }
         request.setAttribute("voucherMap", voucherMap);
-        
+
         switch (urlPath) {
             case URL_FEMALE_PRODUCT:
                 getFemaleProduct(request, response);

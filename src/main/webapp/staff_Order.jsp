@@ -262,13 +262,13 @@
                                                                                             <fmt:formatNumber value="${pPrice}" pattern="###,###"/>
                                                                                         </span>
                                                                                         <span class="text-danger fw-bold">
-                                                                                            <fmt:formatNumber value="${finalP}" pattern="###,###"/> đ
+                                                                                            <fmt:formatNumber value="${finalP}" pattern="###,###"/> VND
                                                                                         </span>
                                                                                         <span class="badge bg-danger text-white" style="font-size: 0.65rem;">-${percent}%</span>
                                                                                     </c:when>
                                                                                     <c:otherwise>
                                                                                         <span class="text-muted">
-                                                                                            <fmt:formatNumber value="${pPrice}" pattern="###,###"/> đ
+                                                                                            <fmt:formatNumber value="${pPrice}" pattern="###,###"/> VND
                                                                                         </span>
                                                                                     </c:otherwise>
                                                                                 </c:choose>

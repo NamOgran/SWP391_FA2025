@@ -215,7 +215,7 @@ public class AdminController extends HttpServlet {
             return;
         }
 
-        // --- [NEW] API: ACCOUNT RELATED DATA (Customer/Staff) ---
+        // --- API: ACCOUNT RELATED DATA (Customer/Staff) ---
         if ("get_account_related_data".equals(action)) {
             response.setContentType("application/json");
             PrintWriter out = response.getWriter();
@@ -267,8 +267,8 @@ public class AdminController extends HttpServlet {
                     out.print(gson.toJson("Missing Voucher ID"));
                     return;
                 }
-                ProductDAO productDAO = new ProductDAO();
-                List<Product> products = productDAO.getProductsByVoucherId(voucherId);
+                // Product logic based on voucher removed
+                List<Product> products = new ArrayList<>(); 
                 out.print(gson.toJson(products));
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -277,58 +277,8 @@ public class AdminController extends HttpServlet {
             return;
         }
 
-        // --- ACTION: TOGGLE PRODUCT STATUS ---
-        if ("toggle_product_status".equals(action)) {
-            int id = 0;
-            try {
-                id = Integer.parseInt(request.getParameter("id"));
-            } catch (NumberFormatException e) {
-                response.sendRedirect(request.getContextPath() + "/admin?tab=product&msg=invalid_id");
-                return;
-            }
-
-            ProductDAO dao = new ProductDAO();
-            Product p = dao.getProductById(id);
-            if (p == null) {
-                response.sendRedirect(request.getContextPath() + "/admin?tab=product&msg=not_found");
-                return;
-            }
-
-            boolean newStatus = !p.isIs_active();
-            boolean success = dao.toggleActiveStatus(id, newStatus);
-
-            String page = request.getParameter("page");
-            String sort = request.getParameter("sort");
-            String search = request.getParameter("search");
-            String category = request.getParameter("category");
-            String status = request.getParameter("status");
-            String msg = "toggle_failed";
-            if (success) {
-                msg = newStatus ? "activated" : "deactivated";
-            }
-
-            StringBuilder redirectUrl = new StringBuilder(request.getContextPath() + "/admin");
-            redirectUrl.append("?tab=product&msg=").append(encode(msg));
-
-            if (page != null && !page.isEmpty()) {
-                redirectUrl.append("&page=").append(encode(page));
-            }
-            if (sort != null && !sort.isEmpty()) {
-                redirectUrl.append("&sort=").append(encode(sort));
-            }
-            if (search != null && !search.isEmpty()) {
-                redirectUrl.append("&search=").append(encode(search));
-            }
-            if (category != null && !category.isEmpty() && !category.equals("0")) {
-                redirectUrl.append("&category=").append(encode(category));
-            }
-            if (status != null && !status.isEmpty() && !status.equals("all")) {
-                redirectUrl.append("&status=").append(encode(status));
-            }
-
-            response.sendRedirect(redirectUrl.toString());
-            return;
-        }
+        // [UPDATED] Removed "toggle_product_status" from doGet because it causes redirects on AJAX calls.
+        // It has been moved to handleProductAction via doPost.
 
         // --- DASHBOARD AND TABS LOGIC ---
         String tab = request.getParameter("tab");
@@ -449,7 +399,7 @@ public class AdminController extends HttpServlet {
                     filteredCust = allCust;
                 }
                 // Sắp xếp ID giảm dần (Mới nhất lên đầu)
-Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), c1.getCustomer_id()));
+                Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), c1.getCustomer_id()));
                 request.setAttribute("customerList", filteredCust);
                 request.setAttribute("custTotal", filteredCust.size());
                 forwardPage = "/admin_CustomerManagement.jsp";
@@ -473,7 +423,9 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
 
                 Map<Integer, String> productNameMap = new HashMap<>();
                 Map<Integer, Integer> productPriceMap = new HashMap<>();
-                Map<Integer, String> productVoucherMap = new HashMap<>();
+                
+                Map<Integer, Integer> productDiscountMap = new HashMap<>();
+                
                 Map<Integer, String> picUrlMap = new HashMap<>();
                 Map<Integer, String> productCategoryMap = new HashMap<>();
 
@@ -487,7 +439,9 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                 for (Product p : products) {
                     productNameMap.put(p.getId(), p.getName());
                     productPriceMap.put(p.getId(), p.getPrice());
-                    productVoucherMap.put(p.getId(), p.getVoucherID());
+                    
+                    productDiscountMap.put(p.getId(), p.getDiscount());
+                    
                     picUrlMap.put(p.getId(), p.getPicURL());
 
                     String catName = categoryNames.getOrDefault(p.getCategoryID(), "Unknown");
@@ -495,7 +449,6 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                 }
                 request.setAttribute("productNameMap", productNameMap);
                 request.setAttribute("productPriceMap", productPriceMap);
-                request.setAttribute("productVoucherMap", productVoucherMap);
                 request.setAttribute("picUrlMap", picUrlMap);
                 request.setAttribute("productCategoryMap", productCategoryMap);
 
@@ -516,8 +469,9 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                         if (d.getOrderID() == o.getOrderID()) {
                             int pId = d.getProductID();
                             int price = productPriceMap.getOrDefault(pId, 0);
-                            String voucherId = productVoucherMap.getOrDefault(pId, null);
-                            int percent = (voucherId != null) ? voucherValMap.getOrDefault(voucherId, 0) : 0;
+                            
+                            int percent = productDiscountMap.getOrDefault(pId, 0);
+                            
                             long finalPrice = price - (price * percent / 100L);
                             subTotal += (finalPrice * d.getQuantity());
                         }
@@ -535,6 +489,7 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                     subTotalMap.put(o.getOrderID(), subTotal);
                     shippingFeeMap.put(o.getOrderID(), shippingFee);
                     calculatedTotalMap.put(o.getOrderID(), finalTotal);
+                    calculatedTotalMap.put(o.getOrderID(), (long) o.getTotal());
                 }
 
                 request.setAttribute("subTotalMap", subTotalMap);
@@ -734,7 +689,9 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
 
         String action = request.getParameter("action");
 
-        if ("add_product".equals(action) || "update_product".equals(action) || "delete_product".equals(action)) {
+        // [UPDATED] Added toggle_product_status to the allowed POST actions
+        if ("add_product".equals(action) || "update_product".equals(action) 
+                || "delete_product".equals(action) || "toggle_product_status".equals(action)) {
             handleProductAction(request, response, action);
             return;
         }
@@ -790,7 +747,7 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
         Gson gson = new Gson();
         ResponseData responseData = new ResponseData();
         ProductDAO productDAO = new ProductDAO();
-        VoucherDAO voucherDAO = new VoucherDAO();
+        // VoucherDAO voucherDAO = new VoucherDAO(); // Not used for Product anymore
         Size_detailDAO size_detailDAO = new Size_detailDAO();
 
         try {
@@ -799,24 +756,22 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                 int price = parseIntSafe(request.getParameter("price"), 0);
                 int categoryId = parseIntSafe(request.getParameter("category"), 0);
                 String des = request.getParameter("des");
-                int voucherPercent = parseIntSafe(request.getParameter("voucher"), 0);
+                
+                // [UPDATE] Get discount directly
+                int discount = parseIntSafe(request.getParameter("voucher"), 0);
+                
                 String pic = request.getParameter("pic");
                 String uploadedFile = processUploadFile(request);
                 if (uploadedFile != null) {
                     pic = uploadedFile;
                 }
 
-                String voucherId = null;
-                if (voucherPercent >= 0) {
-                    String autoId = "V" + voucherPercent;
-                    voucherDAO.addIfNotExist(autoId, voucherPercent);
-                    voucherId = voucherDAO.getIdVoucher(voucherPercent);
-                }
                 if (categoryId == 0) {
                     throw new Exception("Invalid Category ID");
                 }
 
-                Product p = new Product(price, categoryId, voucherId, name, des, pic);
+                // [UPDATE] Use new constructor with int discount
+                Product p = new Product(price, categoryId, discount, name, des, pic);
                 boolean isSuccess = productDAO.insert(p);
                 if (isSuccess) {
                     List<Product> newProducts = productDAO.sortNew();
@@ -836,25 +791,23 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                 int price = parseIntSafe(request.getParameter("price"), 0);
                 int categoryId = parseIntSafe(request.getParameter("category"), 0);
                 String des = request.getParameter("des");
-                int voucherPercent = parseIntSafe(request.getParameter("voucher"), 0);
+                
+                // [UPDATE] Get discount directly
+                int discount = parseIntSafe(request.getParameter("voucher"), 0);
+                
                 String pic = request.getParameter("pic");
                 String uploadedFile = processUploadFile(request);
                 if (uploadedFile != null) {
                     pic = uploadedFile;
                 }
 
-                String voucherId = null;
-                if (voucherPercent >= 0) {
-                    String autoId = "V" + voucherPercent;
-                    voucherDAO.addIfNotExist(autoId, voucherPercent);
-                    voucherId = voucherDAO.getIdVoucher(voucherPercent);
-                }
                 if (id == 0) {
                     throw new Exception("Missing Product ID");
                 }
                 Product existing = productDAO.getProductById(id);
                 if (existing != null) {
-                    Product p = new Product(id, price, categoryId, voucherId, name, des, pic, existing.isIs_active());
+                    // [UPDATE] Use new constructor with int discount
+                    Product p = new Product(id, price, categoryId, discount, name, des, pic, existing.isIs_active());
                     boolean isSuccess = productDAO.update(p);
                     responseData.setIsSuccess(isSuccess);
                 } else {
@@ -902,7 +855,29 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                         }
                     }
                 }
+            } 
+            
+            // [UPDATED] Added Logic for Toggle Status returning JSON
+            else if ("toggle_product_status".equals(action)) {
+                int id = parseIntSafe(request.getParameter("id"), 0);
+                Product p = productDAO.getProductById(id);
+                
+                if (p != null) {
+                    boolean newStatus = !p.isIs_active();
+                    boolean isSuccess = productDAO.toggleActiveStatus(id, newStatus);
+                    
+                    responseData.setIsSuccess(isSuccess);
+                    if (isSuccess) {
+                        responseData.setDescription("Product status updated successfully!");
+                    } else {
+                        responseData.setDescription("Failed to update status in database.");
+                    }
+                } else {
+                    responseData.setIsSuccess(false);
+                    responseData.setDescription("Product not found.");
+                }
             }
+
         } catch (Exception e) {
             responseData.setIsSuccess(false);
             responseData.setDescription("Server Error: " + e.getMessage());
@@ -913,59 +888,85 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
     }
 
     private void handleAccountAction(HttpServletRequest request, HttpServletResponse response, String action) throws IOException {
-        response.setContentType("application/json; charset=UTF-8");
-        PrintWriter out = response.getWriter();
-        Gson gson = new Gson();
-        ResponseData responseData = new ResponseData();
-        StaffDAO staffDAO = new StaffDAO();
-        CustomerDAO customerDAO = new CustomerDAO();
-        try {
-            if ("add_staff".equals(action)) {
-                String username = request.getParameter("username");
-                String password = request.getParameter("password");
-                String email = request.getParameter("email");
-                String fullName = request.getParameter("fullName");
-                String phone = request.getParameter("phone");
-                String address = request.getParameter("address");
-                String role = "staff";
-                if (customerDAO.isUsernameTaken(username)) {
-                    responseData.setIsSuccess(false);
-                    responseData.setDescription("Username exists");
-                } else if (customerDAO.checkEmail(email) || staffDAO.getStaffByEmailOrUsername(email) != null) {
-                    responseData.setIsSuccess(false);
-                    responseData.setDescription("Email exists");
-                } else {
-                    String hashedPassword = getMd5(password);
-                    Staff s = new Staff(username, email, hashedPassword, address, phone, fullName, role);
-                    boolean isSuccess = staffDAO.signUp(s);
-                    responseData.setIsSuccess(isSuccess);
-                }
-            } else if ("update_account".equals(action)) {
-                int id = parseIntSafe(request.getParameter("id"), 0);
-                String email = request.getParameter("email");
-                String address = request.getParameter("address");
-                String fullName = request.getParameter("fullName");
-                String phone = request.getParameter("phone");
+    response.setContentType("application/json; charset=UTF-8");
+    PrintWriter out = response.getWriter();
+    Gson gson = new Gson();
+    ResponseData responseData = new ResponseData();
+    StaffDAO staffDAO = new StaffDAO();
+    CustomerDAO customerDAO = new CustomerDAO();
+
+    try {
+        if ("add_staff".equals(action)) {
+            String username = request.getParameter("username");
+            String password = request.getParameter("password");
+            String email = request.getParameter("email");
+            String fullName = request.getParameter("fullName");
+            String phone = request.getParameter("phone");
+            String address = request.getParameter("address");
+            String role = "staff";
+
+            // KIỂM TRA TRÙNG LẶP KHI THÊM MỚI
+            if (customerDAO.isUsernameTaken(username) || staffDAO.getStaffByEmailOrUsername(username) != null) {
+                responseData.setIsSuccess(false);
+                responseData.setDescription("Username already exists in the system.");
+            } else if (customerDAO.checkEmail(email)) {
+                responseData.setIsSuccess(false);
+                responseData.setDescription("Email already exists in the system.");
+            } else if (staffDAO.getStaffByEmailOrUsername(email) != null) {
+                responseData.setIsSuccess(false);
+                responseData.setDescription("Email already exists in the system.");
+            } else {
+                String hashedPassword = getMd5(password);
+                Staff s = new Staff(username, email, hashedPassword, address, phone, fullName, role);
+                boolean isSuccess = staffDAO.signUp(s);
+                responseData.setIsSuccess(isSuccess);
+                if (!isSuccess) responseData.setDescription("Database error during insert.");
+            }
+
+        } else if ("update_account".equals(action)) {
+            int id = parseIntSafe(request.getParameter("id"), 0);
+            String email = request.getParameter("email");
+            String address = request.getParameter("address");
+            String fullName = request.getParameter("fullName");
+            String phone = request.getParameter("phone");
+
+            // KIỂM TRA TRÙNG LẶP KHI CHỈNH SỬA
+            // 1. Kiểm tra email có tồn tại trong bảng Customer không
+            if (customerDAO.checkEmail(email)) {
+                responseData.setIsSuccess(false);
+                responseData.setDescription("Email already exists in the system.");
+            } 
+            // 2. Kiểm tra email có tồn tại trong bảng Staff (loại trừ ID hiện tại) không
+            else if (staffDAO.isEmailExistedExceptId(email, id)) {
+                responseData.setIsSuccess(false);
+                responseData.setDescription("Email already exists in the system.");
+            } 
+            else {
                 boolean isSuccess = staffDAO.updateStaffProfile(id, email, address, phone, fullName);
                 responseData.setIsSuccess(isSuccess);
                 if (!isSuccess) {
-                    responseData.setDescription("Update failed. Email or Phone may already exist.");
-                }
-            } else if ("delete_account".equals(action)) {
-                String username = request.getParameter("username");
-                boolean isSuccess = staffDAO.delete(username);
-                responseData.setIsSuccess(isSuccess);
-                if (!isSuccess) {
-                    responseData.setDescription("Cannot delete. Data constraints exist.");
+                    responseData.setDescription("Update failed. Phone number might be duplicated.");
                 }
             }
-        } catch (Exception e) {
-            responseData.setIsSuccess(false);
-            responseData.setDescription("Server Error: " + e.getMessage());
+
+        } else if ("delete_account".equals(action)) {
+            String username = request.getParameter("username");
+            // Trước khi xóa thường DAO sẽ tự check ràng buộc FK (Foreign Key)
+            boolean isSuccess = staffDAO.delete(username);
+            responseData.setIsSuccess(isSuccess);
+            if (!isSuccess) {
+                responseData.setDescription("Cannot delete staff. This account has related transaction data (Orders/Imports).");
+            }
         }
-        out.print(gson.toJson(responseData));
-        out.flush();
+    } catch (Exception e) {
+        responseData.setIsSuccess(false);
+        responseData.setDescription("Server Error: " + e.getMessage());
+        e.printStackTrace();
     }
+    
+    out.print(gson.toJson(responseData));
+    out.flush();
+}
 
     private void handleCustomerAction(HttpServletRequest request, HttpServletResponse response, String action) throws IOException {
         response.setContentType("application/json; charset=UTF-8");
@@ -1136,7 +1137,7 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
 
     private void handleVoucherAction(HttpServletRequest request, HttpServletResponse response, String action) throws IOException {
         VoucherDAO dao = new VoucherDAO();
-        ProductDAO productDAO = new ProductDAO();
+        ProductDAO productDAO = new ProductDAO(); // Vẫn giữ lại nếu cần check logic khác
         ResponseData responseData = new ResponseData();
 
         try {
@@ -1145,6 +1146,7 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                 int percent = parseIntSafe(request.getParameter("percent"), -1);
                 String startStr = request.getParameter("startDate");
                 String endStr = request.getParameter("endDate");
+                int maxDiscount = parseIntSafe(request.getParameter("maxDiscount"), 0);
 
                 if (id == null || id.trim().isEmpty()) {
                     responseData.setIsSuccess(false);
@@ -1162,17 +1164,19 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                         responseData.setIsSuccess(false);
                         responseData.setDescription("Error: End date must be after or equal to Start date.");
                     } else {
+                        Voucher v = new Voucher(id, percent, start, end, maxDiscount);
+
                         if ("add".equals(action)) {
                             if (dao.existsById(id)) {
                                 responseData.setIsSuccess(false);
                                 responseData.setDescription("Error: Voucher Code '" + id + "' already exists!");
                             } else {
-                                dao.addVoucher(new Voucher(id, percent, start, end));
+                                dao.insertVoucher(v);
                                 responseData.setIsSuccess(true);
                                 responseData.setDescription("Voucher added successfully!");
                             }
                         } else {
-                            dao.updateVoucher(new Voucher(id, percent, start, end));
+                            dao.updateVoucher(v);
                             responseData.setIsSuccess(true);
                             responseData.setDescription("Voucher updated successfully!");
                         }
@@ -1180,14 +1184,12 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
                 }
             } else if ("delete".equals(action)) {
                 String id = request.getParameter("id");
-                if (productDAO.hasDataForVoucher(id)) {
-                    responseData.setIsSuccess(false);
-                    responseData.setDescription("Cannot delete: Voucher is currently used by products.");
-                } else {
-                    dao.deleteVoucher(id);
-                    responseData.setIsSuccess(true);
-                    responseData.setDescription("Voucher deleted successfully!");
-                }
+                // [UPDATE] Bỏ check hasDataForVoucher từ ProductDAO vì product không còn cột voucher_id
+                // Nếu cần check xem voucher có đang dùng cho đơn hàng nào không thì dùng OrderDAO/VoucherDAO
+                // Tạm thời cho phép xóa
+                dao.deleteVoucher(id);
+                responseData.setIsSuccess(true);
+                responseData.setDescription("Voucher deleted successfully!");
             }
         } catch (Exception e) {
             responseData.setIsSuccess(false);
@@ -1199,78 +1201,69 @@ Collections.sort(filteredCust, (c1, c2) -> Integer.compare(c2.getCustomer_id(), 
         response.getWriter().write(new Gson().toJson(responseData));
     }
 
-    // [FIX] Cập nhật trong file: controller/AdminController.java
-
-private void handleOrderStatusUpdate(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType("application/json; charset=UTF-8");
-    PrintWriter out = response.getWriter();
-    Gson gson = new Gson();
-    ResponseData responseData = new ResponseData();
-    
-    try {
-        int orderId = Integer.parseInt(request.getParameter("orderId"));
-        String newStatus = request.getParameter("status");
+    private void handleOrderStatusUpdate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
+        ResponseData responseData = new ResponseData();
         
-        OrderDAO orderDAO = new OrderDAO();
-        Size_detailDAO size_detailDAO = new Size_detailDAO();
-        ProductDAO productDAO = new ProductDAO(); // [THÊM] Khởi tạo ProductDAO
-        
-        // LOGIC MỚI: Kiểm tra tồn kho trước khi Admin xác nhận (Pending -> Delivering)
-        if ("Delivering".equals(newStatus)) {
-            List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
+        try {
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
+            String newStatus = request.getParameter("status");
             
-            if (details != null && !details.isEmpty()) {
-                // BƯỚC 1: PRE-CHECK (Kiểm tra tồn kho)
-                // Duyệt để đảm bảo TẤT CẢ sản phẩm đều đủ hàng trước khi trừ
-                for (OrderDetail od : details) {
-                    Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
-                    
-                    if (currentStock == null) {
-                         // Lấy tên sản phẩm để báo lỗi rõ ràng hơn
-                        Product p = productDAO.getProductById(od.getProductID());
-                        String pName = (p != null) ? p.getName() : "ID " + od.getProductID();
-                        throw new Exception("Error data: No information found for the product: " + pName);
+            OrderDAO orderDAO = new OrderDAO();
+            Size_detailDAO size_detailDAO = new Size_detailDAO();
+            ProductDAO productDAO = new ProductDAO();
+            
+            // LOGIC MỚI: Kiểm tra tồn kho trước khi Admin xác nhận (Pending -> Delivering)
+            if ("Delivering".equals(newStatus)) {
+                List<OrderDetail> details = orderDAO.getAllOrdersDetailByID(orderId);
+                
+                if (details != null && !details.isEmpty()) {
+                    // BƯỚC 1: PRE-CHECK (Kiểm tra tồn kho)
+                    for (OrderDetail od : details) {
+                        Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                        
+                        if (currentStock == null) {
+                            Product p = productDAO.getProductById(od.getProductID());
+                            String pName = (p != null) ? p.getName() : "ID " + od.getProductID();
+                            throw new Exception("Error data: No information found for the product: " + pName);
+                        }
+                        
+                        if (currentStock.getQuantity() < od.getQuantity()) {
+                            Product p = productDAO.getProductById(od.getProductID());
+                            String productName = (p != null) ? p.getName() : "Product ID " + od.getProductID();
+                            throw new Exception("Insufficient stock for: " + productName 
+                                    + " (Size: " + od.getSize_name() + "). "
+                                    + "In stock: " + currentStock.getQuantity() 
+                                    + ", Customer Order: " + od.getQuantity());
+                        }
                     }
-                    
-                    if (currentStock.getQuantity() < od.getQuantity()) {
-                        // [THÊM] Lấy tên sản phẩm từ ID
-                        Product p = productDAO.getProductById(od.getProductID());
-                        String productName = (p != null) ? p.getName() : "Product ID " + od.getProductID();
 
-                        // Ném lỗi với Tên sản phẩm thay vì ID
-                        throw new Exception("Insufficient stock for: " + productName 
-                                + " (Size: " + od.getSize_name() + "). "
-                                + "In stock: " + currentStock.getQuantity() 
-                                + ", Customer Order: " + od.getQuantity());
+                    // BƯỚC 2: EXECUTION (Trừ kho)
+                    for (OrderDetail od : details) {
+                        Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
+                        int newQty = currentStock.getQuantity() - od.getQuantity();
+                        size_detailDAO.updateQuanSize(newQty, od.getProductID(), currentStock.getSize_name());
                     }
-                }
-
-                // BƯỚC 2: EXECUTION (Trừ kho)
-                // Chỉ chạy khi Bước 1 đã qua (tất cả sản phẩm đều hợp lệ)
-                for (OrderDetail od : details) {
-                    Size_detail currentStock = size_detailDAO.getSizeByProductIdAndName(od.getProductID(), od.getSize_name());
-                    int newQty = currentStock.getQuantity() - od.getQuantity();
-                    size_detailDAO.updateQuanSize(newQty, od.getProductID(), currentStock.getSize_name());
                 }
             }
+
+            // BƯỚC 3: CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
+            orderDAO.updateStatus(newStatus, orderId);
+
+            responseData.setIsSuccess(true);
+            responseData.setDescription("Status update successful: " + newStatus);
+            
+        } catch (Exception e) {
+            responseData.setIsSuccess(false);
+            responseData.setDescription("Error: " + e.getMessage());
+            e.printStackTrace();
         }
-
-        // BƯỚC 3: CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
-        orderDAO.updateStatus(newStatus, orderId);
-
-        responseData.setIsSuccess(true);
-        responseData.setDescription("Status update successful: " + newStatus);
         
-    } catch (Exception e) {
-        // Trả về lỗi để frontend hiển thị alert
-        responseData.setIsSuccess(false);
-        responseData.setDescription("Error: " + e.getMessage());
-        e.printStackTrace();
+        out.print(gson.toJson(responseData));
+        out.flush();
     }
-    
-    out.print(gson.toJson(responseData));
-    out.flush();
-}
 
     private void handleCreateImport(HttpServletRequest request, HttpServletResponse response, int staffId) throws IOException {
         response.setContentType("application/json; charset=UTF-8");

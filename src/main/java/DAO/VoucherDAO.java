@@ -3,13 +3,13 @@ package DAO;
 import entity.Voucher;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class VoucherDAO extends DBConnect.DBConnect {
 
     // IMPORTANT: Make sure Entity Voucher.java is also updated to use String voucherID!
-
     public List<Voucher> getAll() {
         List<Voucher> list = new ArrayList<>();
         // [FIX] Use voucher_id (varchar)
@@ -19,10 +19,11 @@ public class VoucherDAO extends DBConnect.DBConnect {
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 Voucher p = new Voucher(
-                        rs.getString("voucher_id"),   // [FIX] getString
+                        rs.getString("voucher_id"), // [FIX] getString
                         rs.getInt("voucher_percent"),
                         rs.getDate("start_date"),
-                        rs.getDate("end_date"));
+                        rs.getDate("end_date"),
+                        rs.getInt("max_discount_amount"));
                 list.add(p);
             }
         } catch (Exception e) {
@@ -32,7 +33,6 @@ public class VoucherDAO extends DBConnect.DBConnect {
     }
 
     // === PAGINATION METHODS ===
-
     public int getTotalVoucherCount(String searchKeyword) {
         String sql = "SELECT COUNT(*) FROM voucher";
         // Search by ID or Percent
@@ -67,7 +67,7 @@ public class VoucherDAO extends DBConnect.DBConnect {
         // [FIX] Sort by voucher_id instead of int ID
         sql.append(" ORDER BY voucher_id ASC");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-        
+
         try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
             int paramIndex = 1;
             if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
@@ -82,10 +82,11 @@ public class VoucherDAO extends DBConnect.DBConnect {
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     Voucher p = new Voucher(
-                            rs.getString("voucher_id"),   // [FIX] getString
+                            rs.getString("voucher_id"), // [FIX] getString
                             rs.getInt("voucher_percent"),
                             rs.getDate("start_date"),
-                            rs.getDate("end_date"));
+                            rs.getDate("end_date"),
+                            rs.getInt("max_discount_amount"));
                     list.add(p);
                 }
             }
@@ -94,17 +95,16 @@ public class VoucherDAO extends DBConnect.DBConnect {
         }
         return list;
     }
-    
-    // === CRUD METHODS ===
 
+    // === CRUD METHODS ===
     // [FIX] This method was logic-heavy based on Int ID. 
     // Replaced logic: Add voucher if the String ID doesn't exist.
     public boolean addIfNotExist(String voucherId, int percent) {
         String sql = "IF NOT EXISTS (SELECT 1 FROM voucher WHERE voucher_id = ?) "
-                   + "BEGIN "
-                   + "  INSERT INTO voucher (voucher_id, voucher_percent, start_date, end_date) "
-                   + "  VALUES (?, ?, CAST(GETDATE() AS DATE), DATEADD(month, 1, GETDATE())) "
-                   + "END";
+                + "BEGIN "
+                + "  INSERT INTO voucher (voucher_id, voucher_percent, start_date, end_date) "
+                + "  VALUES (?, ?, CAST(GETDATE() AS DATE), DATEADD(month, 1, GETDATE())) "
+                + "END";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, voucherId);
@@ -135,34 +135,42 @@ public class VoucherDAO extends DBConnect.DBConnect {
         return null;
     }
 
-    // Add new voucher
-    public void addVoucher(Voucher p) {
-        // [FIX] Must insert ID explicitly because it's not identity
-        String sql = "INSERT INTO voucher (voucher_id, voucher_percent, start_date, end_date) VALUES (?, ?, ?, ?)";
+    // Trong VoucherDAO.java
+// 1. Sửa hàm thêm mới Voucher (Insert)
+    public void insertVoucher(Voucher v) {
+        // Thêm cột max_discount_amount vào câu SQL
+        String sql = "INSERT INTO voucher (voucher_id, voucher_percent, start_date, end_date, max_discount_amount) "
+                + "VALUES (?, ?, ?, ?, ?)";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setString(1, p.getVoucherID()); // [FIX] setString
-            st.setInt(2, p.getVoucherPercent());
-            st.setDate(3, new java.sql.Date(p.getStartDate().getTime()));
-            st.setDate(4, new java.sql.Date(p.getEndDate().getTime()));
+            st.setString(1, v.getVoucherID());
+            st.setInt(2, v.getVoucherPercent());
+            // Chuyển đổi java.util.Date sang java.sql.Date
+            st.setDate(3, new java.sql.Date(v.getStartDate().getTime()));
+            st.setDate(4, new java.sql.Date(v.getEndDate().getTime()));
+            st.setInt(5, v.getMaxDiscountAmount()); // [MỚI] Set giá trị max
+
             st.executeUpdate();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.out.println(e);
         }
     }
 
-    // Update voucher
-    public void updateVoucher(Voucher p) {
-        // [FIX] Where clause uses String ID
-        String sql = "UPDATE voucher SET voucher_percent = ?, start_date = ?, end_date = ? WHERE voucher_id = ?";
+// 2. Sửa hàm cập nhật Voucher (Update)
+    public void updateVoucher(Voucher v) {
+        // Thêm cập nhật cột max_discount_amount
+        String sql = "UPDATE voucher SET voucher_percent = ?, start_date = ?, end_date = ?, max_discount_amount = ? "
+                + "WHERE voucher_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, p.getVoucherPercent());
-            st.setDate(2, new java.sql.Date(p.getStartDate().getTime()));
-            st.setDate(3, new java.sql.Date(p.getEndDate().getTime()));
-            st.setString(4, p.getVoucherID()); // [FIX] setString
+            st.setInt(1, v.getVoucherPercent());
+            st.setDate(2, new java.sql.Date(v.getStartDate().getTime()));
+            st.setDate(3, new java.sql.Date(v.getEndDate().getTime()));
+            st.setInt(4, v.getMaxDiscountAmount()); // [MỚI]
+            st.setString(5, v.getVoucherID());
+
             st.executeUpdate();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.out.println(e);
         }
     }
@@ -215,7 +223,8 @@ public class VoucherDAO extends DBConnect.DBConnect {
                         rs.getString("voucher_id"),
                         rs.getInt("voucher_percent"),
                         rs.getDate("start_date"),
-                        rs.getDate("end_date")
+                        rs.getDate("end_date"),
+                        rs.getInt("max_discount_amount") // [QUAN TRỌNG] Thêm dòng này
                 );
             }
         } catch (Exception e) {
@@ -257,9 +266,9 @@ public class VoucherDAO extends DBConnect.DBConnect {
     // Get Active Voucher
     public Voucher getActiveById(String id) { // [FIX] param String
         String sql = "SELECT * FROM voucher "
-                   + "WHERE voucher_id = ? "
-                   + "  AND (start_date IS NULL OR CAST(GETDATE() AS DATE) >= CAST(start_date AS DATE)) "
-                   + "  AND (end_date   IS NULL OR CAST(GETDATE() AS DATE) <= CAST(end_date   AS DATE))";
+                + "WHERE voucher_id = ? "
+                + "  AND (start_date IS NULL OR CAST(GETDATE() AS DATE) >= CAST(start_date AS DATE)) "
+                + "  AND (end_date   IS NULL OR CAST(GETDATE() AS DATE) <= CAST(end_date   AS DATE))";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, id);
@@ -279,11 +288,11 @@ public class VoucherDAO extends DBConnect.DBConnect {
     }
 
     // Fallback Active Voucher
-    public Voucher getActiveByIdDb(String id) { // [FIX] param String
+    public Voucher getActiveByIdDb(String id) {
         String sql = "SELECT * FROM voucher "
-                   + "WHERE voucher_id = ? "
-                   + "  AND (start_date IS NULL OR CAST(GETDATE() AS DATE) >= start_date) "
-                   + "  AND (end_date   IS NULL OR CAST(GETDATE() AS DATE) <= end_date)";
+                + "WHERE voucher_id = ? "
+                + "  AND (start_date IS NULL OR CAST(GETDATE() AS DATE) >= start_date) "
+                + "  AND (end_date   IS NULL OR CAST(GETDATE() AS DATE) <= end_date)";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, id);
@@ -293,7 +302,8 @@ public class VoucherDAO extends DBConnect.DBConnect {
                         rs.getString("voucher_id"),
                         rs.getInt("voucher_percent"),
                         rs.getDate("start_date"),
-                        rs.getDate("end_date")
+                        rs.getDate("end_date"),
+                        rs.getInt("max_discount_amount") // [MỚI] Lấy cột này
                 );
             }
         } catch (Exception e) {
@@ -311,4 +321,23 @@ public class VoucherDAO extends DBConnect.DBConnect {
             return "debugUrl error: " + e.getMessage();
         }
     }
+
+    public boolean hasUsedVoucher(int customerId, String voucherId) {
+        // Giả sử bảng orders có cột voucher_id. 
+        // Nếu chưa có, bạn cần ALTER TABLE orders ADD voucher_id VARCHAR(50);
+        String sql = "SELECT COUNT(*) FROM orders WHERE customer_id = ? AND voucher_id = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, customerId);
+            st.setString(2, voucherId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // Trả về true nếu đã có đơn hàng dùng voucher này
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }
